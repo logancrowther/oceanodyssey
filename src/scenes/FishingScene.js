@@ -1,14 +1,88 @@
 import Phaser from 'phaser';
 import GameState from '../systems/GameState.js';
 import { LOCATIONS } from '../data/locationData.js';
-import { getFish } from '../data/fishData.js';
+import { getCatchable, sizeScaleFor } from '../data/catchables.js';
 import { createButton } from '../ui/Button.js';
 import { createIconButton, drawShopIcon, drawBagIcon } from '../ui/iconButton.js';
 import { addStatusBar } from '../ui/fishIcon.js';
-import { drawHook, drawPrawn, drawFlathead } from '../ui/tackle.js';
+import {
+  drawHook,
+  drawPrawn,
+  drawFlathead,
+  drawSalmon,
+  drawMullet,
+  drawBream,
+  drawTuna,
+  drawTailor,
+  drawTrevally,
+  drawGreatWhite,
+  drawTigerShark,
+  drawSeaweed,
+  drawOldBoot
+} from '../ui/tackle.js';
 import { DESIGN_WIDTH, DESIGN_HEIGHT } from '../constants.js';
 import { shadeColor, buildSeaPolygon, waveSurfaceY, drawSunGlow, drawBoatHull } from '../ui/oceanArt.js';
 import { subheading } from '../ui/textStyle.js';
+
+// What to draw on the hook for each equippable bait id - whatever's
+// currently equipped (a bought bait item, or any caught fish/junk/seaweed),
+// so it shows up on the hook the same way Prawns always did. Each one's
+// base scale is its natural on-hook size (a real fish or boot dangling from
+// a hook, not artificially shrunk down to some generic tiny "bait" size) -
+// sizeScaleFor then grows or shrinks that further to match the actual
+// weight of the specific catch equipped.
+const BAIT_DRAWERS = {
+  prawn: drawPrawn,
+  flathead: drawFlathead,
+  salmon: drawSalmon,
+  mullet: drawMullet,
+  bream: drawBream,
+  tuna: drawTuna,
+  tailor: drawTailor,
+  trevally: drawTrevally,
+  great_white: drawGreatWhite,
+  tiger_shark: drawTigerShark,
+  old_boot: drawOldBoot,
+  seaweed: drawSeaweed
+};
+// NOTE: sizeScaleFor only normalizes a catch against its OWN species'
+// average weight (so a big Flathead looks bigger than a small Flathead) -
+// it says nothing about how species compare to each other. Without a
+// deliberately bigger base scale here, a 220kg shark would render at
+// basically the same size as a 1.6kg Flathead, which is exactly backwards.
+// So these base scales are set to reflect real relative size across
+// species - the sharks in particular are scaled way up, to roughly the
+// length of the character himself, so landing one actually feels like the
+// enormous, amazing catch it's supposed to be.
+const BAIT_BASE_SCALE = {
+  prawn: 0.34,
+  flathead: 0.42,
+  salmon: 0.4,
+  mullet: 0.42,
+  bream: 0.38,
+  tuna: 0.36,
+  tailor: 0.42,
+  trevally: 0.4,
+  great_white: 1.35,
+  tiger_shark: 1.2,
+  old_boot: 0.55,
+  seaweed: 0.6
+};
+// Every ordinary real bite (i.e. not the bare-hook seaweed consolation
+// catch) picks evenly from this pool - a Trevally comes up exactly as often
+// as a Tailor, a Tuna, a Bream, a Mullet, a Salmon, a Flathead, or an Old
+// Boot, same as when the Old Boot was first added alongside the Flathead.
+// The sharks are deliberately NOT in here - see LARGE_BAIT_IDS/
+// GREAT_WHITE_CHANCE/TIGER_SHARK_CHANCE below.
+const BITE_POOL = ['flathead', 'salmon', 'mullet', 'bream', 'tuna', 'tailor', 'trevally', 'old_boot'];
+// Sharks only ever have a chance to bite when fishing with a big fish - a
+// Salmon or a Tuna, the two largest regular fish - as bait, and even then
+// it's rare: most of those bites still land whatever's in the normal
+// BITE_POOL instead. The Tiger Shark is a bit more likely to turn up than
+// the Great White, but both are long shots.
+const LARGE_BAIT_IDS = ['salmon', 'tuna'];
+const GREAT_WHITE_CHANCE = 0.08;
+const TIGER_SHARK_CHANCE = 0.14;
 
 const WATERLINE_Y = 300;
 const GROUND_Y = 340;
@@ -25,9 +99,19 @@ const LEDGE_COLOR = 0x8a7a63;
 // or centered, so gentle decay and a generous gain go a long way toward
 // "it never works" if tuned too tight.
 const REEL_WHEEL_X = 480;
-const REEL_WHEEL_Y = 424;
+const REEL_WHEEL_Y = 390;
 const REEL_WHEEL_RADIUS = 62;
 const REEL_TIME_LIMIT = 25000;
+// A fish doesn't just sit there while it's reeled in - every so often it
+// tugs back hard enough to actually rip back some of the progress already
+// made (see doTug), not just look like it. Only the strong tugs count (see
+// TUG_BACKLASH_THRESHOLD), and how much ground is lost scales with that
+// species' own difficultyMultiplier and how big this particular catch
+// rolled - so a big, rare fish is a real struggle you can lose if you stop
+// cranking through the hard pulls, while small common junk barely fights
+// back at all.
+const TUG_BACKLASH_THRESHOLD = 0.6;
+const TUG_BACKLASH_FACTOR = 2.75;
 
 // The bank's x position wobbles gently with depth (y) instead of running a
 // straight vertical line, so the shoreline reads as a natural, uneven edge
@@ -143,6 +227,7 @@ export default class FishingScene extends Phaser.Scene {
     this.tugTimer = null;
     this.waveT = 0;
     this.landedFish = null;
+    this.landedSeaweed = false;
     // 0 = hook resting above water right at the rod tip (not cast yet), 1 =
     // fully cast out at the fishing spot - animated by startCast().
     this.castProgress = 0;
@@ -194,7 +279,7 @@ export default class FishingScene extends Phaser.Scene {
       }
     );
 
-    this.castBtn = createButton(this, width / 2, height - 76, 220, 60, 'Cast Line', () => this.handleCastButton(), {
+    this.castBtn = createButton(this, width / 2, height - 110, 220, 60, 'Cast Line', () => this.handleCastButton(), {
       fontSize: '22px'
     });
 
@@ -203,7 +288,10 @@ export default class FishingScene extends Phaser.Scene {
 
   hasBait() {
     const id = GameState.equippedBait;
-    return !!id && GameState.ownedCount(id) > 0;
+    if (!id) return false;
+    const uid = GameState.equippedCatchUid;
+    if (uid != null) return GameState.data.catches.some((c) => c.uid === uid);
+    return GameState.ownedCount(id) > 0;
   }
 
   // Flat, solid-color sea with just an animated wavy top edge for open water
@@ -793,22 +881,53 @@ export default class FishingScene extends Phaser.Scene {
       g.strokePath();
     }
 
-    // Whatever's on the hook - the equipped bait before a catch, or the
-    // landed fish being hauled up after one - drawn BEHIND the hook (not in
-    // front of it) and centered right on the hook's bend, so the hook reads
-    // as actually skewered through it rather than just floating alongside.
+    // Whatever's on the hook - the equipped bait before a catch, the landed
+    // fish/junk/seaweed being hauled up after one - drawn BEHIND the hook
+    // (not in front of it) and centered right on the hook's bend, so the
+    // hook reads as actually skewered through it rather than just floating
+    // alongside. Faded by the same underwater alpha as the hook and line, so
+    // it actually disappears once submerged instead of showing through the
+    // water.
     const hookAlpha = lineAlphaAt(hookX, hookY);
     const dangle = Math.sin(this.waveT * 3) * 0.18;
-    if (this.landedFish) {
-      drawFlathead(g, hookX + 2, hookY + 3, 0.42, Math.PI / 2 + dangle);
-    } else if (GameState.equippedBait === 'prawn') {
-      drawPrawn(g, hookX + 2, hookY + 1, 0.34, dangle);
-    }
-
-    // The hook itself, modeled properly (eye, shank, curved bend, barb)
-    // instead of a plain squiggle, drawn on top so its point visibly pokes
-    // through whatever's threaded onto it - same underwater fade as the line.
     if (hookAlpha > 0.02) {
+      if (this.landedFish === 'flathead') {
+        drawFlathead(g, hookX + 2, hookY + 3, BAIT_BASE_SCALE.flathead * sizeScaleFor('flathead', this.pendingWeightKg), Math.PI / 2 + dangle, hookAlpha);
+      } else if (this.landedFish === 'salmon') {
+        drawSalmon(g, hookX + 2, hookY + 3, BAIT_BASE_SCALE.salmon * sizeScaleFor('salmon', this.pendingWeightKg), Math.PI / 2 + dangle, hookAlpha);
+      } else if (this.landedFish === 'mullet') {
+        drawMullet(g, hookX + 2, hookY + 3, BAIT_BASE_SCALE.mullet * sizeScaleFor('mullet', this.pendingWeightKg), Math.PI / 2 + dangle, hookAlpha);
+      } else if (this.landedFish === 'bream') {
+        drawBream(g, hookX + 2, hookY + 3, BAIT_BASE_SCALE.bream * sizeScaleFor('bream', this.pendingWeightKg), Math.PI / 2 + dangle, hookAlpha);
+      } else if (this.landedFish === 'tuna') {
+        drawTuna(g, hookX + 2, hookY + 3, BAIT_BASE_SCALE.tuna * sizeScaleFor('tuna', this.pendingWeightKg), Math.PI / 2 + dangle, hookAlpha);
+      } else if (this.landedFish === 'tailor') {
+        drawTailor(g, hookX + 2, hookY + 3, BAIT_BASE_SCALE.tailor * sizeScaleFor('tailor', this.pendingWeightKg), Math.PI / 2 + dangle, hookAlpha);
+      } else if (this.landedFish === 'trevally') {
+        drawTrevally(g, hookX + 2, hookY + 3, BAIT_BASE_SCALE.trevally * sizeScaleFor('trevally', this.pendingWeightKg), Math.PI / 2 + dangle, hookAlpha);
+      } else if (this.landedFish === 'great_white') {
+        drawGreatWhite(g, hookX + 2, hookY + 3, BAIT_BASE_SCALE.great_white * sizeScaleFor('great_white', this.pendingWeightKg), Math.PI / 2 + dangle, hookAlpha);
+      } else if (this.landedFish === 'tiger_shark') {
+        drawTigerShark(g, hookX + 2, hookY + 3, BAIT_BASE_SCALE.tiger_shark * sizeScaleFor('tiger_shark', this.pendingWeightKg), Math.PI / 2 + dangle, hookAlpha);
+      } else if (this.landedFish === 'old_boot') {
+        drawOldBoot(g, hookX + 4, hookY + 6, BAIT_BASE_SCALE.old_boot * sizeScaleFor('old_boot', this.pendingWeightKg), Math.PI + dangle, hookAlpha);
+      } else if (this.landedSeaweed) {
+        drawSeaweed(g, hookX + 2, hookY + 3, BAIT_BASE_SCALE.seaweed * sizeScaleFor('seaweed', this.pendingWeightKg), dangle, hookAlpha);
+      } else if (GameState.equippedBait && BAIT_DRAWERS[GameState.equippedBait]) {
+        const baitId = GameState.equippedBait;
+        // Prawns are a plain stackable pack (no individual weight - every
+        // unit is the same), so they draw at their natural base scale. A
+        // caught fish/junk/seaweed equipped as bait draws at the actual
+        // weight of the SPECIFIC catch that was equipped (by uid), not just
+        // any catch of that species.
+        const equippedCatch = GameState.data.catches.find((c) => c.uid === GameState.equippedCatchUid);
+        const baitScale = BAIT_BASE_SCALE[baitId] * (equippedCatch ? sizeScaleFor(baitId, equippedCatch.weightKg) : 1);
+        BAIT_DRAWERS[baitId](g, hookX + 2, hookY + 1, baitScale, dangle, hookAlpha);
+      }
+
+      // The hook itself, modeled properly (eye, shank, curved bend, barb)
+      // instead of a plain squiggle, drawn on top so its point visibly pokes
+      // through whatever's threaded onto it.
       drawHook(g, hookX, hookY, 0.55, 0, hookAlpha);
     }
   }
@@ -818,15 +937,22 @@ export default class FishingScene extends Phaser.Scene {
   }
 
   startCast() {
-    // Fishing bare-hooked is allowed - it just won't attract much (chances
-    // get tuned down for it later). Bait is only spent if there's actually
-    // some equipped.
+    // Fishing bare-hooked is allowed - it just fishes up mostly seaweed
+    // instead of an actual bite (see onBite). Bait is only spent if there's
+    // actually some equipped, and whether there was any is captured now,
+    // before it's consumed, since that's what the cast itself was fished with.
+    this.castedWithoutBait = !this.hasBait();
+    // Captured before consumption - the Great White's chance to bite
+    // depends on what was actually threaded onto the hook for this cast
+    // (see onBite), not whatever's equipped afterward.
+    this.castBaitId = GameState.equippedBait;
     if (this.hasBait()) {
       GameState.consumeEquippedBait();
       this.statusBar.refresh();
     }
     this.state = 'waiting';
     this.landedFish = null;
+    this.landedSeaweed = false;
     this.castBtn.setLabel('Waiting...');
     this.castBtn.setEnabled(false);
     this.setNavEnabled(false);
@@ -842,35 +968,75 @@ export default class FishingScene extends Phaser.Scene {
       targets: this,
       castProgress: 1,
       duration: 550,
-      ease: 'Cubic.easeOut'
+      ease: 'Cubic.easeOut',
+      // The bite timer only starts once the hook has actually settled in
+      // the water - not in parallel with the cast animation - so there's a
+      // real, deliberate wait after it lands instead of a fish practically
+      // being on the line before the hook even gets there.
+      onComplete: () => {
+        this.time.delayedCall(Phaser.Math.Between(1600, 3200), () => this.onBite());
+      }
     });
-
-    this.time.delayedCall(Phaser.Math.Between(1000, 2200), () => this.onBite());
   }
 
   onBite() {
     if (this.state !== 'waiting') return;
-    this.state = 'biting';
-    this.pendingFishId = 'flathead';
-    const fish = getFish(this.pendingFishId);
 
-    // Every catch is its own size, rolled fresh - bigger ones weigh more AND
-    // fight harder (both the required rotation and the decay scale with the
-    // same roll as the weight), so a big fish is a heavier, meaningfully
-    // tougher fight instead of just "the same fish, more of it".
+    // Fishing bare-hooked mostly just pulls up seaweed instead of an actual
+    // bite - no fight, no reel wheel, just a bare-hook consolation catch.
+    if (this.castedWithoutBait && Phaser.Math.FloatBetween(0, 1) < 0.7) {
+      this.catchSeaweed();
+      return;
+    }
+
+    this.state = 'biting';
+    // The Great White is never in the normal pool - it's only even possible
+    // when a big fish was used as bait, and even then it's a long shot most
+    // casts still just land whatever's in BITE_POOL instead.
+    if (LARGE_BAIT_IDS.includes(this.castBaitId)) {
+      const sharkRoll = Phaser.Math.FloatBetween(0, 1);
+      if (sharkRoll < GREAT_WHITE_CHANCE) {
+        this.pendingFishId = 'great_white';
+      } else if (sharkRoll < GREAT_WHITE_CHANCE + TIGER_SHARK_CHANCE) {
+        this.pendingFishId = 'tiger_shark';
+      } else {
+        this.pendingFishId = Phaser.Utils.Array.GetRandom(BITE_POOL);
+      }
+    } else {
+      this.pendingFishId = Phaser.Utils.Array.GetRandom(BITE_POOL);
+    }
+    const fish = getCatchable(this.pendingFishId);
+
+    // Every catch is its own size, rolled fresh - bigger ones weigh more,
+    // are worth more, AND need more cranking to land, so a big fish is a
+    // heavier, more valuable, meaningfully tougher fight instead of just
+    // "the same fish, more of it". A species' own rarity multiplier stacks
+    // on top of that size roll, so a rarer, more prized catch (like a
+    // Flathead over an Old Boot) fights harder even at the same size.
     const sizeRoll = Phaser.Math.FloatBetween(0.75, 1.75);
-    const sizeLabel = sizeRoll < 1.0 ? 'a small' : sizeRoll > 1.4 ? 'a big' : 'an average-sized';
     this.pendingWeightKg = Math.round(fish.baseWeightKg * sizeRoll * 10) / 10;
-    this.showMessage(`${sizeLabel} ${fish.name} is on the line! Reel it in!`);
+    this.pendingValue = Math.max(1, Math.round(this.pendingWeightKg * fish.valuePerKg));
+    // No species/size spoiler here on purpose - what's on the line stays a
+    // surprise until it's actually landed (see completeCatch's message).
+    this.showMessage('Something is on the line! Reel it in!');
     this.castBtn.setLabel('Reeling...');
     this.castBtn.setEnabled(false);
     this.currentLinePull = 0;
     this.tugState.v = 0;
     this.scheduleTug();
 
-    this.reelRotation = 0;
-    this.reelRequired = fish.turnsRequired * Math.PI * 2 * sizeRoll;
-    this.reelDecayPerSecond = fish.decayPerSecond * sizeRoll;
+    this.currentDifficulty = fish.difficultyMultiplier || 1;
+    this.currentSizeRoll = sizeRoll;
+    this.reelRequired = fish.turnsRequired * this.currentDifficulty * Math.PI * 2 * sizeRoll;
+    // The fight doesn't start from a dead stop - the fish is already
+    // pulling by the time the wheel appears, so the bar opens at 10%
+    // instead of 0%. reelEngaged tracks whether the player has actually
+    // cranked past that starting cushion yet - once they have, losing all
+    // the way back down to empty means the fish has pulled free and gets
+    // away right then, not just on the 25s clock (see doTug's backlash).
+    this.reelStart = this.reelRequired * 0.1;
+    this.reelRotation = this.reelStart;
+    this.reelEngaged = false;
     this.reelHandleAngle = 0;
     this.reelLastX = null;
     this.reelLastY = null;
@@ -880,10 +1046,26 @@ export default class FishingScene extends Phaser.Scene {
     this.redrawReelWheel();
   }
 
+  // Seaweed doesn't fight - no reel wheel, just a quick gentle bend and
+  // straight into the same catch-and-stow sequence as a real fish.
+  catchSeaweed() {
+    this.state = 'result';
+    this.landedSeaweed = true;
+    this.castBtn.setEnabled(false);
+
+    const seaweed = getCatchable('seaweed');
+    const sizeRoll = Phaser.Math.FloatBetween(0.75, 1.75);
+    this.pendingWeightKg = Math.round(seaweed.baseWeightKg * sizeRoll * 10) / 10;
+    this.pendingValue = Math.max(1, Math.round(this.pendingWeightKg * seaweed.valuePerKg));
+
+    this.completeCatch('seaweed', seaweed.name, 10, 350, 'Sine.easeOut');
+  }
+
   // Schedules the next sharp tug on the line after a random pause - real
-  // fish don't pull on a steady rhythm, they jerk unpredictably. Purely
-  // visual flavor (rod bend/hand dip) - independent of the reel wheel's
-  // actual win/lose logic.
+  // fish don't pull on a steady rhythm, they jerk unpredictably. Mostly
+  // visual flavor (rod bend/hand dip), but a strong enough tug also costs
+  // real reel progress (see doTug) - so it's a genuine warning to keep
+  // cranking, not just a cosmetic wiggle.
   scheduleTug() {
     if (this.state !== 'biting') return;
     this.tugTimer = this.time.delayedCall(Phaser.Math.Between(150, 550), () => this.doTug());
@@ -903,6 +1085,34 @@ export default class FishingScene extends Phaser.Scene {
         this.currentLinePull = this.tugState.v;
       },
       onComplete: () => {
+        // A hard enough yank actually rips back some progress - scaled by
+        // how tough (rarer/bigger) this particular catch is - unless it was
+        // a weak jitter, which is just flavor. Gives a real, visible reason
+        // a fight can be lost: stop cranking through the hard pulls and the
+        // fish claws back ground.
+        if (strength > TUG_BACKLASH_THRESHOLD && this.state === 'biting') {
+          const backlash =
+            (strength - TUG_BACKLASH_THRESHOLD) *
+            (this.currentDifficulty || 1) *
+            (this.currentSizeRoll || 1) *
+            TUG_BACKLASH_FACTOR;
+          this.reelRotation = Phaser.Math.Clamp(this.reelRotation - backlash, 0, this.reelRequired);
+          this.redrawReelWheel();
+
+          // Once the player has actually cranked past the starting cushion,
+          // getting torn all the way back down to empty means the fish has
+          // pulled free right then and there - not just a race against the
+          // clock.
+          if (this.reelEngaged && this.reelRotation <= 0) {
+            this.loseFish();
+            return;
+          }
+
+          this.reelHint.setText("It's fighting back - keep reeling!");
+          this.time.delayedCall(650, () => {
+            if (this.state === 'biting') this.reelHint.setText('Move in circles to reel it in!');
+          });
+        }
         this.tweens.add({
           targets: this.tugState,
           v: 0,
@@ -948,6 +1158,7 @@ export default class FishingScene extends Phaser.Scene {
       }
       const moved = Math.hypot(pointer.worldX - this.reelLastX, pointer.worldY - this.reelLastY);
       this.reelRotation = Phaser.Math.Clamp(this.reelRotation + moved / REEL_WHEEL_RADIUS, 0, this.reelRequired);
+      if (!this.reelEngaged && this.reelRotation > this.reelStart) this.reelEngaged = true;
       this.reelHandleAngle = Math.atan2(pointer.worldY - REEL_WHEEL_Y, pointer.worldX - REEL_WHEEL_X);
       this.reelLastX = pointer.worldX;
       this.reelLastY = pointer.worldY;
@@ -1009,23 +1220,47 @@ export default class FishingScene extends Phaser.Scene {
     this.tweens.killTweensOf(this.tugState);
     this.currentLinePull = 0;
 
-    const snap = { bend: 26 };
+    const fish = getCatchable(this.landedFish);
+    this.completeCatch(this.landedFish, fish.name, 26, 550, 'Elastic.easeOut');
+  }
+
+  // Shared tail end for any successful catch (fish, junk or seaweed): the
+  // rod snaps back, then the hook rises straight up out of the water (it
+  // fades in as it crosses the surface, same fade the line and hook already
+  // use), holds fully visible at the rod tip for a couple of seconds so the
+  // catch is actually readable, and only then is it added to the bag and
+  // the scene resets - "brought out of the water, then put away", not an
+  // instant swap.
+  completeCatch(itemId, name, bendAmount, bendDuration, bendEase) {
+    const snap = { bend: bendAmount };
     this.tweens.add({
       targets: snap,
       bend: 0,
-      duration: 550,
-      ease: 'Elastic.easeOut',
+      duration: bendDuration,
+      ease: bendEase,
       onUpdate: () => {
         this.currentBend = snap.bend;
       }
     });
 
-    const fish = getFish(this.landedFish);
-    GameState.addItem(fish.id, 1);
-    this.showMessage(`Caught a ${this.pendingWeightKg}kg ${fish.name}!`);
-    this.statusBar.refresh();
+    this.castBtn.setLabel('Nice catch!');
+    this.showMessage(`Caught a ${this.pendingWeightKg}kg ${name}! Worth ~$${this.pendingValue} in the Shop.`);
 
-    this.time.delayedCall(1400, () => this.resetToIdle());
+    this.tweens.add({
+      targets: this,
+      castProgress: 0,
+      duration: 500,
+      ease: 'Cubic.easeOut',
+      onComplete: () => {
+        this.time.delayedCall(1800, () => {
+          GameState.addCatch(itemId, this.pendingWeightKg, this.pendingValue);
+          this.statusBar.refresh();
+          this.landedFish = null;
+          this.landedSeaweed = false;
+          this.resetToIdle();
+        });
+      }
+    });
   }
 
   loseFish() {
@@ -1063,9 +1298,10 @@ export default class FishingScene extends Phaser.Scene {
     this.setNavEnabled(true);
     this.showMessage('');
 
-    // Reel the hook back up to the rod tip so it's ready to cast again -
-    // whatever's dangling on it (the caught fish) disappears once it
-    // reaches the tip, as if collected right then.
+    // Reel the empty hook back up to the rod tip so it's ready to cast
+    // again - a successful catch already retracted (and stowed) itself in
+    // completeCatch() before this runs, so this is a no-op then; it's really
+    // only doing work after a lost fish, where the hook is still out.
     this.tweens.add({
       targets: this,
       castProgress: 0,
@@ -1073,6 +1309,7 @@ export default class FishingScene extends Phaser.Scene {
       ease: 'Cubic.easeIn',
       onComplete: () => {
         this.landedFish = null;
+        this.landedSeaweed = false;
       }
     });
   }
@@ -1099,9 +1336,11 @@ export default class FishingScene extends Phaser.Scene {
     }
 
     if (this.state === 'biting') {
-      // Passive decay - the fish pulls back if you're not actively
-      // cranking, so standing still isn't a safe strategy.
-      this.reelRotation = Math.max(0, this.reelRotation - this.reelDecayPerSecond * (delta / 1000));
+      // No passive decay - progress only ever goes up. Decay kept causing
+      // the fish to get away no matter how the player moved the mouse, so
+      // the only thing standing between "on the line" and "landed" now is
+      // actually moving the pointer around near the wheel before the (long)
+      // time limit runs out.
       this.redrawReelWheel();
 
       if (this.reelRotation >= this.reelRequired) {

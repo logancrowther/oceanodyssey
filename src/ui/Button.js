@@ -55,6 +55,12 @@ export function createButton(scene, x, y, width, height, label, onClick, opts = 
   container.add(hitZone);
   hitZone.setInteractive({ useHandCursor: true });
 
+  // Reparent into a caller-supplied container (e.g. a scrollable list) - the
+  // button keeps its own x/y, which then read as relative to that
+  // container's transform instead of the scene's, so it scrolls/moves along
+  // with the rest of that container's contents.
+  if (opts.container) opts.container.add(container);
+
   hitZone.on('pointerover', () => {
     hovered = true;
     redraw();

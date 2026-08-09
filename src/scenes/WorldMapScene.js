@@ -210,14 +210,14 @@ export default class WorldMapScene extends Phaser.Scene {
       if (currentlyOver.length > 0) return;
       const x = pointer.worldX;
       const y = pointer.worldY;
-      if (y < 125 || y > height - 108) return;
+      if (y < 125 || y > height - 142) return;
       this.placeFlag(x, y);
     });
 
     this.confirmBtn = createButton(
       this,
       width / 2,
-      height - 76,
+      height - 110,
       220,
       56,
       'Confirm',
