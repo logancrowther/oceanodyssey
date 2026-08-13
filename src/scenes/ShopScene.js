@@ -17,9 +17,12 @@ import {
   drawTrevally,
   drawKingfish,
   drawWhiting,
+  drawCoralTrout,
+  drawAngler,
   drawGreatWhite,
   drawTigerShark,
   drawBullShark,
+  drawMegalodon,
   drawOldBoot
 } from '../ui/tackle.js';
 import { DESIGN_WIDTH, DESIGN_HEIGHT } from '../constants.js';
@@ -38,9 +41,16 @@ const CATCH_DRAWERS = {
   trevally: (g, x, y, weightKg) => drawTrevally(g, x, y, 0.85 * sizeScaleFor('trevally', weightKg)),
   kingfish: (g, x, y, weightKg) => drawKingfish(g, x, y, 0.78 * sizeScaleFor('kingfish', weightKg)),
   whiting: (g, x, y, weightKg) => drawWhiting(g, x, y, 1.1 * sizeScaleFor('whiting', weightKg)),
+  coral_trout: (g, x, y, weightKg) => drawCoralTrout(g, x, y, 0.85 * sizeScaleFor('coral_trout', weightKg)),
+  angler_fish: (g, x, y, weightKg) => drawAngler(g, x, y, 0.95 * sizeScaleFor('angler_fish', weightKg)),
   great_white: (g, x, y, weightKg) => drawGreatWhite(g, x, y, 0.62 * sizeScaleFor('great_white', weightKg)),
   tiger_shark: (g, x, y, weightKg) => drawTigerShark(g, x, y, 0.65 * sizeScaleFor('tiger_shark', weightKg)),
   bull_shark: (g, x, y, weightKg) => drawBullShark(g, x, y, 0.68 * sizeScaleFor('bull_shark', weightKg)),
+  // Much smaller base multiplier than the other sharks - the drawer itself
+  // is built at a far larger native scale (that towering dorsal fin), so
+  // this keeps a caught one from blowing out the row instead of just
+  // looking bigger like the other legendary catches do.
+  megalodon: (g, x, y, weightKg) => drawMegalodon(g, x, y, 0.35 * sizeScaleFor('megalodon', weightKg)),
   old_boot: (g, x, y, weightKg) => drawOldBoot(g, x, y, 1.3 * sizeScaleFor('old_boot', weightKg))
 };
 

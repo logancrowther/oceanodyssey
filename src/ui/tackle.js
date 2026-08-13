@@ -1147,52 +1147,56 @@ export function drawTigerShark(g, x, y, scale = 1, rotation = 0, alpha = 1) {
   g.restore();
 }
 
-// A bull shark - shorter and far stockier than either other shark, with a
-// very short, blunt, flat-fronted snout (no point at all, unlike the Great
-// White's fine tip or even the Tiger Shark's own wide nose - the real
-// animal's own "bull-nosed" field mark), a noticeably heavier girth
-// relative to its length, small eyes set for hunting in the murky, shallow
-// water this species actually prefers, and a lower, more rounded first
-// dorsal fin set further forward on the back. Plain grey-brown
-// countershading with no stripes and none of the Great White's crisp
-// two-tone - just a flat, murky grey back fading to a pale belly.
-export function drawBullShark(g, x, y, scale = 1, rotation = 0, alpha = 1) {
+// A megalodon - the single rarest catch in the game, only ever encountered
+// as an ultra-rare "actually, that wasn't a normal shark" swap the instant
+// one of the three real sharks bites (see OceanScene.MEGALODON_CHANCE), so
+// this is built to justify that reveal: a far more massive, more robust
+// apex predator than the Great White - a deeper, thicker body (between the
+// Great White's lean torpedo and the Bull Shark's barrel build, but bigger
+// than either), a shorter, blunter head as in real fossil-based
+// reconstructions rather than the Great White's fine point, an enormous,
+// towering dorsal fin - taller and broader-based than any other shark
+// here - and a huge gaping jaw lined with much larger, more numerous
+// serrated teeth. Weathered dark slate-grey over a bone-pale belly, aged
+// rather than the Great White's crisp clean two-tone.
+export function drawMegalodon(g, x, y, scale = 1, rotation = 0, alpha = 1) {
   g.save();
   g.translateCanvas(x, y);
   if (rotation) g.rotateCanvas(rotation);
   const s = scale;
 
-  const backColor = 0x5e5a4c;
-  const bellyColor = 0xefe9da;
-  const finColor = 0x5e5a4c;
-  const darkColor = 0x1c1a14;
-  const toothColor = 0xf5f5f0;
+  const backColor = 0x39424a;
+  const bellyColor = 0xd8d6c8;
+  const finColor = 0x39424a;
+  const darkColor = 0x0d0f10;
+  const toothColor = 0xf0ead8;
 
-  // A short, thickset, heavyset body - the front edge is a flat vertical
-  // pair of points instead of a single pointed vertex, which is what reads
-  // as a blunt, rounded-off snout rather than any kind of point.
+  // A massive, deep-bodied torpedo - bulkier than the Great White's lean
+  // build, with a shorter, blunter snout matching real fossil-based
+  // reconstructions instead of a fine point.
   const body = [
-    { x: -29, y: -6 },
-    { x: -20, y: -12 },
-    { x: -6, y: -16 },
-    { x: 8, y: -16 },
-    { x: 19, y: -13 },
-    { x: 27, y: -9 },
-    { x: 33, y: -4 },
-    { x: 33, y: 4 },
-    { x: 27, y: 9 },
-    { x: 19, y: 13 },
-    { x: 8, y: 16 },
-    { x: -6, y: 16 },
-    { x: -20, y: 12 },
-    { x: -29, y: 6 }
+    { x: -40, y: 0 },
+    { x: -36, y: -7 },
+    { x: -25, y: -13 },
+    { x: -10, y: -17 },
+    { x: 4, y: -17 },
+    { x: 18, y: -14 },
+    { x: 29, y: -9 },
+    { x: 36, y: -4 },
+    { x: 36, y: 4 },
+    { x: 29, y: 9 },
+    { x: 18, y: 14 },
+    { x: 4, y: 17 },
+    { x: -10, y: 17 },
+    { x: -25, y: 13 },
+    { x: -36, y: 7 }
   ].map((p) => ({ x: p.x * s, y: p.y * s }));
 
-  // Heterocercal tail - same real-shark construction as the other two,
-  // scaled to this shorter body.
+  // Heterocercal tail - same real-shark construction as the others, scaled
+  // up to this much larger body.
   [
-    { angle: -0.8, bow: 13, len: 27, baseY: -3, w: 6 },
-    { angle: 0.56, bow: -7, len: 12, baseY: 3, w: 4.6 }
+    { angle: -0.86, bow: 17, len: 36, baseY: -3, w: 7.5 },
+    { angle: 0.58, bow: -8, len: 16, baseY: 3, w: 5.6 }
   ].forEach(({ angle, bow, len, baseY, w }) => {
     const dx = Math.cos(angle);
     const dy = Math.sin(angle);
@@ -1204,7 +1208,7 @@ export function drawBullShark(g, x, y, scale = 1, rotation = 0, alpha = 1) {
     for (let t = 0; t <= steps; t += 1) {
       const tt = t / steps;
       const curve = Math.sin(tt * Math.PI) * bow;
-      const cx = (33 + dx * len * tt + px * curve) * s;
+      const cx = (36 + dx * len * tt + px * curve) * s;
       const cy = (baseY + dy * len * tt + py * curve) * s;
       const ww = (w - tt * (w - 0.4)) * s;
       left.push({ x: cx + px * ww, y: cy + py * ww });
@@ -1217,83 +1221,260 @@ export function drawBullShark(g, x, y, scale = 1, rotation = 0, alpha = 1) {
     g.strokePoints(shape, true);
   });
 
-  // Broad, stiff pectoral fins.
+  // Large, stiff, wing-like pectoral fins - broader than the Great White's.
   g.fillStyle(finColor, alpha);
-  g.fillTriangle(-8 * s, 9 * s, -16 * s, 25 * s, 3 * s, 13 * s);
+  g.fillTriangle(-15 * s, 7 * s, -25 * s, 27 * s, -2 * s, 11 * s);
   g.lineStyle(1 * s, darkColor, 0.6 * alpha);
-  g.strokeTriangle(-8 * s, 9 * s, -16 * s, 25 * s, 3 * s, 13 * s);
+  g.strokeTriangle(-15 * s, 7 * s, -25 * s, 27 * s, -2 * s, 11 * s);
 
   // Pelvic and small second dorsal/anal fins.
   g.fillStyle(finColor, alpha);
-  g.fillTriangle(11 * s, 14 * s, 8 * s, 21 * s, 19 * s, 14 * s);
-  g.fillTriangle(21 * s, -11 * s, 26 * s, -10 * s, 23 * s, -17 * s);
+  g.fillTriangle(9 * s, 12 * s, 5 * s, 21 * s, 18 * s, 12 * s);
+  g.fillTriangle(21 * s, -10 * s, 27 * s, -9 * s, 23 * s, -17 * s);
   g.lineStyle(1 * s, darkColor, 0.6 * alpha);
-  g.strokeTriangle(21 * s, -11 * s, 26 * s, -10 * s, 23 * s, -17 * s);
+  g.strokeTriangle(21 * s, -10 * s, 27 * s, -9 * s, 23 * s, -17 * s);
 
-  // Body - solid pale base, then a plain, flat grey-brown back band with no
-  // stripes - just a murky-water countershading tone, unlike either other
-  // shark's own marking.
+  // Body - solid pale base, then the dark, weathered, fully-opaque back for
+  // a crisp but aged demarcation, same technique as the Great White's.
   g.fillStyle(bellyColor, alpha);
   g.fillPoints(body, true);
 
   const topProfile = [
-    { x: -29, y: -6 },
-    { x: -20, y: -12 },
-    { x: -6, y: -16 },
-    { x: 8, y: -16 },
-    { x: 19, y: -13 },
-    { x: 27, y: -9 },
-    { x: 33, y: -4 }
+    { x: -36, y: -7 },
+    { x: -25, y: -13 },
+    { x: -10, y: -17 },
+    { x: 4, y: -17 },
+    { x: 18, y: -14 },
+    { x: 29, y: -9 },
+    { x: 36, y: -4 }
   ].map((p) => ({ x: p.x * s, y: p.y * s }));
   const backBand = topProfile.concat(
     topProfile
       .slice()
       .reverse()
-      .map((p, i) => ({ x: p.x, y: p.y + (4 + Math.sin(i * 1.2) * 1.4) * s }))
+      .map((p, i) => ({ x: p.x, y: p.y + (4 + Math.sin(i * 1.3) * 1.8) * s }))
   );
   g.fillStyle(backColor, alpha);
+  g.fillPoints(backBand, true);
+
+  g.lineStyle(1.6 * s, darkColor, 0.85 * alpha);
+  g.strokePoints(body, true);
+
+  // The enormous, towering dorsal fin - taller and broader-based than any
+  // other shark in the game, matching the real animal's own outsized
+  // proportions.
+  g.fillStyle(finColor, alpha);
+  g.fillTriangle(-11 * s, -17 * s, 11 * s, -15 * s, 2 * s, -46 * s);
+  g.lineStyle(1.5 * s, darkColor, 0.7 * alpha);
+  g.strokeTriangle(-11 * s, -17 * s, 11 * s, -15 * s, 2 * s, -46 * s);
+
+  // Gill slits.
+  g.lineStyle(1.2 * s, darkColor, 0.6 * alpha);
+  for (let i = 0; i < 5; i += 1) {
+    const gx = -29 + i * 2.6;
+    g.beginPath();
+    g.moveTo(gx * s, -10 * s);
+    g.lineTo((gx - 1.6) * s, 9 * s);
+    g.strokePath();
+  }
+
+  // The huge, gaping jaw lined with much larger, more numerous serrated
+  // teeth than any other shark - the real animal's own namesake ("big
+  // tooth") field mark.
+  g.lineStyle(1.2 * s, darkColor, 0.75 * alpha);
+  g.beginPath();
+  g.moveTo(-39 * s, 1 * s);
+  g.lineTo(-22 * s, 8 * s);
+  g.strokePath();
+  g.fillStyle(toothColor, alpha);
+  for (let i = 0; i < 6; i += 1) {
+    const tx = -37 + i * 3;
+    g.fillTriangle(tx * s, 2 * s, (tx + 2.6) * s, 3.5 * s, (tx + 1) * s, 8.5 * s);
+  }
+
+  // Small, dark, ancient-looking eye - unsettlingly small against the
+  // sheer size of the head.
+  g.fillStyle(darkColor, alpha);
+  g.fillCircle(-32 * s, -5 * s, 2.2 * s);
+  g.fillStyle(0x000000, 0.85 * alpha);
+  g.fillCircle(-32 * s, -5 * s, 1.2 * s);
+
+  g.restore();
+}
+
+// A bull shark - built to read as its own distinct animal, not a resized
+// Tiger Shark, but tuned back from the earlier "barrel" version toward the
+// real animal's actual proportions: longer and noticeably flatter than
+// that first pass, though still a bit stockier than the other two sharks
+// (depth-to-length ~0.4 here vs the Tiger Shark's ~0.37 and Great White's
+// ~0.35 - a real bull shark is robust, not literally round). The snout is
+// short and evenly rounded (built from three close-set points forming a
+// soft curve, not a single vertex or a flat chord). The first dorsal fin
+// is broad-based, upright, and rounded at the tip - NOT a swept sickle
+// like the Great White's or the Tiger Shark's - and sits unusually far
+// forward, almost directly over the pectoral fins, which is exactly where
+// a real bull shark carries it. Coloring is a plain warm grey-bronze
+// (distinct from the Tiger Shark's olive-brown and the Great White's cool
+// blue-grey), fading softly to a white belly with no stripes and none of
+// the Great White's crisp two-tone edge.
+export function drawBullShark(g, x, y, scale = 1, rotation = 0, alpha = 1) {
+  g.save();
+  g.translateCanvas(x, y);
+  if (rotation) g.rotateCanvas(rotation);
+  const s = scale;
+
+  const backColor = 0x7d7568;
+  const bellyColor = 0xf5f1e6;
+  const finColor = 0x7d7568;
+  const darkColor = 0x28241c;
+  const toothColor = 0xf5f5f0;
+
+  // A longer, flatter body than the original barrel version - depth is
+  // roughly 40% of length here, still a bit stockier than the other two
+  // sharks but far closer to a real bull shark's actual build. The nose is
+  // three close-set points (top/tip/bottom) forming a soft rounded curve
+  // instead of a flat chord or sharp vertex.
+  const body = [
+    { x: -33, y: -6 },
+    { x: -25, y: -11 },
+    { x: -11, y: -14 },
+    { x: 4, y: -14 },
+    { x: 17, y: -11 },
+    { x: 27, y: -7 },
+    { x: 34, y: -3 },
+    { x: 34, y: 3 },
+    { x: 27, y: 7 },
+    { x: 17, y: 11 },
+    { x: 4, y: 14 },
+    { x: -11, y: 14 },
+    { x: -25, y: 11 },
+    { x: -33, y: 6 },
+    { x: -36, y: 0 }
+  ].map((p) => ({ x: p.x * s, y: p.y * s }));
+
+  // Heterocercal tail - same real-shark construction as the other two,
+  // scaled to this longer body.
+  [
+    { angle: -0.8, bow: 13, len: 28, baseY: -3, w: 6.2 },
+    { angle: 0.56, bow: -7.5, len: 12.5, baseY: 3, w: 4.8 }
+  ].forEach(({ angle, bow, len, baseY, w }) => {
+    const dx = Math.cos(angle);
+    const dy = Math.sin(angle);
+    const px = -dy;
+    const py = dx;
+    const steps = 10;
+    const left = [];
+    const right = [];
+    for (let t = 0; t <= steps; t += 1) {
+      const tt = t / steps;
+      const curve = Math.sin(tt * Math.PI) * bow;
+      const cx = (34 + dx * len * tt + px * curve) * s;
+      const cy = (baseY + dy * len * tt + py * curve) * s;
+      const ww = (w - tt * (w - 0.4)) * s;
+      left.push({ x: cx + px * ww, y: cy + py * ww });
+      right.push({ x: cx - px * ww, y: cy - py * ww });
+    }
+    const shape = left.concat(right.reverse());
+    g.fillStyle(finColor, alpha);
+    g.fillPoints(shape, true);
+    g.lineStyle(1 * s, darkColor, 0.7 * alpha);
+    g.strokePoints(shape, true);
+  });
+
+  // Broad, stiff pectoral fins, set right under where the forward-placed
+  // dorsal fin sits above.
+  g.fillStyle(finColor, alpha);
+  g.fillTriangle(-15 * s, 9 * s, -23 * s, 22 * s, -5 * s, 12 * s);
+  g.lineStyle(1 * s, darkColor, 0.6 * alpha);
+  g.strokeTriangle(-15 * s, 9 * s, -23 * s, 22 * s, -5 * s, 12 * s);
+
+  // Pelvic and small second dorsal/anal fins.
+  g.fillStyle(finColor, alpha);
+  g.fillTriangle(9 * s, 13 * s, 6 * s, 19 * s, 17 * s, 13 * s);
+  g.fillTriangle(20 * s, -9 * s, 25 * s, -8 * s, 22 * s, -15 * s);
+  g.lineStyle(1 * s, darkColor, 0.6 * alpha);
+  g.strokeTriangle(20 * s, -9 * s, 25 * s, -8 * s, 22 * s, -15 * s);
+
+  // Body - solid pale base, then a plain warm grey-bronze back band with no
+  // stripes and a soft (not crisp) edge into the belly - unlike either
+  // other shark's own marking.
+  g.fillStyle(bellyColor, alpha);
+  g.fillPoints(body, true);
+
+  const topProfile = [
+    { x: -33, y: -6 },
+    { x: -25, y: -11 },
+    { x: -11, y: -14 },
+    { x: 4, y: -14 },
+    { x: 17, y: -11 },
+    { x: 27, y: -7 },
+    { x: 34, y: -3 }
+  ].map((p) => ({ x: p.x * s, y: p.y * s }));
+  const backBand = topProfile.concat(
+    topProfile
+      .slice()
+      .reverse()
+      .map((p, i) => ({ x: p.x, y: p.y + (6 + Math.sin(i * 1.2) * 1.3) * s }))
+  );
+  g.fillStyle(backColor, 0.9 * alpha);
   g.fillPoints(backBand, true);
 
   g.lineStyle(1.5 * s, darkColor, 0.85 * alpha);
   g.strokePoints(body, true);
 
-  // A lower, more rounded, more forward-set first dorsal fin than either
-  // other shark's - real bull sharks carry a broader, less towering fin set
-  // further up the back toward the head.
+  // The broad-based, upright, rounded-tip first dorsal fin, set unusually
+  // far forward almost directly over the pectoral fins - a real bull
+  // shark's own distinctive placement, quite unlike the swept sickle shape
+  // and further-back position of either other shark's dorsal fin.
   g.fillStyle(finColor, alpha);
-  g.fillTriangle(-12 * s, -15 * s, 5 * s, -14 * s, -4 * s, -29 * s);
+  g.beginPath();
+  g.moveTo(-19 * s, -12 * s);
+  g.lineTo(-3 * s, -13 * s);
+  g.lineTo(-7 * s, -24 * s);
+  g.lineTo(-15 * s, -22 * s);
+  g.closePath();
+  g.fillPath();
   g.lineStyle(1.3 * s, darkColor, 0.7 * alpha);
-  g.strokeTriangle(-12 * s, -15 * s, 5 * s, -14 * s, -4 * s, -29 * s);
+  g.strokePoints(
+    [
+      { x: -19 * s, y: -12 * s },
+      { x: -3 * s, y: -13 * s },
+      { x: -7 * s, y: -24 * s },
+      { x: -15 * s, y: -22 * s }
+    ],
+    true
+  );
 
   // Gill slits.
   g.lineStyle(1.1 * s, darkColor, 0.6 * alpha);
   for (let i = 0; i < 5; i += 1) {
-    const gx = -22 + i * 2.4;
+    const gx = -24 + i * 2.6;
     g.beginPath();
-    g.moveTo(gx * s, -11 * s);
-    g.lineTo((gx - 1.4) * s, 10 * s);
+    g.moveTo(gx * s, -10 * s);
+    g.lineTo((gx - 1.4) * s, 9 * s);
     g.strokePath();
   }
 
-  // A wide, blunt jaw with a dense row of teeth - a real bull shark's own
-  // powerful bite.
+  // A short, wide jaw with a dense row of broad teeth - a real bull
+  // shark's own powerful bite, blunter and wider than the Tiger Shark's.
   g.lineStyle(1 * s, darkColor, 0.7 * alpha);
   g.beginPath();
-  g.moveTo(-28 * s, 3 * s);
-  g.lineTo(-15 * s, 8 * s);
+  g.moveTo(-32 * s, 2 * s);
+  g.lineTo(-16 * s, 8 * s);
   g.strokePath();
   g.fillStyle(toothColor, alpha);
   for (let i = 0; i < 5; i += 1) {
-    const tx = -27 + i * 2.6;
-    g.fillTriangle(tx * s, 3.5 * s, (tx + 2) * s, 4.8 * s, (tx + 0.8) * s, 8 * s);
+    const tx = -31 + i * 2.9;
+    g.fillTriangle(tx * s, 2.5 * s, (tx + 2.2) * s, 4 * s, (tx + 0.9) * s, 7.6 * s);
   }
 
   // Small, dark, watchful eyes - noticeably smaller than either the Great
-  // White's or the Tiger Shark's own eye, a real hunter-in-murky-water trait.
+  // White's or the Tiger Shark's own eye, a real hunter-in-murky-water
+  // trait.
   g.fillStyle(darkColor, alpha);
-  g.fillCircle(-21 * s, -8 * s, 1.5 * s);
+  g.fillCircle(-22 * s, -8 * s, 1.5 * s);
   g.fillStyle(0x000000, 0.85 * alpha);
-  g.fillCircle(-21 * s, -8 * s, 0.8 * s);
+  g.fillCircle(-22 * s, -8 * s, 0.8 * s);
 
   g.restore();
 }
@@ -1978,6 +2159,297 @@ export function drawWhiting(g, x, y, scale = 1, rotation = 0, alpha = 1) {
   g.fillCircle(-23 * s, -2 * s, 2 * s);
   g.fillStyle(0x201a10, alpha);
   g.fillCircle(-22.7 * s, -2 * s, 1.1 * s);
+
+  g.restore();
+}
+
+// A coral trout - a robust, thick-set grouper body (bulkier through the
+// middle than any of the elongated open-water fish here, closer to the
+// Bull Shark's own heavyset build but with real fins), a big head with a
+// blunt snout and thick lips housing a large mouth, a rounded, fanned tail
+// instead of any kind of fork (real groupers don't have forked tails), and
+// the field mark that makes the species unmistakable: a scatter of small,
+// vivid blue spots covering the whole body, head, and fins over a bright
+// red-orange base color.
+export function drawCoralTrout(g, x, y, scale = 1, rotation = 0, alpha = 1) {
+  g.save();
+  g.translateCanvas(x, y);
+  if (rotation) g.rotateCanvas(rotation);
+  const s = scale;
+
+  const bodyColor = 0xd9502f;
+  const backColor = 0xb23522;
+  const bellyColor = 0xf0a888;
+  const finColor = 0xd9502f;
+  const darkColor = 0x531509;
+  const spotColor = 0x3fd2e8;
+
+  // A thick-set, robust grouper body - deeper through the middle relative
+  // to its length than any of the elongated open-water fish, with a big,
+  // blunt-snouted head.
+  const body = [
+    { x: -30, y: 0 },
+    { x: -27, y: -6 },
+    { x: -18, y: -11 },
+    { x: -4, y: -13 },
+    { x: 10, y: -12 },
+    { x: 21, y: -8 },
+    { x: 28, y: -4 },
+    { x: 28, y: 4 },
+    { x: 21, y: 8 },
+    { x: 10, y: 12 },
+    { x: -4, y: 13 },
+    { x: -18, y: 11 },
+    { x: -27, y: 6 }
+  ].map((p) => ({ x: p.x * s, y: p.y * s }));
+
+  // A rounded, fanned tail rather than any kind of fork - a real grouper's
+  // own tail shape, unlike every open-water fish here.
+  g.fillStyle(finColor, alpha);
+  g.fillEllipse(37 * s, 0, 20 * s, 18 * s);
+  g.lineStyle(1 * s, darkColor, 0.6 * alpha);
+  g.strokeEllipse(37 * s, 0, 20 * s, 18 * s);
+
+  // Broad, rounded pectoral fin and small pelvic/anal fins.
+  g.fillStyle(finColor, alpha);
+  g.fillTriangle(-8 * s, 5 * s, -15 * s, 18 * s, 2 * s, 9 * s);
+  g.lineStyle(1 * s, darkColor, 0.6 * alpha);
+  g.strokeTriangle(-8 * s, 5 * s, -15 * s, 18 * s, 2 * s, 9 * s);
+  g.fillStyle(finColor, alpha);
+  g.fillTriangle(4 * s, 11 * s, 1 * s, 18 * s, 12 * s, 11 * s);
+  g.fillTriangle(16 * s, -8 * s, 21 * s, -7 * s, 18 * s, -14 * s);
+  g.lineStyle(1 * s, darkColor, 0.6 * alpha);
+  g.strokeTriangle(16 * s, -8 * s, 21 * s, -7 * s, 18 * s, -14 * s);
+
+  // Body.
+  g.fillStyle(bodyColor, alpha);
+  g.fillPoints(body, true);
+
+  // Subtle darker-red back band, following the top of the body's own
+  // profile - a soft countershading, not a crisp two-tone.
+  const topProfile = [
+    { x: -27, y: -6 },
+    { x: -18, y: -11 },
+    { x: -4, y: -13 },
+    { x: 10, y: -12 },
+    { x: 21, y: -8 },
+    { x: 28, y: -4 }
+  ].map((p) => ({ x: p.x * s, y: p.y * s }));
+  const backBand = topProfile.concat(
+    topProfile
+      .slice()
+      .reverse()
+      .map((p) => ({ x: p.x, y: p.y + 6 * s }))
+  );
+  g.fillStyle(backColor, 0.4 * alpha);
+  g.fillPoints(backBand, true);
+
+  // Paler belly strip.
+  const bottomProfile = [
+    { x: -18, y: 11 },
+    { x: -4, y: 13 },
+    { x: 10, y: 12 },
+    { x: 21, y: 8 }
+  ].map((p) => ({ x: p.x * s, y: p.y * s }));
+  const bellyBand = bottomProfile.concat(
+    bottomProfile
+      .slice()
+      .reverse()
+      .map((p) => ({ x: p.x, y: p.y - 4 * s }))
+  );
+  g.fillStyle(bellyColor, 0.35 * alpha);
+  g.fillPoints(bellyBand, true);
+
+  g.lineStyle(1.4 * s, darkColor, 0.8 * alpha);
+  g.strokePoints(body, true);
+
+  // One long, low, continuous dorsal fin - a short spiny front zigzag
+  // blending into a longer soft rear lobe, same construction as the
+  // Bream's, sized to this bulkier body.
+  g.fillStyle(finColor, alpha);
+  const spineBase = [
+    { x: -12, y: -11 },
+    { x: -7, y: -13.5 },
+    { x: -2, y: -13 },
+    { x: 3, y: -12.5 }
+  ].map((p) => ({ x: p.x * s, y: p.y * s }));
+  for (let i = 0; i < spineBase.length - 1; i += 1) {
+    const b0 = spineBase[i];
+    const b1 = spineBase[i + 1];
+    const tipX = (b0.x + b1.x) / 2;
+    const tipY = Math.min(b0.y, b1.y) - 6 * s;
+    g.fillTriangle(b0.x, b0.y, b1.x, b1.y, tipX, tipY);
+  }
+  g.fillTriangle(3 * s, -12.5 * s, 15 * s, -9 * s, 9 * s, -20 * s);
+  g.lineStyle(1 * s, darkColor, 0.6 * alpha);
+  g.strokeTriangle(3 * s, -12.5 * s, 15 * s, -9 * s, 9 * s, -20 * s);
+
+  // The scatter of small vivid blue spots covering the body, head, and
+  // fins - the real animal's own unmistakable field mark, and unique to
+  // this fish in the game.
+  g.fillStyle(spotColor, 0.9 * alpha);
+  [
+    [-22, -3, 1.4],
+    [-16, -7, 1.3],
+    [-10, -2, 1.5],
+    [-14, 3, 1.3],
+    [-4, -7, 1.4],
+    [-2, 2, 1.5],
+    [4, -8, 1.3],
+    [6, 1, 1.5],
+    [12, -6, 1.4],
+    [14, 4, 1.3],
+    [20, -2, 1.3],
+    [20, 5, 1.2],
+    [-24, 2, 1.2],
+    [0, -11, 1.1],
+    [9, -3, 1.3],
+    [-8, 8, 1.2]
+  ].forEach(([sx, sy, sr]) => g.fillCircle(sx * s, sy * s, sr * s));
+
+  // Thick lips around the big mouth - a real grouper's own jaw, not the
+  // thin line the leaner predator fish have.
+  g.lineStyle(2.2 * s, darkColor, 0.7 * alpha);
+  g.beginPath();
+  g.moveTo(-29 * s, 1 * s);
+  g.lineTo(-19 * s, 6 * s);
+  g.strokePath();
+
+  // Large eye, set high and forward on the big head.
+  g.fillStyle(0xf5ded2, alpha);
+  g.fillCircle(-20 * s, -5 * s, 2.8 * s);
+  g.fillStyle(0x201008, alpha);
+  g.fillCircle(-19.6 * s, -5 * s, 1.6 * s);
+
+  g.restore();
+}
+
+// An angler fish - a deep-sea ambush predator built almost entirely around
+// its own enormous head: a big, lumpy, bulbous body dominated by a massive
+// crescent mouth lined with long, needle-thin teeth, tapering back to a
+// small, weak tail stalk (real anglerfish are poor swimmers - all ambush,
+// no chase). Near-black skin, since there's no light this deep to reflect
+// any color, a tiny near-useless eye, and the real animal's own
+// unmistakable field mark: the thin flexible illicium arcing forward over
+// the mouth, tipped with a glowing bioluminescent lure - the only spot of
+// color on the whole fish.
+export function drawAngler(g, x, y, scale = 1, rotation = 0, alpha = 1) {
+  g.save();
+  g.translateCanvas(x, y);
+  if (rotation) g.rotateCanvas(rotation);
+  const s = scale;
+
+  const bodyColor = 0x0e0d12;
+  const bellyColor = 0x1c1a22;
+  const finColor = 0x151319;
+  const darkColor = 0x000000;
+  const toothColor = 0xe8e6e0;
+  const lureColor = 0x9be8ff;
+
+  // A big, lumpy, irregular globular body dominated by the head - not a
+  // smooth streamlined shape like any of the open-water fish.
+  const body = [
+    { x: -10, y: -20 },
+    { x: 6, y: -22 },
+    { x: 19, y: -14 },
+    { x: 25, y: -3 },
+    { x: 24, y: 8 },
+    { x: 14, y: 16 },
+    { x: 0, y: 19 },
+    { x: -14, y: 15 },
+    { x: -25, y: 6 },
+    { x: -27, y: -8 },
+    { x: -19, y: -18 }
+  ].map((p) => ({ x: p.x * s, y: p.y * s }));
+
+  // A small, weak tail stalk - real anglerfish are poor swimmers, so this
+  // reads as an afterthought next to the huge head/body, not a powerful
+  // propulsion fin.
+  g.fillStyle(finColor, alpha);
+  g.fillTriangle(23 * s, -4 * s, 38 * s, -6 * s, 30 * s, 2 * s);
+  g.fillTriangle(23 * s, 6 * s, 36 * s, 10 * s, 28 * s, 3 * s);
+  g.lineStyle(1 * s, darkColor, 0.6 * alpha);
+  g.strokeTriangle(23 * s, -4 * s, 38 * s, -6 * s, 30 * s, 2 * s);
+  g.strokeTriangle(23 * s, 6 * s, 36 * s, 10 * s, 28 * s, 3 * s);
+
+  // Tiny pectoral fin, near the "chin".
+  g.fillStyle(finColor, alpha);
+  g.fillTriangle(-14 * s, 8 * s, -20 * s, 16 * s, -8 * s, 12 * s);
+
+  // Body.
+  g.fillStyle(bodyColor, alpha);
+  g.fillPoints(body, true);
+
+  // A slightly paler underside, barely distinguishable in the dark - deep-
+  // sea camouflage means almost no visible countershading, unlike any
+  // other fish in the game.
+  g.fillStyle(bellyColor, 0.35 * alpha);
+  g.fillEllipse(-2 * s, 10 * s, 26 * s, 12 * s);
+
+  g.lineStyle(1.2 * s, darkColor, 0.9 * alpha);
+  g.strokePoints(body, true);
+
+  // A few small skin spines - the lumpy, warty texture real deep-sea
+  // anglerfish carry.
+  g.fillStyle(finColor, 0.8 * alpha);
+  [
+    [-16, -14, 1.6],
+    [4, -19, 1.4],
+    [16, -6, 1.5],
+    [-22, 0, 1.4],
+    [8, 14, 1.4]
+  ].forEach(([sx, sy, sr]) => g.fillCircle(sx * s, sy * s, sr * s));
+
+  // The massive crescent mouth, held open, lined with long, needle-thin
+  // teeth - the real animal's own defining feature.
+  g.fillStyle(darkColor, alpha);
+  g.beginPath();
+  g.moveTo(-25 * s, -2 * s);
+  g.lineTo(20 * s, -2 * s);
+  g.lineTo(14 * s, 10 * s);
+  g.lineTo(-18 * s, 12 * s);
+  g.closePath();
+  g.fillPath();
+
+  g.fillStyle(toothColor, alpha);
+  for (let i = 0; i < 7; i += 1) {
+    const tt = i / 6;
+    const tx = -22 + tt * 38;
+    g.fillTriangle(tx * s, -1 * s, (tx + 2.4) * s, -1 * s, (tx + 1.2) * s, 9 * s);
+  }
+  for (let i = 0; i < 6; i += 1) {
+    const tt = i / 5;
+    const tx = -18 + tt * 30;
+    g.fillTriangle(tx * s, 11 * s, (tx + 2.4) * s, 11 * s, (tx + 1.2) * s, 2 * s);
+  }
+
+  // Tiny, near-useless eye, easily lost in the dark skin.
+  g.fillStyle(0x2a2732, alpha);
+  g.fillCircle(-10 * s, -12 * s, 1.6 * s);
+  g.fillStyle(0x000000, 0.8 * alpha);
+  g.fillCircle(-10 * s, -12 * s, 0.9 * s);
+
+  // The illicium - a thin flexible spine arcing up and forward over the
+  // mouth - tipped with the glowing bioluminescent lure (esca): the real
+  // animal's own unmistakable field mark, built as layered fading circles
+  // for a soft glow rather than a single flat dot.
+  g.lineStyle(1.4 * s, 0x2a2732, alpha);
+  g.beginPath();
+  g.moveTo(-8 * s, -20 * s);
+  g.lineTo(-2 * s, -32 * s);
+  g.lineTo(10 * s, -34 * s);
+  g.strokePath();
+
+  const lureX = 10 * s;
+  const lureY = -34 * s;
+  g.fillStyle(lureColor, 0.18 * alpha);
+  g.fillCircle(lureX, lureY, 9 * s);
+  g.fillStyle(lureColor, 0.35 * alpha);
+  g.fillCircle(lureX, lureY, 6 * s);
+  g.fillStyle(lureColor, 0.9 * alpha);
+  g.fillCircle(lureX, lureY, 3 * s);
+  g.fillStyle(0xffffff, alpha);
+  g.fillCircle(lureX, lureY, 1.4 * s);
 
   g.restore();
 }

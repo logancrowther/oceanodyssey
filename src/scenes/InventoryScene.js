@@ -16,9 +16,12 @@ import {
   drawTrevally,
   drawKingfish,
   drawWhiting,
+  drawCoralTrout,
+  drawAngler,
   drawGreatWhite,
   drawTigerShark,
   drawBullShark,
+  drawMegalodon,
   drawOldBoot
 } from '../ui/tackle.js';
 import { DESIGN_WIDTH, DESIGN_HEIGHT } from '../constants.js';
@@ -44,9 +47,12 @@ const CATCH_DRAWERS = {
   trevally: (g, x, y, weightKg) => drawTrevally(g, x, y, 0.72 * sizeScaleFor('trevally', weightKg)),
   kingfish: (g, x, y, weightKg) => drawKingfish(g, x, y, 0.65 * sizeScaleFor('kingfish', weightKg)),
   whiting: (g, x, y, weightKg) => drawWhiting(g, x, y, 0.95 * sizeScaleFor('whiting', weightKg)),
+  coral_trout: (g, x, y, weightKg) => drawCoralTrout(g, x, y, 0.7 * sizeScaleFor('coral_trout', weightKg)),
+  angler_fish: (g, x, y, weightKg) => drawAngler(g, x, y, 0.78 * sizeScaleFor('angler_fish', weightKg)),
   great_white: (g, x, y, weightKg) => drawGreatWhite(g, x, y, 0.54 * sizeScaleFor('great_white', weightKg)),
   tiger_shark: (g, x, y, weightKg) => drawTigerShark(g, x, y, 0.56 * sizeScaleFor('tiger_shark', weightKg)),
   bull_shark: (g, x, y, weightKg) => drawBullShark(g, x, y, 0.58 * sizeScaleFor('bull_shark', weightKg)),
+  megalodon: (g, x, y, weightKg) => drawMegalodon(g, x, y, 0.3 * sizeScaleFor('megalodon', weightKg)),
   old_boot: (g, x, y, weightKg) => drawOldBoot(g, x, y, 1.1 * sizeScaleFor('old_boot', weightKg))
 };
 

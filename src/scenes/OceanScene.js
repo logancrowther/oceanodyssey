@@ -16,9 +16,12 @@ import {
   drawTrevally,
   drawKingfish,
   drawWhiting,
+  drawCoralTrout,
+  drawAngler,
   drawGreatWhite,
   drawTigerShark,
   drawBullShark,
+  drawMegalodon,
   drawOldBoot
 } from '../ui/tackle.js';
 import { DESIGN_WIDTH, DESIGN_HEIGHT } from '../constants.js';
@@ -36,9 +39,12 @@ const DRAWERS = {
   trevally: drawTrevally,
   kingfish: drawKingfish,
   whiting: drawWhiting,
+  coral_trout: drawCoralTrout,
+  angler_fish: drawAngler,
   great_white: drawGreatWhite,
   tiger_shark: drawTigerShark,
   bull_shark: drawBullShark,
+  megalodon: drawMegalodon,
   old_boot: drawOldBoot
 };
 
@@ -56,9 +62,17 @@ const BAIT_HOOK_SCALE = {
   trevally: 0.4,
   kingfish: 0.38,
   whiting: 0.3,
-  great_white: 0.3,
-  tiger_shark: 0.28,
-  bull_shark: 0.29,
+  coral_trout: 0.36,
+  angler_fish: 0.4,
+  // Sharks are a deliberate exception to "modest" - their SWIM_SCALE below
+  // is already huge (1.0-1.15, "unmistakable the moment one shows up"), so
+  // a small bait-on-hook scale here made them visibly collapse the instant
+  // they bit, then balloon back up for the catch reveal. Keeping this close
+  // to their SWIM_SCALE (and REVEAL_SCALE) avoids that jarring double-shrink.
+  great_white: 0.85,
+  tiger_shark: 0.75,
+  bull_shark: 0.78,
+  megalodon: 4,
   old_boot: 0.55
 };
 
@@ -75,9 +89,15 @@ const REVEAL_SCALE = {
   trevally: 0.85,
   kingfish: 0.88,
   whiting: 0.65,
+  coral_trout: 0.85,
+  angler_fish: 0.8,
   great_white: 1.3,
   tiger_shark: 1.15,
   bull_shark: 1.2,
+  // Deliberately enormous - the whole point of the encounter is that it
+  // fills the screen at the moment of the reveal, the one time it's ever
+  // seen at all.
+  megalodon: 7.5,
   old_boot: 1.1
 };
 
@@ -95,6 +115,8 @@ const SWIM_SCALE = {
   trevally: 0.46,
   kingfish: 0.5,
   whiting: 0.36,
+  coral_trout: 0.5,
+  angler_fish: 0.44,
   great_white: 1.15,
   tiger_shark: 1.0,
   bull_shark: 1.05,
@@ -110,13 +132,16 @@ const SWIM_SPEED = {
   trevally: 55,
   kingfish: 58,
   whiting: 38,
+  coral_trout: 32,
+  angler_fish: 16,
   great_white: 48,
   tiger_shark: 52,
   bull_shark: 46,
   old_boot: 18
 };
 
-// Every regular fish spawns evenly from this pool (no Seaweed anymore).
+// Every regular fish spawns evenly from this pool (no Seaweed anymore),
+// filtered per-spawn by DEPTH_LIMITS below.
 const NORMAL_POOL = [
   'flathead',
   'salmon',
@@ -127,18 +152,44 @@ const NORMAL_POOL = [
   'trevally',
   'kingfish',
   'whiting',
+  'coral_trout',
+  'angler_fish',
   'old_boot'
 ];
+// Depth (world px, 12px = 1m) restrictions on individual NORMAL_POOL
+// entries - checked against the hook's current depth every spawn roll.
+// Coral Trout only turns up from 200m down; the Angler Fish only turns up
+// from a genuinely abyssal 4000m down; the Boot only turns up above 150m
+// (junk washing around near the surface, not down in open water).
+const DEPTH_LIMITS = {
+  coral_trout: { min: 2400 },
+  angler_fish: { min: 48000 },
+  old_boot: { max: 1800 }
+};
 // Sharks only ever get rolled for when one of these is equipped as bait,
 // and only once the hook is past SHARK_MIN_DEPTH - which sits below the
 // starting line's own max reach entirely, so a shark genuinely can't turn
 // up until at least one line upgrade has been bought - and even then it's
-// a long shot (same odds the old cast-based bite used).
-const LARGE_BAIT_IDS = ['salmon', 'tuna'];
-const GREAT_WHITE_CHANCE = 0.08;
-const TIGER_SHARK_CHANCE = 0.14;
-const BULL_SHARK_CHANCE = 0.12;
+// a long shot. Every 'rare'-rarity regular fish qualifies as "large" -
+// Kingfish and Coral Trout joined Salmon/Tuna here later and should stay in
+// step with any future rare fish - and every shark counts too, so a caught
+// shark equipped as bait can hook another one (chum of its own kind).
+const LARGE_BAIT_IDS = ['salmon', 'tuna', 'kingfish', 'coral_trout', 'great_white', 'tiger_shark', 'bull_shark'];
+// Cut to a third of their original odds (0.08/0.14/0.12) now that every
+// shark - not just Salmon/Tuna - can trigger this roll, so shark encounters
+// don't get 3x more common just because there are more ways to reach them.
+const GREAT_WHITE_CHANCE = 0.08 / 3;
+const TIGER_SHARK_CHANCE = 0.14 / 3;
+const BULL_SHARK_CHANCE = 0.12 / 3;
 const SHARK_MIN_DEPTH = 1000;
+// Not part of the spawn roll at all - a Megalodon never swims around as
+// itself. Instead, right as one of the three real sharks above actually
+// bites (see updateSwimmers) at least this deep, there's this tiny chance
+// the catch turns out to be a Megalodon instead - "a shark was on the hook,
+// this far down" is the precondition, not a separate encounter, and it's
+// kept deliberately far rarer than any individual shark's own spawn chance.
+const MEGALODON_CHANCE = 0.01;
+const MEGALODON_MIN_DEPTH = 6000; // 500m
 
 const WATERLINE_Y = 340; // matches TitleScene, so the dive starts from the identical framing
 const SKY_COLOR = 0x9fd9f0;
@@ -353,7 +404,14 @@ export default class OceanScene extends Phaser.Scene {
       if (roll < GREAT_WHITE_CHANCE + TIGER_SHARK_CHANCE) return 'tiger_shark';
       if (roll < GREAT_WHITE_CHANCE + TIGER_SHARK_CHANCE + BULL_SHARK_CHANCE) return 'bull_shark';
     }
-    return Phaser.Utils.Array.GetRandom(NORMAL_POOL);
+    const pool = NORMAL_POOL.filter((id) => {
+      const limits = DEPTH_LIMITS[id];
+      if (!limits) return true;
+      if (limits.min != null && hookDepth < limits.min) return false;
+      if (limits.max != null && hookDepth >= limits.max) return false;
+      return true;
+    });
+    return Phaser.Utils.Array.GetRandom(pool);
   }
 
   trySpawnFish() {
@@ -402,8 +460,21 @@ export default class OceanScene extends Phaser.Scene {
   }
 
   updateScroll() {
-    const maxScroll = Math.max(this.depthOrigin, this.depthOrigin + this.maxDepthPx - DESIGN_HEIGHT);
-    const target = Phaser.Math.Clamp(this.hook.y - DESIGN_HEIGHT * CAMERA_VIEW_OFFSET, this.depthOrigin, maxScroll);
+    // Scale.ENVELOP crops the canvas symmetrically top-and-bottom on any
+    // window wider than the design's 960x600 (1.6:1) ratio - true of most
+    // maximized widescreen browser windows (16:9 is already 1.78:1). Capping
+    // scroll against the full nominal DESIGN_HEIGHT assumes all 600 design
+    // units are visible, when in practice only visibleHeight of them are -
+    // the rest lands in the cropped-off strip. That silently ate the bottom
+    // of the reachable range: a line's advertised max depth would sit inside
+    // that invisible strip and never actually appear to be reached. Deriving
+    // the real visible height from the live canvas aspect ratio (same trick
+    // already used to keep the status bar clear of the crop) keeps the true
+    // max depth exactly at the real visible bottom edge, whatever the
+    // window's proportions are.
+    const visibleHeight = Math.min(DESIGN_HEIGHT, (DESIGN_WIDTH * this.scale.height) / this.scale.width);
+    const maxScroll = Math.max(this.depthOrigin, this.depthOrigin + this.maxDepthPx - visibleHeight);
+    const target = Phaser.Math.Clamp(this.hook.y - visibleHeight * CAMERA_VIEW_OFFSET, this.depthOrigin, maxScroll);
     this.scroll.y += (target - this.scroll.y) * CAMERA_FOLLOW_EASE;
   }
 
@@ -413,6 +484,7 @@ export default class OceanScene extends Phaser.Scene {
     const hookIsCalm = this.hookSpeed <= CALM_SPEED;
     const hookIsStill = this.hookSpeed <= STILL_SPEED;
     const baitEquipped = !!GameState.equippedBait;
+    const hookDepth = hook.y - this.depthOrigin;
 
     for (let i = this.swimmers.length - 1; i >= 0; i -= 1) {
       const f = this.swimmers[i];
@@ -444,7 +516,11 @@ export default class OceanScene extends Phaser.Scene {
         if (Math.random() < STILL_BITE_CHANCE_PER_TICK) f.state = 'attracted';
       }
 
-      if (f.state === 'attracted') {
+      if (f.state === 'attracted' && !f.isBoot) {
+        // Junk has no will of its own - "attracted" for a boot only ever
+        // means "close enough that a snag roll can catch it" (see above),
+        // never a directed swim toward the hook the way a real lured fish
+        // gets here. Falls through to the passive drift below instead.
         const speed = (SWIM_SPEED[f.itemId] || 40) * 1.3;
         f.vx = (dx / dist) * speed;
         f.vy = (dy / dist) * speed;
@@ -461,6 +537,12 @@ export default class OceanScene extends Phaser.Scene {
       f.y = Phaser.Math.Clamp(f.y, this.depthOrigin, this.depthOrigin + this.maxDepthPx);
 
       if (f.state === 'attracted' && dist < CATCH_RADIUS) {
+        // A shark is genuinely on the hook right now, this deep - the one
+        // and only moment a Megalodon can turn up, swapped in at the last
+        // instant instead of ever swimming around as itself.
+        if (f.isShark && hookDepth >= MEGALODON_MIN_DEPTH && Math.random() < MEGALODON_CHANCE) {
+          f.itemId = 'megalodon';
+        }
         this.catchFish(f);
         this.swimmers.splice(i, 1);
         continue;
@@ -578,9 +660,16 @@ export default class OceanScene extends Phaser.Scene {
       const dangle = Math.sin(this.waveT * 3) * 0.15;
       if (this.landedCatch && DRAWERS[this.landedCatch.itemId]) {
         // Whatever just got caught rides up on the hook during the reel-in,
-        // instead of the bait that was there before it bit.
+        // instead of the bait that was there before it bit. Uses its own
+        // SWIM_SCALE (how big it looked alive a second ago), not
+        // BAIT_HOOK_SCALE - that constant is tuned "modest" for bait
+        // dangling before any bite, and reusing it here made every catch
+        // visibly shrink the instant it bit, before jumping back up for the
+        // reveal. Megalodon has no SWIM_SCALE (it never swims as itself),
+        // so it falls back to its own deliberately huge BAIT_HOOK_SCALE.
         const lc = this.landedCatch;
-        const scale = (BAIT_HOOK_SCALE[lc.itemId] || 0.4) * Phaser.Math.Clamp(lc.weightKg / (getCatchable(lc.itemId).baseWeightKg || 1), 0.55, 1.9);
+        const reelScale = SWIM_SCALE[lc.itemId] ?? BAIT_HOOK_SCALE[lc.itemId] ?? 0.4;
+        const scale = reelScale * Phaser.Math.Clamp(lc.weightKg / (getCatchable(lc.itemId).baseWeightKg || 1), 0.55, 1.9);
         DRAWERS[lc.itemId](hg, this.hook.x + 2, this.hook.y + 1, scale, dangle, 1);
       } else {
         const baitId = GameState.equippedBait;

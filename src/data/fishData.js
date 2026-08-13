@@ -86,6 +86,34 @@ export const FISH = [
     difficultyMultiplier: 1.45
   },
   {
+    id: 'coral_trout',
+    name: 'Coral Trout',
+    // Only turns up once the hook is past 200m (see
+    // OceanScene.NORMAL_POOL/DEPTH_LIMITS) - a genuine deep-water prize, a
+    // solid fight, and priced accordingly.
+    baseWeightKg: 3.0,
+    valuePerKg: 14,
+    turnsRequired: 2.2,
+    rarity: 'rare',
+    difficultyMultiplier: 1.5
+  },
+  {
+    id: 'angler_fish',
+    name: 'Angler Fish',
+    // Only turns up once the hook is past 4000m (see
+    // OceanScene.NORMAL_POOL/DEPTH_LIMITS) - the deepest-dwelling catch in
+    // the game by a huge margin. Small like the real animal, but priced
+    // the highest per kg of anything short of a shark, reflecting just how
+    // absurd a line has to be to ever reach it. Low wariness - a real
+    // anglerfish is a passive ambush predator, not something that spooks
+    // and bolts.
+    baseWeightKg: 1.2,
+    valuePerKg: 25,
+    turnsRequired: 2.0,
+    rarity: 'legendary',
+    difficultyMultiplier: 1.2
+  },
+  {
     id: 'whiting',
     name: 'Whiting',
     // A small, prized table fish - much lighter than the others and no real
@@ -155,6 +183,20 @@ export const FISH = [
     turnsRequired: 4.0,
     rarity: 'legendary',
     difficultyMultiplier: 2.7
+  },
+  {
+    id: 'megalodon',
+    name: 'Megalodon',
+    // Not reachable through the normal spawn roll at all - the only way to
+    // ever see one is OceanScene.MEGALODON_CHANCE swapping in a Megalodon
+    // at the very instant one of the three real sharks bites, and that
+    // chance is deliberately tiny. The single rarest and by a huge margin
+    // the most valuable catch in the game.
+    baseWeightKg: 6000,
+    valuePerKg: 20,
+    turnsRequired: 5.0,
+    rarity: 'legendary',
+    difficultyMultiplier: 5.0
   }
 ];
 
