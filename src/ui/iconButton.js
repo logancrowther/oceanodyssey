@@ -8,12 +8,12 @@ function shade(color, factor) {
   return Phaser.Display.Color.GetColor(r, g, b);
 }
 
-// A small round icon button - same flat, no-3D language as Button.js, just
-// circular and driven by a caller-supplied icon-drawing callback instead of
-// a text label.
+// A small round icon "bubble" - a glassy gradient fill, bright rim and a
+// glint highlight, matching createBubbleButton's look - driven by a
+// caller-supplied icon-drawing callback instead of a text label.
 export function createIconButton(scene, x, y, radius, drawIcon, onClick, opts = {}) {
-  const baseColor = opts.color ?? 0x1f6f8b;
-  const disabledColor = 0x33424a;
+  const baseColor = opts.color ?? 0x4fb8e8;
+  const disabledColor = 0x4a5b63;
   const container = scene.add.container(x, y);
 
   const g = scene.add.graphics();
@@ -28,12 +28,15 @@ export function createIconButton(scene, x, y, radius, drawIcon, onClick, opts = 
 
   function redraw() {
     const base = enabled ? baseColor : disabledColor;
-    const fillColor = enabled && hovered ? shade(base, 1.18) : base;
+    const top = shade(base, hovered && enabled ? 1.5 : 1.3);
+    const bottom = shade(base, hovered && enabled ? 0.85 : 0.75);
     g.clear();
-    g.fillStyle(fillColor, 1);
+    g.fillGradientStyle(top, top, bottom, bottom, enabled ? 0.62 : 0.4);
     g.fillCircle(0, 0, radius);
-    g.lineStyle(2, 0x0c2430, enabled ? 0.55 : 0.3);
+    g.lineStyle(1.6, 0xf2fbff, enabled ? (hovered ? 0.85 : 0.6) : 0.3);
     g.strokeCircle(0, 0, radius);
+    g.fillStyle(0xffffff, enabled ? (hovered ? 0.5 : 0.35) : 0.15);
+    g.fillEllipse(-radius * 0.4, -radius * 0.4, radius * 0.6, radius * 0.7);
     iconG.setAlpha(enabled ? 1 : 0.5);
   }
 

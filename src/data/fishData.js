@@ -3,15 +3,15 @@ export const FISH = [
     id: 'flathead',
     name: 'Flathead',
     // Typical weight for an average-sized one - individual catches roll a
-    // size multiplier (see FishingScene.onBite) that scales this up or down,
-    // and value scales with the resulting weight - a bigger catch is worth
-    // more, not a flat price regardless of size.
+    // size multiplier (see OceanScene.trySpawnFish/catchFish) that scales
+    // this up or down, and value scales with the resulting weight - a
+    // bigger catch is worth more, not a flat price regardless of size.
     baseWeightKg: 1.6,
     valuePerKg: 5,
-    // Reel minigame tuning: how many full crank rotations an average-sized
-    // one takes to land, before the per-catch size roll and rarity
-    // multiplier below scale it further - a bigger, rarer catch pulls
-    // harder and takes more cranking than a small common one.
+    // Leftover from the old cast-and-reel minigame - kept for potential
+    // future reintroduction, not read by anything right now.
+    // difficultyMultiplier below IS still used, as each species' wariness -
+    // see OceanScene.trySpawnFish.
     turnsRequired: 1.9,
     rarity: 'uncommon',
     difficultyMultiplier: 1.3
@@ -86,11 +86,34 @@ export const FISH = [
     difficultyMultiplier: 1.45
   },
   {
+    id: 'whiting',
+    name: 'Whiting',
+    // A small, prized table fish - much lighter than the others and no real
+    // fight to reel in, but still worth good money per kg.
+    baseWeightKg: 0.5,
+    valuePerKg: 8,
+    turnsRequired: 1.6,
+    rarity: 'common',
+    difficultyMultiplier: 1.0
+  },
+  {
+    id: 'kingfish',
+    name: 'Yellowtail Kingfish',
+    // A big, strong pelagic gamefish - heavier and more valuable than the
+    // Trevally, and a real fight to reel in, though not in the same league
+    // as the Tuna or the sharks.
+    baseWeightKg: 6.0,
+    valuePerKg: 11,
+    turnsRequired: 2.4,
+    rarity: 'rare',
+    difficultyMultiplier: 1.7
+  },
+  {
     id: 'great_white',
     name: 'Great White Shark',
-    // The legendary catch - not in the normal bite pool at all (see
-    // FishingScene.LARGE_BAIT_IDS/GREAT_WHITE_CHANCE): it only has a
-    // chance to bite when fishing with a big fish (a Salmon or Tuna) as
+    // The legendary catch - not in the normal spawn pool at all (see
+    // OceanScene.LARGE_BAIT_IDS/GREAT_WHITE_CHANCE): it only has a
+    // chance to appear when fishing with a big fish (a Salmon or Tuna) as
     // bait, and even then it's a rare event, not a guarantee. Enormous,
     // by far the most valuable thing in the game, and the single toughest
     // fight there is.
@@ -107,7 +130,7 @@ export const FISH = [
     id: 'tiger_shark',
     name: 'Tiger Shark',
     // Also only reachable via a big fish as bait (see
-    // FishingScene.LARGE_BAIT_IDS/TIGER_SHARK_CHANCE) - a bit more likely
+    // OceanScene.LARGE_BAIT_IDS/TIGER_SHARK_CHANCE) - a bit more likely
     // to turn up than the Great White when it's rolled for, but still rare.
     // Smaller and less valuable than the Great White, but every bit as
     // much of a fight to land - every shark in the game is a real
@@ -117,6 +140,21 @@ export const FISH = [
     turnsRequired: 3.9,
     rarity: 'legendary',
     difficultyMultiplier: 2.6
+  },
+  {
+    id: 'bull_shark',
+    name: 'Bull Shark',
+    // Also only reachable via a big fish as bait (see
+    // OceanScene.LARGE_BAIT_IDS/BULL_SHARK_CHANCE). Sits squarely between
+    // the other two sharks in both weight and value - heavier than the
+    // Tiger Shark despite being the shortest of the three (a real bull
+    // shark is stocky rather than long), but still well short of the Great
+    // White's own size.
+    baseWeightKg: 190,
+    valuePerKg: 13,
+    turnsRequired: 4.0,
+    rarity: 'legendary',
+    difficultyMultiplier: 2.7
   }
 ];
 

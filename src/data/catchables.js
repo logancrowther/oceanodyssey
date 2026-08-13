@@ -1,13 +1,11 @@
 import { getFish } from './fishData.js';
 import { getJunk } from './junkData.js';
-import { SEAWEED } from './seaweedData.js';
 
-// Fish, junk and seaweed all share the same shape (id/name/baseWeightKg/
-// valuePerKg) even though they come from separate data files and go through
-// different bite paths - this is the one place that knows how to look any
-// of them up by id.
+// Fish and junk share the same shape (id/name/baseWeightKg/valuePerKg) even
+// though they come from separate data files - this is the one place that
+// knows how to look either up by id. (Seaweed is no longer a catchable -
+// its data file and model are untouched but unreferenced.)
 export function getCatchable(id) {
-  if (id === SEAWEED.id) return SEAWEED;
   return getFish(id) || getJunk(id);
 }
 

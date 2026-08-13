@@ -1147,6 +1147,157 @@ export function drawTigerShark(g, x, y, scale = 1, rotation = 0, alpha = 1) {
   g.restore();
 }
 
+// A bull shark - shorter and far stockier than either other shark, with a
+// very short, blunt, flat-fronted snout (no point at all, unlike the Great
+// White's fine tip or even the Tiger Shark's own wide nose - the real
+// animal's own "bull-nosed" field mark), a noticeably heavier girth
+// relative to its length, small eyes set for hunting in the murky, shallow
+// water this species actually prefers, and a lower, more rounded first
+// dorsal fin set further forward on the back. Plain grey-brown
+// countershading with no stripes and none of the Great White's crisp
+// two-tone - just a flat, murky grey back fading to a pale belly.
+export function drawBullShark(g, x, y, scale = 1, rotation = 0, alpha = 1) {
+  g.save();
+  g.translateCanvas(x, y);
+  if (rotation) g.rotateCanvas(rotation);
+  const s = scale;
+
+  const backColor = 0x5e5a4c;
+  const bellyColor = 0xefe9da;
+  const finColor = 0x5e5a4c;
+  const darkColor = 0x1c1a14;
+  const toothColor = 0xf5f5f0;
+
+  // A short, thickset, heavyset body - the front edge is a flat vertical
+  // pair of points instead of a single pointed vertex, which is what reads
+  // as a blunt, rounded-off snout rather than any kind of point.
+  const body = [
+    { x: -29, y: -6 },
+    { x: -20, y: -12 },
+    { x: -6, y: -16 },
+    { x: 8, y: -16 },
+    { x: 19, y: -13 },
+    { x: 27, y: -9 },
+    { x: 33, y: -4 },
+    { x: 33, y: 4 },
+    { x: 27, y: 9 },
+    { x: 19, y: 13 },
+    { x: 8, y: 16 },
+    { x: -6, y: 16 },
+    { x: -20, y: 12 },
+    { x: -29, y: 6 }
+  ].map((p) => ({ x: p.x * s, y: p.y * s }));
+
+  // Heterocercal tail - same real-shark construction as the other two,
+  // scaled to this shorter body.
+  [
+    { angle: -0.8, bow: 13, len: 27, baseY: -3, w: 6 },
+    { angle: 0.56, bow: -7, len: 12, baseY: 3, w: 4.6 }
+  ].forEach(({ angle, bow, len, baseY, w }) => {
+    const dx = Math.cos(angle);
+    const dy = Math.sin(angle);
+    const px = -dy;
+    const py = dx;
+    const steps = 10;
+    const left = [];
+    const right = [];
+    for (let t = 0; t <= steps; t += 1) {
+      const tt = t / steps;
+      const curve = Math.sin(tt * Math.PI) * bow;
+      const cx = (33 + dx * len * tt + px * curve) * s;
+      const cy = (baseY + dy * len * tt + py * curve) * s;
+      const ww = (w - tt * (w - 0.4)) * s;
+      left.push({ x: cx + px * ww, y: cy + py * ww });
+      right.push({ x: cx - px * ww, y: cy - py * ww });
+    }
+    const shape = left.concat(right.reverse());
+    g.fillStyle(finColor, alpha);
+    g.fillPoints(shape, true);
+    g.lineStyle(1 * s, darkColor, 0.7 * alpha);
+    g.strokePoints(shape, true);
+  });
+
+  // Broad, stiff pectoral fins.
+  g.fillStyle(finColor, alpha);
+  g.fillTriangle(-8 * s, 9 * s, -16 * s, 25 * s, 3 * s, 13 * s);
+  g.lineStyle(1 * s, darkColor, 0.6 * alpha);
+  g.strokeTriangle(-8 * s, 9 * s, -16 * s, 25 * s, 3 * s, 13 * s);
+
+  // Pelvic and small second dorsal/anal fins.
+  g.fillStyle(finColor, alpha);
+  g.fillTriangle(11 * s, 14 * s, 8 * s, 21 * s, 19 * s, 14 * s);
+  g.fillTriangle(21 * s, -11 * s, 26 * s, -10 * s, 23 * s, -17 * s);
+  g.lineStyle(1 * s, darkColor, 0.6 * alpha);
+  g.strokeTriangle(21 * s, -11 * s, 26 * s, -10 * s, 23 * s, -17 * s);
+
+  // Body - solid pale base, then a plain, flat grey-brown back band with no
+  // stripes - just a murky-water countershading tone, unlike either other
+  // shark's own marking.
+  g.fillStyle(bellyColor, alpha);
+  g.fillPoints(body, true);
+
+  const topProfile = [
+    { x: -29, y: -6 },
+    { x: -20, y: -12 },
+    { x: -6, y: -16 },
+    { x: 8, y: -16 },
+    { x: 19, y: -13 },
+    { x: 27, y: -9 },
+    { x: 33, y: -4 }
+  ].map((p) => ({ x: p.x * s, y: p.y * s }));
+  const backBand = topProfile.concat(
+    topProfile
+      .slice()
+      .reverse()
+      .map((p, i) => ({ x: p.x, y: p.y + (4 + Math.sin(i * 1.2) * 1.4) * s }))
+  );
+  g.fillStyle(backColor, alpha);
+  g.fillPoints(backBand, true);
+
+  g.lineStyle(1.5 * s, darkColor, 0.85 * alpha);
+  g.strokePoints(body, true);
+
+  // A lower, more rounded, more forward-set first dorsal fin than either
+  // other shark's - real bull sharks carry a broader, less towering fin set
+  // further up the back toward the head.
+  g.fillStyle(finColor, alpha);
+  g.fillTriangle(-12 * s, -15 * s, 5 * s, -14 * s, -4 * s, -29 * s);
+  g.lineStyle(1.3 * s, darkColor, 0.7 * alpha);
+  g.strokeTriangle(-12 * s, -15 * s, 5 * s, -14 * s, -4 * s, -29 * s);
+
+  // Gill slits.
+  g.lineStyle(1.1 * s, darkColor, 0.6 * alpha);
+  for (let i = 0; i < 5; i += 1) {
+    const gx = -22 + i * 2.4;
+    g.beginPath();
+    g.moveTo(gx * s, -11 * s);
+    g.lineTo((gx - 1.4) * s, 10 * s);
+    g.strokePath();
+  }
+
+  // A wide, blunt jaw with a dense row of teeth - a real bull shark's own
+  // powerful bite.
+  g.lineStyle(1 * s, darkColor, 0.7 * alpha);
+  g.beginPath();
+  g.moveTo(-28 * s, 3 * s);
+  g.lineTo(-15 * s, 8 * s);
+  g.strokePath();
+  g.fillStyle(toothColor, alpha);
+  for (let i = 0; i < 5; i += 1) {
+    const tx = -27 + i * 2.6;
+    g.fillTriangle(tx * s, 3.5 * s, (tx + 2) * s, 4.8 * s, (tx + 0.8) * s, 8 * s);
+  }
+
+  // Small, dark, watchful eyes - noticeably smaller than either the Great
+  // White's or the Tiger Shark's own eye, a real hunter-in-murky-water trait.
+  g.fillStyle(darkColor, alpha);
+  g.fillCircle(-21 * s, -8 * s, 1.5 * s);
+  g.fillStyle(0x000000, 0.85 * alpha);
+  g.fillCircle(-21 * s, -8 * s, 0.8 * s);
+
+  g.restore();
+}
+
 // A tailor - a lean, moderately compressed predator fish (slimmer than the
 // Bream, less stout than the Tuna), with a pointed jaw held slightly open
 // to show a real row of sharp little teeth - the real fish's own
@@ -1469,6 +1620,364 @@ export function drawTrevally(g, x, y, scale = 1, rotation = 0, alpha = 1) {
   g.fillCircle(-22 * s, -8 * s, 2.6 * s);
   g.fillStyle(0x131a1c, alpha);
   g.fillCircle(-21.6 * s, -8 * s, 1.4 * s);
+
+  g.restore();
+}
+
+// A yellowtail kingfish - a big, powerful, elongated fusiform predator
+// (leaner than the Tuna, less deep-bodied than the Trevally), with a
+// pointed head and a strongly forked tail, plus the two field marks that
+// make the real animal unmistakable: a dark diagonal band running from the
+// top of the head down across the eye, and the bright yellow stripe running
+// the length of the flank into a golden-yellow tail - the marking that
+// gives the species its name. Olive-blue-green back over silvery sides.
+export function drawKingfish(g, x, y, scale = 1, rotation = 0, alpha = 1) {
+  g.save();
+  g.translateCanvas(x, y);
+  if (rotation) g.rotateCanvas(rotation);
+  const s = scale;
+
+  const bodyColor = 0xc9d4c8;
+  const backColor = 0x35544a;
+  const bellyColor = 0xf2f4e8;
+  const finColor = 0x8a9060;
+  const tailColor = 0xe8b93a;
+  const darkColor = 0x232d24;
+  const stripeColor = 0xf0c93f;
+  const eyeStripeColor = 0x1c231d;
+
+  // A long, lean fusiform body - more elongated than the Trevally's deep
+  // body, leaner than the Tuna's stockier build - tapering to a slender
+  // caudal peduncle.
+  const body = [
+    { x: -37, y: 0 },
+    { x: -34, y: -3 },
+    { x: -25, y: -7 },
+    { x: -12, y: -10 },
+    { x: 1, y: -10.5 },
+    { x: 13, y: -9 },
+    { x: 22, y: -6 },
+    { x: 28, y: -3 },
+    { x: 28, y: 3 },
+    { x: 22, y: 6 },
+    { x: 13, y: 9 },
+    { x: 1, y: 10.5 },
+    { x: -12, y: 10 },
+    { x: -25, y: 7 },
+    { x: -34, y: 3 }
+  ].map((p) => ({ x: p.x * s, y: p.y * s }));
+
+  // Strongly forked, golden-yellow tail - the real animal's namesake
+  // marking, built as bowed scythe blades like the Trevally's fork.
+  [
+    { angle: -0.58, bow: 12 },
+    { angle: 0.58, bow: -12 }
+  ].forEach(({ angle, bow }) => {
+    const dx = Math.cos(angle);
+    const dy = Math.sin(angle);
+    const px = -dy;
+    const py = dx;
+    const len = 26;
+    const steps = 10;
+    const left = [];
+    const right = [];
+    for (let t = 0; t <= steps; t += 1) {
+      const tt = t / steps;
+      const curve = Math.sin(tt * Math.PI) * bow;
+      const cx = (28 + dx * len * tt + px * curve) * s;
+      const cy = (dy * len * tt + py * curve) * s;
+      const w = (5 - tt * 4.5) * s;
+      left.push({ x: cx + px * w, y: cy + py * w });
+      right.push({ x: cx - px * w, y: cy - py * w });
+    }
+    const shape = left.concat(right.reverse());
+    g.fillStyle(tailColor, alpha);
+    g.fillPoints(shape, true);
+    g.lineStyle(1 * s, darkColor, 0.6 * alpha);
+    g.strokePoints(shape, true);
+  });
+
+  // Long, curved, sickle-shaped pectoral fin, swept back - a real pelagic
+  // predator's fin, though not as oversized as the Trevally's.
+  {
+    const angle = 1.5;
+    const len = 19;
+    const bow = 8;
+    const dx = Math.cos(angle);
+    const dy = Math.sin(angle);
+    const px = -dy;
+    const py = dx;
+    const steps = 10;
+    const left = [];
+    const right = [];
+    const baseX = -10;
+    const baseY = 3;
+    for (let t = 0; t <= steps; t += 1) {
+      const tt = t / steps;
+      const curve = Math.sin(tt * Math.PI) * bow;
+      const cx = (baseX + dx * len * tt + px * curve) * s;
+      const cy = (baseY + dy * len * tt + py * curve) * s;
+      const w = (3 - tt * 2.6) * s;
+      left.push({ x: cx + px * w, y: cy + py * w });
+      right.push({ x: cx - px * w, y: cy - py * w });
+    }
+    const shape = left.concat(right.reverse());
+    g.fillStyle(finColor, alpha);
+    g.fillPoints(shape, true);
+    g.lineStyle(1 * s, darkColor, 0.6 * alpha);
+    g.strokePoints(shape, true);
+  }
+
+  // Pelvic and anal fins.
+  g.fillStyle(finColor, alpha);
+  g.fillTriangle(-4 * s, 9 * s, -8 * s, 17 * s, 4 * s, 10 * s);
+  g.fillTriangle(10 * s, 9 * s, 8 * s, 16 * s, 18 * s, 8 * s);
+
+  // Body.
+  g.fillStyle(bodyColor, alpha);
+  g.fillPoints(body, true);
+
+  // Dark olive-blue-green back band, following the top of the body's own
+  // profile.
+  const topProfile = [
+    { x: -34, y: -3 },
+    { x: -25, y: -7 },
+    { x: -12, y: -10 },
+    { x: 1, y: -10.5 },
+    { x: 13, y: -9 },
+    { x: 22, y: -6 },
+    { x: 28, y: -3 }
+  ].map((p) => ({ x: p.x * s, y: p.y * s }));
+  const backBand = topProfile.concat(
+    topProfile
+      .slice()
+      .reverse()
+      .map((p) => ({ x: p.x, y: p.y + 7 * s }))
+  );
+  g.fillStyle(backColor, 0.75 * alpha);
+  g.fillPoints(backBand, true);
+
+  // Pale belly strip.
+  const bottomProfile = [
+    { x: -25, y: 7 },
+    { x: -12, y: 10 },
+    { x: 1, y: 10.5 },
+    { x: 13, y: 9 }
+  ].map((p) => ({ x: p.x * s, y: p.y * s }));
+  const bellyBand = bottomProfile.concat(
+    bottomProfile
+      .slice()
+      .reverse()
+      .map((p) => ({ x: p.x, y: p.y - 4 * s }))
+  );
+  g.fillStyle(bellyColor, 0.5 * alpha);
+  g.fillPoints(bellyBand, true);
+
+  g.lineStyle(1.4 * s, darkColor, 0.85 * alpha);
+  g.strokePoints(body, true);
+
+  // The bright yellow stripe running the length of the flank from behind
+  // the eye back into the tail - the real animal's own namesake field mark.
+  g.lineStyle(2.4 * s, stripeColor, 0.85 * alpha);
+  g.beginPath();
+  g.moveTo(-24 * s, -1 * s);
+  g.lineTo(-5 * s, -1.5 * s);
+  g.lineTo(15 * s, -1 * s);
+  g.lineTo(27 * s, 0 * s);
+  g.strokePath();
+
+  // One long dorsal fin - a short spiny front zigzag blending into a long,
+  // low soft rear lobe running most of the back.
+  g.fillStyle(finColor, alpha);
+  const spineBase = [
+    { x: -9, y: -10 },
+    { x: -5, y: -12 },
+    { x: -1, y: -11.5 },
+    { x: 3, y: -10.5 }
+  ].map((p) => ({ x: p.x * s, y: p.y * s }));
+  for (let i = 0; i < spineBase.length - 1; i += 1) {
+    const b0 = spineBase[i];
+    const b1 = spineBase[i + 1];
+    const tipX = (b0.x + b1.x) / 2;
+    const tipY = Math.min(b0.y, b1.y) - 6 * s;
+    g.fillTriangle(b0.x, b0.y, b1.x, b1.y, tipX, tipY);
+  }
+  g.fillTriangle(3 * s, -10.5 * s, 17 * s, -7 * s, 10 * s, -16 * s);
+  g.lineStyle(1 * s, darkColor, 0.6 * alpha);
+  g.strokeTriangle(3 * s, -10.5 * s, 17 * s, -7 * s, 10 * s, -16 * s);
+
+  // Gill line, just behind the head.
+  g.lineStyle(1 * s, darkColor, 0.5 * alpha);
+  g.beginPath();
+  g.moveTo(-21 * s, -6 * s);
+  g.lineTo(-19 * s, 6 * s);
+  g.strokePath();
+
+  // The dark diagonal band running from the top of the head down across the
+  // eye to the snout - the real animal's other unmistakable field mark,
+  // shared with its amberjack relatives, and unique to this fish in the
+  // game.
+  g.lineStyle(2.6 * s, eyeStripeColor, 0.75 * alpha);
+  g.beginPath();
+  g.moveTo(-26 * s, -9 * s);
+  g.lineTo(-35 * s, 1 * s);
+  g.strokePath();
+
+  // Eye, forward on the pointed head.
+  g.fillStyle(0xeef3ec, alpha);
+  g.fillCircle(-29 * s, -3 * s, 2.6 * s);
+  g.fillStyle(0x14180f, alpha);
+  g.fillCircle(-28.6 * s, -3 * s, 1.4 * s);
+
+  g.restore();
+}
+
+// A whiting - a slender, elongated, almost cylindrical body (notably
+// slimmer than the Mullet's stouter build), a pointed snout with a small,
+// underslung mouth (whiting are bottom feeders with tiny mouths, not a wide
+// predator's jaw like the Tailor's), a shallow, only lightly forked tail,
+// two low separate dorsal fins (a short spiny first and a longer, low soft
+// second set well back, mirrored below by a low anal fin), and the pale
+// gold-brown blotches strung along the flank that real whiting carry. Pale
+// silvery-sandy overall - reads noticeably paler and slimmer than anything
+// else in the game.
+export function drawWhiting(g, x, y, scale = 1, rotation = 0, alpha = 1) {
+  g.save();
+  g.translateCanvas(x, y);
+  if (rotation) g.rotateCanvas(rotation);
+  const s = scale;
+
+  const bodyColor = 0xe9ddbf;
+  const backColor = 0xcabf8e;
+  const bellyColor = 0xf9f6ec;
+  const finColor = 0xd0c49b;
+  const darkColor = 0x5c5138;
+  const spotColor = 0xb1813c;
+
+  // A slim, elongated, almost cylindrical body - noticeably slimmer than
+  // any of the other fish here, with a fine pointed snout.
+  const body = [
+    { x: -30, y: 0 },
+    { x: -28, y: -2.5 },
+    { x: -20, y: -4.5 },
+    { x: -8, y: -6 },
+    { x: 4, y: -6 },
+    { x: 14, y: -4.5 },
+    { x: 21, y: -2.5 },
+    { x: 25, y: -1 },
+    { x: 25, y: 1 },
+    { x: 21, y: 2.5 },
+    { x: 14, y: 4.5 },
+    { x: 4, y: 6 },
+    { x: -8, y: 6 },
+    { x: -20, y: 4.5 },
+    { x: -28, y: 2.5 }
+  ].map((p) => ({ x: p.x * s, y: p.y * s }));
+
+  // Shallow, only lightly forked tail - a small double cusp, not the deep
+  // scythe fork of the faster-swimming fish.
+  g.fillStyle(finColor, alpha);
+  g.fillTriangle(25 * s, -1 * s, 33 * s, -4 * s, 29 * s, 0);
+  g.fillTriangle(25 * s, 1 * s, 33 * s, 4 * s, 29 * s, 0);
+  g.lineStyle(1 * s, darkColor, 0.6 * alpha);
+  g.strokeTriangle(25 * s, -1 * s, 33 * s, -4 * s, 29 * s, 0);
+  g.strokeTriangle(25 * s, 1 * s, 33 * s, 4 * s, 29 * s, 0);
+
+  // Small pectoral and pelvic fins, and the long, low anal fin mirroring
+  // the second dorsal fin below.
+  g.fillStyle(finColor, alpha);
+  g.fillTriangle(-12 * s, 2.5 * s, -17 * s, 8 * s, -8 * s, 5 * s);
+  g.fillTriangle(-2 * s, 5.5 * s, -5 * s, 10 * s, 3 * s, 6.5 * s);
+  g.fillTriangle(8 * s, 5.5 * s, 6 * s, 11 * s, 16 * s, 5 * s);
+
+  // Body.
+  g.fillStyle(bodyColor, alpha);
+  g.fillPoints(body, true);
+
+  // Faint pale olive-fawn back band - much softer/paler than the other
+  // fish's own back bands, since whiting reads as an overall pale fish.
+  const topProfile = [
+    { x: -28, y: -2.5 },
+    { x: -20, y: -4.5 },
+    { x: -8, y: -6 },
+    { x: 4, y: -6 },
+    { x: 14, y: -4.5 },
+    { x: 21, y: -2.5 },
+    { x: 25, y: -1 }
+  ].map((p) => ({ x: p.x * s, y: p.y * s }));
+  const backBand = topProfile.concat(
+    topProfile
+      .slice()
+      .reverse()
+      .map((p) => ({ x: p.x, y: p.y + 3.5 * s }))
+  );
+  g.fillStyle(backColor, 0.55 * alpha);
+  g.fillPoints(backBand, true);
+
+  // Pale belly strip.
+  const bottomProfile = [
+    { x: -20, y: 4.5 },
+    { x: -8, y: 6 },
+    { x: 4, y: 6 },
+    { x: 14, y: 4.5 }
+  ].map((p) => ({ x: p.x * s, y: p.y * s }));
+  const bellyBand = bottomProfile.concat(
+    bottomProfile
+      .slice()
+      .reverse()
+      .map((p) => ({ x: p.x, y: p.y - 2.5 * s }))
+  );
+  g.fillStyle(bellyColor, 0.5 * alpha);
+  g.fillPoints(bellyBand, true);
+
+  g.lineStyle(1.1 * s, darkColor, 0.7 * alpha);
+  g.strokePoints(body, true);
+
+  // The row of pale gold-brown blotches strung along the flank - a real
+  // whiting's own signature marking, unlike any other fish's pattern in the
+  // game.
+  g.fillStyle(spotColor, 0.7 * alpha);
+  [
+    [-16, -1, 2.2],
+    [-8, 0.5, 2],
+    [0, -1, 2.2],
+    [8, 0.5, 2],
+    [16, -0.5, 1.8]
+  ].forEach(([sx, sy, sr]) => g.fillEllipse(sx * s, sy * s, sr * 2 * s, sr * 1.3 * s));
+
+  // Two low, separate dorsal fins - a short spiny first dorsal and a
+  // longer, low soft second dorsal set well back, with a clear gap between
+  // them (like the Mullet's arrangement, but lower and slimmer).
+  g.fillStyle(finColor, alpha);
+  g.fillTriangle(-9 * s, -6 * s, -3 * s, -5.5 * s, -6 * s, -12 * s);
+  g.lineStyle(1 * s, darkColor, 0.5 * alpha);
+  g.strokeTriangle(-9 * s, -6 * s, -3 * s, -5.5 * s, -6 * s, -12 * s);
+
+  g.fillStyle(finColor, alpha);
+  g.fillTriangle(4 * s, -6 * s, 15 * s, -4.5 * s, 9.5 * s, -9 * s);
+  g.lineStyle(1 * s, darkColor, 0.5 * alpha);
+  g.strokeTriangle(4 * s, -6 * s, 15 * s, -4.5 * s, 9.5 * s, -9 * s);
+
+  // Gill line.
+  g.lineStyle(1 * s, darkColor, 0.45 * alpha);
+  g.beginPath();
+  g.moveTo(-19 * s, -4 * s);
+  g.lineTo(-18 * s, 4 * s);
+  g.strokePath();
+
+  // The small, underslung mouth just below the pointed snout tip - a real
+  // bottom-feeder's mouth, not a wide predator's jaw like the Tailor's.
+  g.lineStyle(1 * s, darkColor, 0.6 * alpha);
+  g.beginPath();
+  g.moveTo(-29 * s, 1 * s);
+  g.lineTo(-24 * s, 3 * s);
+  g.strokePath();
+
+  // Eye, set just behind the pointed snout.
+  g.fillStyle(0xf2ede0, alpha);
+  g.fillCircle(-23 * s, -2 * s, 2 * s);
+  g.fillStyle(0x201a10, alpha);
+  g.fillCircle(-22.7 * s, -2 * s, 1.1 * s);
 
   g.restore();
 }

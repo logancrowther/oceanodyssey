@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import GameState from '../systems/GameState.js';
 import { BAIT } from '../data/baitData.js';
 import { getCatchable, sizeScaleFor } from '../data/catchables.js';
-import { createButton } from '../ui/Button.js';
+import { createBubbleButton } from '../ui/BubbleButton.js';
 import { createIconButton, drawCloseIcon } from '../ui/iconButton.js';
 import { addStatusBar } from '../ui/fishIcon.js';
 import {
@@ -14,9 +14,11 @@ import {
   drawTuna,
   drawTailor,
   drawTrevally,
+  drawKingfish,
+  drawWhiting,
   drawGreatWhite,
   drawTigerShark,
-  drawSeaweed,
+  drawBullShark,
   drawOldBoot
 } from '../ui/tackle.js';
 import { DESIGN_WIDTH, DESIGN_HEIGHT } from '../constants.js';
@@ -40,10 +42,12 @@ const CATCH_DRAWERS = {
   tuna: (g, x, y, weightKg) => drawTuna(g, x, y, 0.65 * sizeScaleFor('tuna', weightKg)),
   tailor: (g, x, y, weightKg) => drawTailor(g, x, y, 0.82 * sizeScaleFor('tailor', weightKg)),
   trevally: (g, x, y, weightKg) => drawTrevally(g, x, y, 0.72 * sizeScaleFor('trevally', weightKg)),
+  kingfish: (g, x, y, weightKg) => drawKingfish(g, x, y, 0.65 * sizeScaleFor('kingfish', weightKg)),
+  whiting: (g, x, y, weightKg) => drawWhiting(g, x, y, 0.95 * sizeScaleFor('whiting', weightKg)),
   great_white: (g, x, y, weightKg) => drawGreatWhite(g, x, y, 0.54 * sizeScaleFor('great_white', weightKg)),
   tiger_shark: (g, x, y, weightKg) => drawTigerShark(g, x, y, 0.56 * sizeScaleFor('tiger_shark', weightKg)),
-  old_boot: (g, x, y, weightKg) => drawOldBoot(g, x, y, 1.1 * sizeScaleFor('old_boot', weightKg)),
-  seaweed: (g, x, y, weightKg) => drawSeaweed(g, x, y, 1.5 * sizeScaleFor('seaweed', weightKg))
+  bull_shark: (g, x, y, weightKg) => drawBullShark(g, x, y, 0.58 * sizeScaleFor('bull_shark', weightKg)),
+  old_boot: (g, x, y, weightKg) => drawOldBoot(g, x, y, 1.1 * sizeScaleFor('old_boot', weightKg))
 };
 
 export default class InventoryScene extends Phaser.Scene {
@@ -60,13 +64,13 @@ export default class InventoryScene extends Phaser.Scene {
     this.maxScroll = 0;
 
     this.add.rectangle(0, 0, width, height, 0x0e3f5c).setOrigin(0, 0);
-    this.add.text(width / 2, 68, 'Tackle Bag', heading('28px')).setOrigin(0.5);
+    this.add.text(width / 2, 68, 'Inventory', heading('28px')).setOrigin(0.5);
     this.add
       .text(width / 2, 90, 'Equip bait to load it on your hook', subheading('14px'))
       .setOrigin(0.5);
 
     this.statusBar = addStatusBar(this, GameState);
-    createIconButton(this, width - 40, 92, 22, drawCloseIcon, () => this.scene.start('FishingScene'));
+    createIconButton(this, width - 40, 92, 22, drawCloseIcon, () => this.scene.start('OceanScene'));
 
     // Bait stacks (identical units - one cell, a count) and individual
     // catches (each its own cell, since two catches of the same species can
@@ -170,7 +174,7 @@ export default class InventoryScene extends Phaser.Scene {
     const subText = this.add.text(x, y + 3, item.sub, label('11px', { color: '#bfe9ff' })).setOrigin(0.5);
     this.gridContainer.add(subText);
 
-    const equipBtn = createButton(this, x, y + 34, 116, 32, '', () => this.equip(item.itemId, item.uid), {
+    const equipBtn = createBubbleButton(this, x, y + 34, 116, 32, '', () => this.equip(item.itemId, item.uid), {
       fontSize: '12px',
       container: this.gridContainer
     });

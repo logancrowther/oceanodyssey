@@ -1,5 +1,7 @@
-// Junk you can snag on the hook instead of an actual bite - same odds and
-// same reel-in fight as a real fish, just not worth much.
+// Junk that can drift onto the hook alongside real fish - same spawn odds,
+// just not worth much. Unlike every fish, it's not alive: it never flees a
+// fast-moving hook (see OceanScene.updateSwimmers), so difficultyMultiplier
+// here is unused.
 export const JUNK = [
   {
     id: 'old_boot',

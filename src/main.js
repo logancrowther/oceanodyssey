@@ -1,8 +1,7 @@
 import Phaser from 'phaser';
 import BootScene from './scenes/BootScene.js';
 import TitleScene from './scenes/TitleScene.js';
-import WorldMapScene from './scenes/WorldMapScene.js';
-import FishingScene from './scenes/FishingScene.js';
+import OceanScene from './scenes/OceanScene.js';
 import ShopScene from './scenes/ShopScene.js';
 import InventoryScene from './scenes/InventoryScene.js';
 import { DESIGN_WIDTH, DESIGN_HEIGHT } from './constants.js';
@@ -31,7 +30,7 @@ const config = {
     width: DESIGN_WIDTH * RES_MULT,
     height: DESIGN_HEIGHT * RES_MULT
   },
-  scene: [BootScene, TitleScene, WorldMapScene, FishingScene, ShopScene, InventoryScene]
+  scene: [BootScene, TitleScene, OceanScene, ShopScene, InventoryScene]
 };
 
 new Phaser.Game(config);

@@ -33,32 +33,3 @@ export function drawSunGlow(g, cx, cy) {
   g.fillStyle(0xfff6cf, 1);
   g.fillCircle(cx, cy, 22);
 }
-
-// Simple rowboat hull: flat gunwale top, smooth rounded bottom, symmetric
-// about local x=0 so it can sit flush with the left screen edge with only
-// its right half ever needing to be on screen.
-export function drawBoatHull(g, { halfWidth = 160, topY = -20, bottomY = 60 } = {}) {
-  const hull = [];
-  const steps = 24;
-  for (let i = 0; i <= steps; i += 1) {
-    const t = i / steps;
-    const angle = t * Math.PI;
-    hull.push({
-      x: halfWidth * Math.cos(angle),
-      y: topY + (bottomY - topY) * Math.sin(angle)
-    });
-  }
-
-  g.fillStyle(0x9a9a9a, 1);
-  g.fillPoints(hull, true);
-  g.lineStyle(3, 0x555555, 1);
-  g.beginPath();
-  hull.forEach((p, i) => (i === 0 ? g.moveTo(p.x, p.y) : g.lineTo(p.x, p.y)));
-  g.strokePath();
-
-  g.lineStyle(4, 0x6b6b6b, 1);
-  g.beginPath();
-  g.moveTo(-halfWidth, topY);
-  g.lineTo(halfWidth, topY);
-  g.strokePath();
-}

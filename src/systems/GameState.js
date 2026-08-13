@@ -1,8 +1,11 @@
-const STORAGE_KEY = 'oceanOdysseySave';
+// Bumped when a change makes old save data meaningless (this one - the
+// underwater redesign changed the whole game) so everyone starts fresh
+// under a new key instead of the old save silently carrying over.
+const STORAGE_KEY = 'oceanOdysseySave_v2';
 
 function defaultState() {
   return {
-    coins: 20,
+    coins: 0,
     // Stackable bait items (e.g. 'prawn') - identical units, so a simple
     // id -> count is fine.
     inventory: {},
@@ -17,7 +20,10 @@ function defaultState() {
     // Flathead doesn't also mark every OTHER Flathead in the bag as
     // equipped, and casting only ever consumes that exact fish.
     equippedCatchUid: null,
-    selectedLocation: null
+    // How many times the line-length upgrade has been bought (see
+    // data/upgradeData.js) - determines how deep the hook can go. 0 =
+    // starting line, no purchases yet.
+    lineLengthTier: 0
   };
 }
 
@@ -54,6 +60,19 @@ class GameState {
 
   get equippedCatchUid() {
     return this.data.equippedCatchUid;
+  }
+
+  get lineLengthTier() {
+    return this.data.lineLengthTier;
+  }
+
+  // Spends coins to buy one more line-length upgrade - the caller (ShopScene)
+  // supplies the cost for the next purchase from data/upgradeData.js.
+  buyLineUpgrade(cost) {
+    if (!this.spendCoins(cost)) return false;
+    this.data.lineLengthTier += 1;
+    this.save();
+    return true;
   }
 
   addCoins(amount) {

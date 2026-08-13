@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
-import { createButton } from '../ui/Button.js';
+import { createBubbleButton } from '../ui/BubbleButton.js';
 import { DESIGN_WIDTH, DESIGN_HEIGHT } from '../constants.js';
-import { shadeColor, buildSeaPolygon, drawSunGlow, drawBoatHull } from '../ui/oceanArt.js';
+import { shadeColor, buildSeaPolygon, drawSunGlow } from '../ui/oceanArt.js';
 import { heading, subheading } from '../ui/textStyle.js';
 
 const WATERLINE_Y = 340;
@@ -23,7 +23,9 @@ export default class TitleScene extends Phaser.Scene {
     const height = DESIGN_HEIGHT;
     this.waveT = 0;
 
-    // Same sunny-day sky gradient and calm, animated sea as the fishing view.
+    // Same sunny-day sky gradient and calm, animated sea OceanScene's dive
+    // transition starts from, so pressing Play reads as diving straight
+    // into this same water.
     const skyTop = shadeColor(SKY_COLOR, 0.85);
     const skyBottom = shadeColor(SKY_COLOR, 1.2);
     const skyG = this.add.graphics();
@@ -35,19 +37,26 @@ export default class TitleScene extends Phaser.Scene {
 
     drawSunGlow(this.add.graphics(), 800, 110);
 
-    this.drawBoatAndCaptain();
-
     this.add
-      .text(width / 2, 150, 'Ocean Odyssey', heading('56px', { strokeThickness: 6 }))
+      .text(width / 2, 220, 'Ocean Odyssey', heading('56px', { strokeThickness: 6 }))
       .setOrigin(0.5);
 
     this.add
-      .text(width / 2, 204, 'Cast your line. Chart the seas.', subheading())
+      .text(width / 2, 274, 'Cast your line. Chart the seas.', subheading())
       .setOrigin(0.5);
 
-    createButton(this, width / 2, height * 0.72, 220, 60, 'Play', () => {
-      this.scene.start('WorldMapScene');
-    }, { fontSize: '24px' });
+    createBubbleButton(
+      this,
+      width / 2,
+      height * 0.72,
+      220,
+      60,
+      'Play',
+      () => {
+        this.scene.start('OceanScene');
+      },
+      { fontSize: '24px' }
+    );
   }
 
   renderSea(t) {
@@ -57,88 +66,8 @@ export default class TitleScene extends Phaser.Scene {
     g.fillPoints(buildSeaPolygon(DESIGN_WIDTH, DESIGN_HEIGHT, WATERLINE_Y, t), true);
   }
 
-  // The same boat as the fishing view, but with the captain standing up and
-  // pointing out at the horizon instead of seated and casting - no rod, reel
-  // or handle here.
-  drawBoatAndCaptain() {
-    const originX = 0;
-    const originY = WATERLINE_Y;
-    const scale = 1.3;
-    const container = this.add.container(originX, originY);
-    container.setScale(scale);
-    this.boatContainer = container;
-    this.boatBaseY = originY;
-
-    // Body drawn before the hull, so the hull hides everything below the
-    // gunwale line - the captain reads as standing inside the boat.
-    const bodyG = this.add.graphics();
-    container.add(bodyG);
-
-    const black = 0x1a1a1a;
-    const lineWidth = 6;
-    const hip = { x: 58, y: -5 };
-    const neck = { x: 62, y: -69 };
-    const shoulder = { x: 62, y: -63 };
-    const headRadius = 20;
-    const head = { x: neck.x, y: neck.y - headRadius };
-
-    bodyG.lineStyle(lineWidth, black, 1);
-
-    // Torso.
-    bodyG.beginPath();
-    bodyG.moveTo(hip.x, hip.y);
-    bodyG.lineTo(neck.x, neck.y);
-    bodyG.strokePath();
-
-    // Legs, standing straight, feet planted on the boat's floor.
-    bodyG.beginPath();
-    bodyG.moveTo(hip.x, hip.y);
-    bodyG.lineTo(48, 10);
-    bodyG.lineTo(46, 26);
-    bodyG.strokePath();
-    bodyG.beginPath();
-    bodyG.moveTo(hip.x, hip.y);
-    bodyG.lineTo(70, 10);
-    bodyG.lineTo(70, 26);
-    bodyG.strokePath();
-
-    // Resting arm, swung out and down at the side - away from the torso, so
-    // it reads as a separate limb instead of overlapping it.
-    bodyG.lineStyle(lineWidth, black, 1);
-    bodyG.beginPath();
-    bodyG.moveTo(shoulder.x, shoulder.y);
-    bodyG.lineTo(32, -50);
-    bodyG.lineTo(26, -22);
-    bodyG.strokePath();
-
-    // Pointing arm, raised out toward the horizon - land ho!
-    bodyG.beginPath();
-    bodyG.moveTo(shoulder.x, shoulder.y);
-    bodyG.lineTo(105, -70);
-    bodyG.lineTo(155, -72);
-    bodyG.strokePath();
-
-    // Round joints at the hip and neck, so the thick strokes read as one
-    // continuous body instead of separate segments meeting at sharp corners.
-    bodyG.fillStyle(black, 1);
-    bodyG.fillCircle(hip.x, hip.y, lineWidth / 2);
-    bodyG.fillCircle(neck.x, neck.y, lineWidth / 2);
-
-    // Plain head, no face.
-    bodyG.lineStyle(lineWidth - 1, black, 1);
-    bodyG.strokeCircle(head.x, head.y, headRadius);
-
-    const hullG = this.add.graphics();
-    container.add(hullG);
-    drawBoatHull(hullG);
-  }
-
   update(time, delta) {
     this.waveT += delta * 0.001;
     this.renderSea(this.waveT);
-
-    // Gentle rocking, matching the calm sea used out on the water.
-    this.boatContainer.rotation = Math.sin(this.waveT * 1.3) * 0.02;
-    this.boatContainer.y = this.boatBaseY + Math.sin(this.waveT * 1.3 + 0.6) * 2;
   }
 }
