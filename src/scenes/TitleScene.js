@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import GameState from '../systems/GameState.js';
 import { createBubbleButton } from '../ui/BubbleButton.js';
 import { DESIGN_WIDTH, DESIGN_HEIGHT } from '../constants.js';
 import { shadeColor, buildSeaPolygon, drawSunGlow } from '../ui/oceanArt.js';
@@ -56,6 +57,43 @@ export default class TitleScene extends Phaser.Scene {
         this.scene.start('OceanScene');
       },
       { fontSize: '24px' }
+    );
+
+    this.buildWipeDataButton(width, height);
+  }
+
+  // Tucked in the bottom right, well away from Play - resets coins,
+  // inventory and catches back to a fresh save. Destructive, so it takes a
+  // second confirming tap within a few seconds rather than wiping on the
+  // very first click.
+  buildWipeDataButton(width, height) {
+    let confirming = false;
+    let confirmTimer = null;
+
+    const btn = createBubbleButton(
+      this,
+      width - 100,
+      height - 30,
+      170,
+      38,
+      'Wipe Data',
+      () => {
+        if (!confirming) {
+          confirming = true;
+          btn.setLabel('Tap to confirm');
+          confirmTimer = this.time.delayedCall(2500, () => {
+            confirming = false;
+            btn.setLabel('Wipe Data');
+          });
+          return;
+        }
+        if (confirmTimer) confirmTimer.remove(false);
+        confirming = false;
+        GameState.wipe();
+        btn.setLabel('Data wiped');
+        this.time.delayedCall(1200, () => btn.setLabel('Wipe Data'));
+      },
+      { fontSize: '13px', color: 0xb84a4a }
     );
   }
 

@@ -46,6 +46,14 @@ class GameState {
     }
   }
 
+  // Resets everything back to a fresh save - coins, inventory, catches, the
+  // works - and persists that reset immediately so a reload doesn't bring
+  // the old save back.
+  wipe() {
+    this.data = defaultState();
+    this.save();
+  }
+
   save() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data));
   }
