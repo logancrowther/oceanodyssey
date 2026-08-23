@@ -17,7 +17,7 @@ function base(fontSize, extra) {
   };
 }
 
-// Big scene titles ("Ocean Odyssey", "Choose a Fishing Spot", ...).
+// Big scene titles ("Abyssal Odyssey", "Choose a Fishing Spot", ...).
 export function heading(fontSize = '30px', extra = {}) {
   return base(fontSize, { fontStyle: 'bold', strokeThickness: 5, ...extra });
 }

@@ -175,3 +175,67 @@ export function drawBagIcon(g, radius) {
   g.fillStyle(strapColor, 1);
   g.fillCircle(0, 6 * s, 1.2 * s);
 }
+
+// A tilted pencil - graphite point, shaved wood taper, hexagonal shaft,
+// metal ferrule and eraser - for the Fishing Index (a logbook you fill in
+// with a pencil).
+export function drawPencilIcon(g, radius) {
+  const s = radius / 20;
+  const angle = -0.72;
+  const cosA = Math.cos(angle);
+  const sinA = Math.sin(angle);
+  const rot = (x, y) => ({ x: (x * cosA - y * sinA) * s, y: (x * sinA + y * cosA) * s });
+
+  const graphiteColor = 0x2b2118;
+  const woodColor = 0xe8c07a;
+  const shaftColor = 0xf2c94c;
+  const shaftEdgeColor = 0xc79a2e;
+  const ferruleColor = 0xd7dde0;
+  const eraserColor = 0xe8879a;
+
+  // Graphite tip.
+  const tip = rot(-16, 0);
+  const tipA = rot(-10, -2.6);
+  const tipB = rot(-10, 2.6);
+  g.fillStyle(graphiteColor, 1);
+  g.fillTriangle(tip.x, tip.y, tipA.x, tipA.y, tipB.x, tipB.y);
+
+  // Shaved wood taper behind the point.
+  g.fillStyle(woodColor, 1);
+  g.fillPoints([rot(-10, -2.6), rot(-6, -3.6), rot(-6, 3.6), rot(-10, 2.6)], true);
+
+  // Shaft body.
+  const shaftPts = [rot(-6, -3.6), rot(6, -3.6), rot(6, 3.6), rot(-6, 3.6)];
+  g.fillStyle(shaftColor, 1);
+  g.fillPoints(shaftPts, true);
+  g.lineStyle(1 * s, shaftEdgeColor, 0.8);
+  g.strokePoints(shaftPts, true);
+
+  // A shine facet line down the shaft.
+  const shineA = rot(-5, -1);
+  const shineB = rot(5, -1);
+  g.lineStyle(1 * s, 0xfff3c9, 0.7);
+  g.beginPath();
+  g.moveTo(shineA.x, shineA.y);
+  g.lineTo(shineB.x, shineB.y);
+  g.strokePath();
+
+  // Metal ferrule, with a crimp line through it.
+  const ferrulePts = [rot(6, -3.8), rot(8.5, -3.8), rot(8.5, 3.8), rot(6, 3.8)];
+  g.fillStyle(ferruleColor, 1);
+  g.fillPoints(ferrulePts, true);
+  g.lineStyle(0.8 * s, 0x9aa4aa, 0.8);
+  const crimpA = rot(7.2, -3.8);
+  const crimpB = rot(7.2, 3.8);
+  g.beginPath();
+  g.moveTo(crimpA.x, crimpA.y);
+  g.lineTo(crimpB.x, crimpB.y);
+  g.strokePath();
+
+  // Eraser.
+  const eraserPts = [rot(8.5, -3.8), rot(13, -3.8), rot(13, 3.8), rot(8.5, 3.8)];
+  g.fillStyle(eraserColor, 1);
+  g.fillPoints(eraserPts, true);
+  g.lineStyle(1 * s, 0xb85f74, 0.7);
+  g.strokePoints(eraserPts, true);
+}

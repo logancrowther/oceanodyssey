@@ -39,7 +39,7 @@ export default class TitleScene extends Phaser.Scene {
     drawSunGlow(this.add.graphics(), 800, 110);
 
     this.add
-      .text(width / 2, 220, 'Ocean Odyssey', heading('56px', { strokeThickness: 6 }))
+      .text(width / 2, 220, 'Abyssal Odyssey', heading('56px', { strokeThickness: 6 }))
       .setOrigin(0.5);
 
     this.add
@@ -65,7 +65,17 @@ export default class TitleScene extends Phaser.Scene {
   // Tucked in the bottom right, well away from Play - resets coins,
   // inventory and catches back to a fresh save. Destructive, so it takes a
   // second confirming tap within a few seconds rather than wiping on the
-  // very first click.
+  // very first click. y is kept well inset from the bottom edge for the
+  // same reason addStatusBar keeps its own text inset from the top: the
+  // game canvas covers the whole browser window (Scale.ENVELOP) and crops
+  // whatever overflows, so on a browser window proportioned wider than the
+  // design's 960x600 (a maximized 16:9 window is already right at that
+  // edge), a real chunk of the bottom (and top, symmetrically) gets
+  // cropped off. The old y = height - 30 sat inside that crop zone on
+  // exactly the kind of wide window most people actually play in, which
+  // is why the button was invisible - height - 92 mirrors the status
+  // bar's own y = 92 top margin and clears the crop out to the same
+  // ~2.3:1 window aspect.
   buildWipeDataButton(width, height) {
     let confirming = false;
     let confirmTimer = null;
@@ -73,7 +83,7 @@ export default class TitleScene extends Phaser.Scene {
     const btn = createBubbleButton(
       this,
       width - 100,
-      height - 30,
+      height - 92,
       170,
       38,
       'Wipe Data',

@@ -4,6 +4,7 @@ import TitleScene from './scenes/TitleScene.js';
 import OceanScene from './scenes/OceanScene.js';
 import ShopScene from './scenes/ShopScene.js';
 import InventoryScene from './scenes/InventoryScene.js';
+import FishIndexScene from './scenes/FishIndexScene.js';
 import { DESIGN_WIDTH, DESIGN_HEIGHT } from './constants.js';
 
 // Phaser's Scale Manager has no working option to render the canvas at a
@@ -30,7 +31,7 @@ const config = {
     width: DESIGN_WIDTH * RES_MULT,
     height: DESIGN_HEIGHT * RES_MULT
   },
-  scene: [BootScene, TitleScene, OceanScene, ShopScene, InventoryScene]
+  scene: [BootScene, TitleScene, OceanScene, ShopScene, InventoryScene, FishIndexScene]
 };
 
 new Phaser.Game(config);
