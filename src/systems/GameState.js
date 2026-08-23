@@ -1,7 +1,32 @@
 // Bumped when a change makes old save data meaningless (this one - the
 // underwater redesign changed the whole game) so everyone starts fresh
 // under a new key instead of the old save silently carrying over.
-const STORAGE_KEY = 'oceanOdysseySave_v2';
+// v3 bump: the checksum below is now MANDATORY for this key, no exceptions -
+// v2 (checksum-less) saves get migrated across exactly once, below, rather
+// than sharing a key where "checksum missing" has to stay a trusted state
+// forever (that gap was verified exploitable - deleting just the checksum
+// key made a hand-edited save look identical to a legitimate pre-checksum
+// save; bumping the key means "no checksum" under v3 is never trusted).
+const LEGACY_STORAGE_KEY = 'oceanOdysseySave_v2';
+const STORAGE_KEY = 'oceanOdysseySave_v3';
+const CHECKSUM_KEY = STORAGE_KEY + '_chk';
+// Not real cryptography - the point isn't to stop someone determined enough
+// to read the (obfuscated) bundle and reimplement this, it's to stop the
+// far more common "open DevTools > Application > Local Storage and edit
+// coins to 999999" cheat, which otherwise works with zero effort since the
+// save is just plaintext JSON. A mismatch here means the stored JSON was
+// hand-edited outside the game, so it's discarded rather than trusted.
+const SALT = 'abyssal-odyssey-save-v3';
+
+function hashState(str) {
+  const salted = SALT + str;
+  let h = 0x811c9dc5;
+  for (let i = 0; i < salted.length; i += 1) {
+    h ^= salted.charCodeAt(i);
+    h = Math.imul(h, 0x01000193);
+  }
+  return (h >>> 0).toString(36);
+}
 
 function defaultState() {
   return {
@@ -23,27 +48,72 @@ function defaultState() {
     // How many times the line-length upgrade has been bought (see
     // data/upgradeData.js) - determines how deep the hook can go. 0 =
     // starting line, no purchases yet.
-    lineLengthTier: 0
+    lineLengthTier: 0,
+    // Every species id ever landed, permanently - powers the Fishing
+    // Index (see FishIndexScene). Deliberately separate from `catches`
+    // (which empties out as fish are sold or eaten as bait) so an index
+    // entry stays unlocked forever once first caught, id -> true.
+    discoveredFish: {}
   };
 }
 
 class GameState {
   constructor() {
     this.data = defaultState();
+    this._saveTimer = null;
+    if (typeof window !== 'undefined') {
+      // Guarantees a debounced save still lands if the tab closes before
+      // its timer fires.
+      window.addEventListener('beforeunload', () => this.flush());
+    }
   }
 
   load() {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      this.data = defaultState();
-      return;
+    let raw = localStorage.getItem(STORAGE_KEY);
+
+    if (raw === null) {
+      // Nothing under the current (checksummed) key yet - the ONE case
+      // where a pre-existing save with no checksum is still trusted: a
+      // real v2 save left over from before this key bump. Migrated once,
+      // immediately below, straight into the strictly-checked v3 key -
+      // after this point in time "no checksum" is never trusted again.
+      const legacyRaw = localStorage.getItem(LEGACY_STORAGE_KEY);
+      if (legacyRaw === null) {
+        this.data = defaultState();
+        return;
+      }
+      raw = legacyRaw;
+    } else {
+      // Under the current key, a checksum is mandatory - missing or wrong
+      // both mean the JSON doesn't match what the game itself last wrote,
+      // whether from hand-editing or corruption, so it's discarded rather
+      // than trusted.
+      const storedChecksum = localStorage.getItem(CHECKSUM_KEY);
+      if (storedChecksum === null || storedChecksum !== hashState(raw)) {
+        this.data = defaultState();
+        this.flush();
+        return;
+      }
     }
+
     try {
       const parsed = JSON.parse(raw);
       this.data = { ...defaultState(), ...parsed };
+      // Saves from before the Fishing Index existed have no discoveredFish
+      // record at all - backfill it from whatever's still sitting in the
+      // bag right now, so a species the player is visibly holding doesn't
+      // show up locked. Anything already sold or used as bait by then is
+      // unrecoverable and stays locked until caught again.
+      this.data.catches.forEach((c) => {
+        this.data.discoveredFish[c.itemId] = true;
+      });
     } catch (e) {
       this.data = defaultState();
     }
+    // Immediately re-save so a migrated v2 save (or anything that just went
+    // through the merge/backfill above) is durably persisted under the
+    // checksummed v3 key right away, not left waiting on the next mutation.
+    this.flush();
   }
 
   // Resets everything back to a fresh save - coins, inventory, catches, the
@@ -51,11 +121,35 @@ class GameState {
   // the old save back.
   wipe() {
     this.data = defaultState();
-    this.save();
+    this.flush();
   }
 
+  // A single action (catching a fish, say) can trigger several of these
+  // in a row - consuming bait, adding the catch, adding coins each call
+  // this once. JSON.stringify-ing the whole save (which only grows as
+  // more catches pile up over a session) and writing it to localStorage
+  // is synchronous and was being paid on every single one of those calls
+  // - the real cause of the game periodically freezing for a moment.
+  // Coalescing a burst of calls into one write shortly after keeps the
+  // same "always saved" guarantee without paying that cost per mutation.
   save() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data));
+    if (this._saveTimer) return;
+    this._saveTimer = setTimeout(() => {
+      this._saveTimer = null;
+      this.flush();
+    }, 200);
+  }
+
+  // Writes immediately, bypassing the debounce - for moments that need
+  // the save to be durable right now (a wipe, or the tab closing).
+  flush() {
+    if (this._saveTimer) {
+      clearTimeout(this._saveTimer);
+      this._saveTimer = null;
+    }
+    const raw = JSON.stringify(this.data);
+    localStorage.setItem(STORAGE_KEY, raw);
+    localStorage.setItem(CHECKSUM_KEY, hashState(raw));
   }
 
   get coins() {
@@ -120,8 +214,13 @@ class GameState {
     const uid = this.data.nextCatchUid;
     this.data.nextCatchUid += 1;
     this.data.catches.push({ uid, itemId, weightKg, value });
+    this.data.discoveredFish[itemId] = true;
     this.save();
     return uid;
+  }
+
+  isDiscovered(itemId) {
+    return !!this.data.discoveredFish[itemId];
   }
 
   catchesOf(itemId) {
