@@ -21465,3 +21465,143 @@ export function drawOldBoot(g, x, y, scale = 1, rotation = 0, alpha = 1) {
 
   g.restore();
 }
+
+// A real deep-sea dragonfish (Stomiidae) - extremely elongated, eel-like
+// and near-black, with a hinged jaw of long transparent fangs (real deep-
+// sea dragonfish teeth are genuinely glass-clear, so they don't catch and
+// betray any stray light), rows of pale photophores down the flank, and a
+// long chin barbel tipped with a glowing lure - unlike the Angler Fish's
+// dorsal illicium, this hangs and trails from the CHIN, and glows a dim
+// red rather than the Angler's cyan: several real dragonfish species
+// (the loosejaws) are the rare deep-sea animals that can emit red light,
+// which most other deep-sea eyes can't even see - effectively a sniper
+// scope invisible to their prey.
+export function drawDragonfish(g, x, y, scale = 1, rotation = 0, alpha = 1) {
+  g.save();
+  g.translateCanvas(x, y);
+  if (rotation) g.rotateCanvas(rotation);
+  const s = scale;
+
+  const bodyColor = 0x0a0c12;
+  const bellyColor = 0x14171f;
+  const finColor = 0x0e1017;
+  const darkColor = 0x000000;
+  const fangColor = 0xcfe6f2;
+  const photophoreColor = 0xff5a4a;
+
+  // Long, slender, whip-tapering eel body - none of the other deep-sea
+  // fish here (the lumpy, globular Angler) reads anywhere near this
+  // elongated.
+  const top = [
+    { x: -34, y: -3 },
+    { x: -26, y: -7 },
+    { x: -14, y: -6.4 },
+    { x: 0, y: -4.4 },
+    { x: 16, y: -3 },
+    { x: 30, y: -1.8 },
+    { x: 44, y: -0.8 }
+  ];
+  const bottom = [
+    { x: 44, y: 0.8 },
+    { x: 30, y: 2.4 },
+    { x: 16, y: 4 },
+    { x: 0, y: 5.2 },
+    { x: -14, y: 6.2 },
+    { x: -26, y: 4.2 },
+    { x: -34, y: 3 }
+  ];
+  const body = [...top, ...bottom].map((p) => ({ x: p.x * s, y: p.y * s }));
+
+  // A whip-thin tail filament, trailing well past where the body itself
+  // tapers out.
+  g.lineStyle(1 * s, finColor, 0.85 * alpha);
+  g.beginPath();
+  g.moveTo(44 * s, 0 * s);
+  quadCurveTo(g, 44 * s, 0 * s, 56 * s, -1.5 * s, 66 * s, 0.5 * s);
+  g.strokePath();
+
+  // Small dorsal and anal fins, both set unusually far back near the tail
+  // rather than centred - matches the real fish, and reads very
+  // differently from every forward-set-finned open-water species.
+  g.fillStyle(finColor, alpha);
+  g.fillTriangle(24 * s, -3 * s, 33 * s, -9 * s, 36 * s, -2.5 * s);
+  g.fillTriangle(24 * s, 3.5 * s, 32 * s, 9.5 * s, 35 * s, 3 * s);
+
+  // A tiny pectoral fin just behind the head.
+  g.fillStyle(finColor, alpha);
+  g.fillTriangle(-20 * s, 2 * s, -26 * s, 9 * s, -16 * s, 5 * s);
+
+  // Body.
+  g.fillStyle(bodyColor, alpha);
+  g.fillPoints(body, true);
+  g.fillStyle(bellyColor, 0.3 * alpha);
+  g.fillEllipse(0, 4 * s, 60 * s, 6 * s);
+  g.lineStyle(1 * s, darkColor, 0.85 * alpha);
+  g.strokePoints(body, true);
+
+  // The huge hinged jaw, dropped open at an angle - real dragonfish can
+  // unhinge their jaw far wider than the head itself to take prey larger
+  // than they are.
+  g.fillStyle(darkColor, alpha);
+  g.beginPath();
+  g.moveTo(-34 * s, -4 * s);
+  g.lineTo(-14 * s, -3 * s);
+  g.lineTo(-16 * s, 9 * s);
+  g.lineTo(-32 * s, 10 * s);
+  g.closePath();
+  g.fillPath();
+
+  // Long needle fangs, top and bottom, drawn translucent - too long to
+  // fully close over, the real animal's own signature look.
+  g.fillStyle(fangColor, 0.55 * alpha);
+  for (let i = 0; i < 4; i += 1) {
+    const tt = i / 3;
+    const tx = -32 + tt * 15;
+    g.fillTriangle(tx * s, -3 * s, (tx + 2) * s, -3 * s, (tx + 1) * s, 5 * s);
+  }
+  for (let i = 0; i < 3; i += 1) {
+    const tt = i / 2;
+    const tx = -30 + tt * 12;
+    g.fillTriangle(tx * s, 9.5 * s, (tx + 2.2) * s, 9.5 * s, (tx + 1.1) * s, 2.5 * s);
+  }
+
+  // Small, dark, near-vestigial eye.
+  g.fillStyle(0x1c2028, alpha);
+  g.fillCircle(-24 * s, -6 * s, 1.6 * s);
+  g.fillStyle(0x000000, 0.8 * alpha);
+  g.fillCircle(-24 * s, -6 * s, 0.9 * s);
+
+  // The chin barbel - unlike the Angler's illicium (which arcs UP off the
+  // forehead), this hangs and trails DOWN and back from underneath the
+  // jaw, tipped with a dim red photophore lure.
+  g.lineStyle(1 * s, 0x1c2028, alpha);
+  g.beginPath();
+  g.moveTo(-30 * s, 9 * s);
+  quadCurveTo(g, -30 * s, 9 * s, -26 * s, 22 * s, -14 * s, 26 * s);
+  g.strokePath();
+
+  const lureX = -14 * s;
+  const lureY = 26 * s;
+  g.fillStyle(photophoreColor, 0.16 * alpha);
+  g.fillCircle(lureX, lureY, 7 * s);
+  g.fillStyle(photophoreColor, 0.32 * alpha);
+  g.fillCircle(lureX, lureY, 4.5 * s);
+  g.fillStyle(photophoreColor, 0.9 * alpha);
+  g.fillCircle(lureX, lureY, 2.2 * s);
+  g.fillStyle(0xffd8d0, alpha);
+  g.fillCircle(lureX, lureY, 1 * s);
+
+  // Two faint rows of small photophores dotting the flank and belly - the
+  // real animal's array of light-producing spots used to counter-
+  // illuminate itself against the faint light from above.
+  g.fillStyle(photophoreColor, 0.55 * alpha);
+  [-8, 0, 8, 16, 24].forEach((px) => {
+    g.fillCircle(px * s, 3.5 * s, 0.9 * s);
+  });
+  g.fillStyle(photophoreColor, 0.35 * alpha);
+  [-4, 4, 12, 20].forEach((px) => {
+    g.fillCircle(px * s, -1.5 * s, 0.7 * s);
+  });
+
+  g.restore();
+}

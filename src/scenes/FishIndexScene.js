@@ -45,9 +45,27 @@ export default class FishIndexScene extends Phaser.Scene {
     createIconButton(this, width - 40, 92, 22, drawCloseIcon, () => this.scene.start('OceanScene'));
 
     // Every real fish in the game (junk items like the Old Boot aren't
-    // species, so they don't belong in a fishing log), in the same order
-    // they're defined in fishData.js.
-    this.allItems = FISH.map((f) => ({ itemId: f.id, name: f.name, baseWeightKg: f.baseWeightKg }));
+    // species, so they don't belong in a fishing log), ordered least to
+    // most valuable "on average" (an average-weight catch's coin value -
+    // the same baseWeightKg * valuePerKg an actual catch's value is
+    // derived from, just without a specific roll to plug in).
+    const withValue = FISH.map((f) => ({
+      itemId: f.id,
+      name: f.name,
+      baseWeightKg: f.baseWeightKg,
+      avgValue: f.baseWeightKg * f.valuePerKg
+    }));
+    this.allItems = withValue.slice().sort((a, b) => a.avgValue - b.avgValue || a.name.localeCompare(b.name));
+
+    // The badge in each box's corner is a value RANK, not a list position -
+    // the single most valuable fish in the game is always "1#" regardless
+    // of where it happens to scroll to, so it's computed off a separate
+    // descending sort rather than off this.allItems' own (ascending) order.
+    const byValueDesc = withValue.slice().sort((a, b) => b.avgValue - a.avgValue || a.name.localeCompare(b.name));
+    this.valueRank = {};
+    byValueDesc.forEach((item, i) => {
+      this.valueRank[item.itemId] = i + 1;
+    });
 
     this.viewportBottom = height - VIEWPORT_BOTTOM_MARGIN;
 
@@ -196,5 +214,14 @@ export default class FishIndexScene extends Phaser.Scene {
       .text(x, y - 16, discovered ? item.name : '???', label('15px', discovered ? {} : { color: '#4a6472' }))
       .setOrigin(0.5);
     this.gridContainer.add(nameText);
+
+    // Value rank badge, bottom-left corner of the box - shown even for a
+    // locked "???" entry, since a number alone doesn't spoil what the fish
+    // actually is.
+    const rank = this.valueRank[item.itemId];
+    const rankText = this.add
+      .text(x - (CELL_W - 16) / 2 + 8, y + (CELL_H - 16) / 2 - 8, `${rank}#`, label('12px', { color: '#7fa8bd' }))
+      .setOrigin(0, 1);
+    this.gridContainer.add(rankText);
   }
 }

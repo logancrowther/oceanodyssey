@@ -255,7 +255,7 @@ export const FISH = [
     // famous for the rigid pectoral fins they can't fold flat, and for
     // sheer brute strength on the line.
     baseWeightKg: 90.0,
-    valuePerKg: 22,
+    valuePerKg: 18,
     turnsRequired: 4.4,
     rarity: 'legendary',
     difficultyMultiplier: 2.9,
@@ -268,7 +268,7 @@ export const FISH = [
     // is one of the biggest bony fish in the ocean and a genuine
     // bucket-list gamefish.
     baseWeightKg: 110.0,
-    valuePerKg: 24,
+    valuePerKg: 19,
     turnsRequired: 4.6,
     rarity: 'legendary',
     difficultyMultiplier: 3.0,
@@ -292,7 +292,7 @@ export const FISH = [
     // The smallest marlin here - still a serious gamefish, just a step
     // below its three larger relatives.
     baseWeightKg: 32.0,
-    valuePerKg: 17,
+    valuePerKg: 14,
     turnsRequired: 3.4,
     rarity: 'rare',
     difficultyMultiplier: 2.2,
@@ -2067,6 +2067,23 @@ export const FISH = [
     rarity: 'legendary',
     difficultyMultiplier: 1.2,
     // An opportunistic abyssal ambush predator - takes whatever drifts by.
+    baits: ['prawn', 'squid']
+  },
+  {
+    id: 'dragonfish',
+    name: 'Dragonfish',
+    // Only turns up once the hook is past 1500m (see
+    // OceanScene.NORMAL_POOL/DEPTH_LIMITS) - sits between the Blue-eye
+    // Trevalla's 600m and the Angler Fish's abyssal 4000m. Tiny like the
+    // real animal (real dragonfish rarely top 30cm), so priced very high
+    // per kg to still feel like a real find rather than pocket change.
+    baseWeightKg: 0.4,
+    valuePerKg: 60,
+    turnsRequired: 2.3,
+    rarity: 'legendary',
+    difficultyMultiplier: 1.4,
+    // A passive abyssal ambush predator like the Angler Fish - not
+    // picky about what's drifting on the hook.
     baits: ['prawn', 'squid']
   },
   {

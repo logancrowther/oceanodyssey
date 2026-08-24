@@ -180,6 +180,7 @@ import {
   drawWhiting,
   drawCoralTrout,
   drawAngler,
+  drawDragonfish,
   drawGreatWhite,
   drawTigerShark,
   drawBullShark,
@@ -365,6 +366,7 @@ const DRAWERS = {
   whiting: drawWhiting,
   coral_trout: drawCoralTrout,
   angler_fish: drawAngler,
+  dragonfish: drawDragonfish,
   great_white: drawGreatWhite,
   tiger_shark: drawTigerShark,
   bull_shark: drawBullShark,
@@ -550,6 +552,7 @@ const BAIT_HOOK_SCALE = {
   whiting: 0.3,
   coral_trout: 0.36,
   angler_fish: 0.4,
+  dragonfish: 0.32,
   // Sharks are a deliberate exception to "modest" - their SWIM_SCALE below
   // is already huge (1.0-1.15, "unmistakable the moment one shows up"), so
   // a small bait-on-hook scale here made them visibly collapse the instant
@@ -738,6 +741,7 @@ const REVEAL_SCALE = {
   whiting: 0.65,
   coral_trout: 0.85,
   angler_fish: 0.8,
+  dragonfish: 0.7,
   great_white: 1.3,
   tiger_shark: 1.15,
   bull_shark: 1.2,
@@ -925,6 +929,7 @@ const SWIM_SCALE = {
   whiting: 0.36,
   coral_trout: 0.5,
   angler_fish: 0.44,
+  dragonfish: 0.34,
   great_white: 1.15,
   tiger_shark: 1.0,
   bull_shark: 1.05,
@@ -1107,6 +1112,7 @@ const SWIM_SPEED = {
   whiting: 38,
   coral_trout: 32,
   angler_fish: 16,
+  dragonfish: 18,
   great_white: 48,
   tiger_shark: 52,
   bull_shark: 46,
@@ -1240,6 +1246,7 @@ const NORMAL_POOL = [
   'whiting',
   'coral_trout',
   'angler_fish',
+  'dragonfish',
   'barndoor_skate',
   'winter_skate',
   'clearnose_skate',
@@ -1256,6 +1263,7 @@ const NORMAL_POOL = [
 // Coral Trout only turns up from 200m down; Hapuku is a real deep-dwelling
 // wreckfish and only turns up from 100m; Blue-eye Trevalla is a real
 // continental-shelf deep-dropper species and only turns up from 600m; the
+// Dragonfish is a real deep-sea species and only turns up from 1500m; the
 // Angler Fish only turns up from a genuinely abyssal 4000m down; the Boot
 // only turns up above 150m (junk washing around near the surface, not down
 // in open water).
@@ -1270,6 +1278,9 @@ const DEPTH_LIMITS = {
   blueline_tilefish: { min: 3000 },
   golden_tilefish: { min: 4800 },
   blue_eye_trevalla: { min: 7200 },
+  // A real deep-sea dragonfish - sits between the Blue-eye Trevalla's
+  // continental-shelf 600m and the Angler Fish's abyssal 4000m.
+  dragonfish: { min: 18000 },
   angler_fish: { min: 48000 },
   old_boot: { max: 1800 }
 };
@@ -1859,7 +1870,9 @@ const RAY_BAIT = {
   guitarfish: { squidChance: 0.16 / 3, prawnChance: 0.02 / 3 },
   shovelnose_ray: { squidChance: 0.16 / 3, prawnChance: 0.02 / 3 },
   eagle_ray: { squidChance: 0.13 / 3, prawnChance: 0.02 / 3 },
-  manta_ray: { squidChance: 0.04 / 3, prawnChance: 0.004 / 3 },
+  // The rarest ray by far, to match it being the single most valuable one
+  // in the pool - roughly a fifth of its old already-lowest chance.
+  manta_ray: { squidChance: 0.008 / 3, prawnChance: 0.0008 / 3 },
   devil_ray: { squidChance: 0.08 / 3, prawnChance: 0.01 / 3 },
   stingray: { squidChance: 0.2 / 3, prawnChance: 0.03 / 3 },
   southern_stingray: { squidChance: 0.16 / 3, prawnChance: 0.025 / 3 },
