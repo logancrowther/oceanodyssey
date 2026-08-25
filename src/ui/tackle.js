@@ -20171,10 +20171,13 @@ export function drawElectricRay(g, x, y, scale = 1, rotation = 0, alpha = 1) {
   g.restore();
 }
 
-// A torpedo ray - a real, close relative of the Electric Ray here (same
-// order), but bigger and more robust, told genuinely apart by the real
-// animal's own field mark: bold, dark, ocellated ring blotches across
-// the back, unlike the Electric Ray's own plain, unmarked skin.
+// A torpedo ray - built the same simple way as the plain baseline
+// Stingray right beside it (a smooth disc blending straight into the
+// head, one venomous-looking tail spine, plain mottled blotching), the
+// one deliberate difference being a rounded oval disc instead of the
+// Stingray's own diamond-shaped one. Distinguished from the Stingray in
+// the water by being a genuinely faster swimmer (see
+// OceanScene.SWIM_SPEED), not by a different silhouette.
 export function drawTorpedoRay(g, x, y, scale = 1, rotation = 0, alpha = 1) {
   g.save();
   g.translateCanvas(x, y);
@@ -20183,64 +20186,45 @@ export function drawTorpedoRay(g, x, y, scale = 1, rotation = 0, alpha = 1) {
 
   const bodyColor = 0x5c5040;
   const backColor = 0x3c342a;
-  const bellyColor = 0xb8ac98;
   const finColor = 0x483e30;
   const darkColor = 0x140f08;
-  const ringColor = 0x201a10;
-  const ringFill = 0x847858;
+  const mottleColor = 0x241e14;
 
-  const disc = { cx: 0, cy: -2, rx: 24, ry: 21 };
+  // Same whip tail and venomous-looking spine as the plain baseline
+  // Stingray right beside it.
+  g.lineStyle(1.4 * s, finColor, alpha);
+  g.beginPath();
+  g.moveTo(0, 26 * s);
+  quadCurveTo(g, 0, 26 * s, 4 * s, 44 * s, 2 * s, 60 * s);
+  g.strokePath();
+  g.fillStyle(0xe4d8b8, alpha);
+  g.fillTriangle(2 * s, 36 * s, 6 * s, 41 * s, 3.4 * s, 34 * s);
 
-  g.fillStyle(finColor, alpha);
-  g.fillEllipse(35 * s, 25 * s, 9 * s, 8 * s);
-  g.lineStyle(1 * s, darkColor, 0.5 * alpha);
-  g.strokeEllipse(35 * s, 25 * s, 9 * s, 8 * s);
-
-  const tailTop = [
-    { x: 6, y: 14 },
-    { x: 17, y: 18 },
-    { x: 28, y: 23 }
-  ];
-  const tailBottom = tailTop.map((p) => ({ x: p.x + 2, y: p.y + 9 })).reverse();
-  const tail = tailTop.concat(tailBottom).map((p) => ({ x: p.x * s, y: p.y * s }));
+  // The one deliberate difference from the Stingray: a smooth, rounded
+  // oval disc instead of its diamond-shaped one.
   g.fillStyle(bodyColor, alpha);
-  g.fillPoints(tail, true);
-  g.lineStyle(1 * s, darkColor, 0.45 * alpha);
-  g.strokePoints(tail, true);
+  g.fillEllipse(0, 0, 48 * s, 52 * s);
 
-  g.fillStyle(finColor, alpha);
-  g.fillTriangle(12 * s, 17 * s, 18 * s, 17.5 * s, 14.5 * s, 10.5 * s);
-  g.fillTriangle(21 * s, 21 * s, 27 * s, 21.5 * s, 23.5 * s, 14.5 * s);
-  g.lineStyle(1 * s, darkColor, 0.45 * alpha);
-  g.strokeTriangle(12 * s, 17 * s, 18 * s, 17.5 * s, 14.5 * s, 10.5 * s);
-  g.strokeTriangle(21 * s, 21 * s, 27 * s, 21.5 * s, 23.5 * s, 14.5 * s);
+  g.fillStyle(backColor, 0.35 * alpha);
+  g.fillEllipse(0, -4 * s, 32 * s, 40 * s);
 
-  g.fillStyle(bodyColor, alpha);
-  g.fillEllipse(disc.cx * s, disc.cy * s, disc.rx * s, disc.ry * s);
-
-  // Bold, dark, ocellated ring blotches across the back - the real
-  // Torpedo Ray's own field mark, unlike the plain Electric Ray.
+  g.fillStyle(mottleColor, 0.3 * alpha);
   [
-    [-9, -8, 4.4],
-    [9, -8, 4.4],
-    [0, 6, 5],
-    [-10, 8, 3]
-  ].forEach(([rx, ry, rr]) => {
-    g.lineStyle(1.4 * s, ringColor, 0.6 * alpha);
-    g.strokeCircle(rx * s, ry * s, rr * s);
-    g.fillStyle(ringFill, 0.3 * alpha);
-    g.fillCircle(rx * s, ry * s, rr * 0.55 * s);
-  });
+    [-6, -10, 3.4],
+    [7, 4, 3.6],
+    [-8, 8, 2.8],
+    [4, -8, 3]
+  ].forEach(([bx, by, br]) => g.fillEllipse(bx * s, by * s, br * 1.3 * s, br * s));
 
-  g.lineStyle(1.3 * s, darkColor, 0.55 * alpha);
-  g.strokeEllipse(disc.cx * s, disc.cy * s, disc.rx * s, disc.ry * s);
+  g.lineStyle(1.2 * s, darkColor, 0.6 * alpha);
+  g.strokeEllipse(0, 0, 48 * s, 52 * s);
 
-  g.fillStyle(0xd8ccb4, alpha);
-  g.fillCircle(-6 * s, -15 * s, 1.7 * s);
-  g.fillCircle(6 * s, -15 * s, 1.7 * s);
-  g.fillStyle(0x0c0906, alpha);
-  g.fillCircle(-5.7 * s, -15 * s, 0.95 * s);
-  g.fillCircle(6.3 * s, -15 * s, 0.95 * s);
+  g.fillStyle(0xe8dcc4, alpha);
+  g.fillCircle(-6 * s, -13.5 * s, 1.6 * s);
+  g.fillCircle(6 * s, -13.5 * s, 1.6 * s);
+  g.fillStyle(0x0e0a06, alpha);
+  g.fillCircle(-5.7 * s, -13.5 * s, 0.9 * s);
+  g.fillCircle(6.3 * s, -13.5 * s, 0.9 * s);
 
   g.restore();
 }
@@ -21602,6 +21586,225 @@ export function drawDragonfish(g, x, y, scale = 1, rotation = 0, alpha = 1) {
   [-4, 4, 12, 20].forEach((px) => {
     g.fillCircle(px * s, -1.5 * s, 0.7 * s);
   });
+
+  g.restore();
+}
+
+// A humpback whale - not a fish or a shark, and drawn nothing like either:
+// a real humpback's own unmistakable field marks are a much deeper, chunkier
+// body than any shark here, a small stubby dorsal fin sat on a "hump" far
+// back on the spine (the real animal's namesake), knobby tubercles studding
+// the head and jaw, ventral throat grooves, twin blowholes, a wide notched
+// tail fluke, and above all its own huge, elongated, mostly-white pectoral
+// flipper - by real proportion nearly a third of the whole body length,
+// nothing else in the game has anything close.
+export function drawHumpbackWhale(g, x, y, scale = 1, rotation = 0, alpha = 1) {
+  g.save();
+  g.translateCanvas(x, y);
+  if (rotation) g.rotateCanvas(rotation);
+  const s = scale;
+
+  const backColor = 0x20262a;
+  const bellyColor = 0xe8e2d0;
+  const finColor = 0x20262a;
+  const darkColor = 0x0a0c0e;
+  const flipperColor = 0xf0ecdc;
+  const flipperEdgeColor = 0x2c3236;
+  const barnacleColor = 0xc9bfa0;
+
+  // A long, deep-bodied rorqual, thickest around a third of the way back
+  // from the rounded (not pointed) snout and tapering to a slender tail
+  // stock - real humpbacks read as an elongated torpedo, not a round
+  // blob, even though they're much chunkier than any shark here.
+  const body = [
+    { x: -58, y: 0 },
+    { x: -55, y: -8 },
+    { x: -46, y: -15 },
+    { x: -32, y: -19 },
+    { x: -16, y: -20 },
+    { x: 0, y: -19 },
+    { x: 14, y: -16 },
+    { x: 26, y: -11 },
+    { x: 34, y: -6 },
+    { x: 39, y: 0 },
+    { x: 34, y: 6 },
+    { x: 26, y: 11 },
+    { x: 14, y: 16 },
+    { x: 0, y: 19 },
+    { x: -16, y: 20 },
+    { x: -32, y: 19 },
+    { x: -46, y: 15 },
+    { x: -55, y: 8 }
+  ].map((p) => ({ x: p.x * s, y: p.y * s }));
+
+  // The wide, notched tail fluke - two broad flat lobes swept out from a
+  // slender peduncle to a deep central notch, the real animal's own
+  // iconic silhouette (unlike a fish's single vertical tail fin, a
+  // whale's fluke is horizontal, but this side-profile stylization keeps
+  // the notch shape recognizable the same way the game's sharks already
+  // take real liberties with their own tails).
+  const fluke = [
+    { x: 36, y: -4 },
+    { x: 48, y: -20 },
+    { x: 70, y: -22 },
+    { x: 56, y: -8 },
+    { x: 44, y: -1 },
+    { x: 44, y: 1 },
+    { x: 56, y: 8 },
+    { x: 70, y: 22 },
+    { x: 48, y: 20 },
+    { x: 36, y: 4 }
+  ].map((p) => ({ x: p.x * s, y: p.y * s }));
+  g.fillStyle(finColor, alpha);
+  g.fillPoints(fluke, true);
+  g.lineStyle(1.3 * s, darkColor, 0.7 * alpha);
+  g.strokePoints(fluke, true);
+  // A faint centerline hints at the fluke lying in its own, horizontal
+  // plane rather than standing upright like a fish's tail.
+  g.lineStyle(1 * s, darkColor, 0.3 * alpha);
+  g.beginPath();
+  g.moveTo(40 * s, 0);
+  g.lineTo(66 * s, 0);
+  g.strokePath();
+
+  // The huge, elongated, mostly-white pectoral flipper, swept back off
+  // the front third of the body and tapering to a rounded tip - the real
+  // Humpback's own single most famous field mark, nothing else in the
+  // game has anything close.
+  const flipper = [
+    { x: -24, y: 8 },
+    { x: -36, y: 16 },
+    { x: -47, y: 27 },
+    { x: -55, y: 40 },
+    { x: -59, y: 53 },
+    { x: -52, y: 59 },
+    { x: -43, y: 51 },
+    { x: -33, y: 38 },
+    { x: -22, y: 24 },
+    { x: -12, y: 12 }
+  ].map((p) => ({ x: p.x * s, y: p.y * s }));
+  g.fillStyle(flipperColor, alpha);
+  g.fillPoints(flipper, true);
+  g.lineStyle(1.2 * s, flipperEdgeColor, 0.7 * alpha);
+  g.strokePoints(flipper, true);
+  // A dark leading-edge patch near the shoulder and a little mottling
+  // further out - real humpback flippers are rarely pure white end to
+  // end.
+  g.fillStyle(flipperEdgeColor, 0.35 * alpha);
+  g.fillEllipse(-30 * s, 16 * s, 8 * s, 5 * s);
+  [
+    [-45, 34],
+    [-53, 47]
+  ].forEach(([fx, fy]) => g.fillEllipse(fx * s, fy * s, 4 * s, 6 * s));
+  // A few small tubercle bumps along the flipper's own leading edge.
+  g.fillStyle(barnacleColor, 0.8 * alpha);
+  [
+    [-31, 15],
+    [-42, 25],
+    [-51, 37]
+  ].forEach(([tx, ty]) => g.fillCircle(tx * s, ty * s, 1.3 * s));
+
+  // Body - filled pale first so the dark dorsal band above reads as a
+  // crisp, fully-opaque line, the same countershading trick as the
+  // sharks use.
+  g.fillStyle(bellyColor, alpha);
+  g.fillPoints(body, true);
+
+  const topProfile = [
+    { x: -55, y: -8 },
+    { x: -46, y: -15 },
+    { x: -32, y: -19 },
+    { x: -16, y: -20 },
+    { x: 0, y: -19 },
+    { x: 14, y: -16 },
+    { x: 26, y: -11 },
+    { x: 34, y: -6 }
+  ].map((p) => ({ x: p.x * s, y: p.y * s }));
+  const backBand = topProfile.concat(
+    topProfile
+      .slice()
+      .reverse()
+      .map((p, i) => ({ x: p.x, y: p.y + (7 + Math.sin(i * 1.1) * 2.4) * s }))
+  );
+  g.fillStyle(backColor, alpha);
+  g.fillPoints(backBand, true);
+
+  g.lineStyle(1.6 * s, darkColor, 0.85 * alpha);
+  g.strokePoints(body, true);
+
+  // A small, stubby, hooked dorsal fin sat on a low "hump" far back along
+  // the spine - the real animal's own namesake, nowhere near the tall
+  // triangular fin a shark carries.
+  g.fillStyle(finColor, alpha);
+  g.fillTriangle(8 * s, -17 * s, 20 * s, -15 * s, 13 * s, -26 * s);
+  g.lineStyle(1.1 * s, darkColor, 0.6 * alpha);
+  g.strokeTriangle(8 * s, -17 * s, 20 * s, -15 * s, 13 * s, -26 * s);
+
+  // A row of small dorsal-ridge "knuckles" running from the fin back to
+  // the tail stock - a real, genuine Humpback field mark that sets it
+  // apart from the smooth-backed rorquals, not just a decorative frill.
+  g.fillStyle(backColor, alpha);
+  g.lineStyle(0.8 * s, darkColor, 0.5 * alpha);
+  [
+    [22, -13],
+    [27, -10],
+    [31, -7],
+    [34, -4]
+  ].forEach(([kx, ky]) => {
+    g.fillCircle(kx * s, ky * s, 1.6 * s);
+    g.strokeCircle(kx * s, ky * s, 1.6 * s);
+  });
+
+  // Ventral throat grooves - the real animal's pleated throat, a row of
+  // parallel lines running from the chin back under the jaw, unlike any
+  // fish or shark's smooth belly.
+  g.lineStyle(1 * s, darkColor, 0.4 * alpha);
+  for (let i = 0; i < 7; i += 1) {
+    const gx0 = -50 + i * 5;
+    g.beginPath();
+    g.moveTo(gx0 * s, 5 * s);
+    quadCurveTo(g, gx0 * s, 5 * s, (gx0 + 3.5) * s, 13 * s, (gx0 + 6) * s, 19 * s);
+    g.strokePath();
+  }
+
+  // Knobby tubercles studding the rostrum and lower jaw - the real
+  // animal's own hair-follicle bumps, unmistakable up close and unique
+  // to this species in the game.
+  g.fillStyle(barnacleColor, 0.85 * alpha);
+  [
+    [-54, -6],
+    [-49, -11],
+    [-42, -15],
+    [-34, -18],
+    [-25, -20]
+  ].forEach(([bx, by]) => g.fillCircle(bx * s, by * s, 1.7 * s));
+  [
+    [-53, 3],
+    [-47, 7],
+    [-39, 10]
+  ].forEach(([bx, by]) => g.fillCircle(bx * s, by * s, 1.4 * s));
+  g.lineStyle(0.6 * s, darkColor, 0.5 * alpha);
+  [
+    [-54, -6, 1.7],
+    [-49, -11, 1.7],
+    [-42, -15, 1.7],
+    [-34, -18, 1.7],
+    [-25, -20, 1.7],
+    [-53, 3, 1.4],
+    [-47, 7, 1.4],
+    [-39, 10, 1.4]
+  ].forEach(([bx, by, br]) => g.strokeCircle(bx * s, by * s, br * s));
+
+  // Twin blowholes on top of the head.
+  g.fillStyle(darkColor, 0.8 * alpha);
+  g.fillEllipse(-47 * s, -17 * s, 1.7 * s, 1 * s);
+  g.fillEllipse(-43 * s, -18.5 * s, 1.7 * s, 1 * s);
+
+  // Small, dark eye low on the head, just above the jawline.
+  g.fillStyle(darkColor, alpha);
+  g.fillCircle(-46 * s, -1 * s, 1.8 * s);
+  g.fillStyle(0x000000, 0.8 * alpha);
+  g.fillCircle(-46 * s, -1 * s, 1 * s);
 
   g.restore();
 }

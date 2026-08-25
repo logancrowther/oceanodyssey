@@ -185,6 +185,7 @@ import {
   drawTigerShark,
   drawBullShark,
   drawMegalodon,
+  drawHumpbackWhale,
   drawOldBoot
 } from '../ui/tackle.js';
 import { DESIGN_WIDTH, DESIGN_HEIGHT } from '../constants.js';
@@ -371,6 +372,7 @@ const DRAWERS = {
   tiger_shark: drawTigerShark,
   bull_shark: drawBullShark,
   megalodon: drawMegalodon,
+  humpback_whale: drawHumpbackWhale,
   old_boot: drawOldBoot
 };
 
@@ -562,6 +564,7 @@ const BAIT_HOOK_SCALE = {
   tiger_shark: 0.75,
   bull_shark: 0.78,
   megalodon: 4,
+  humpback_whale: 1.3,
   old_boot: 0.55
 };
 
@@ -749,6 +752,11 @@ const REVEAL_SCALE = {
   // fills the screen at the moment of the reveal, the one time it's ever
   // seen at all.
   megalodon: 7.5,
+  // A real trophy encounter in its own right, sitting well above every
+  // shark's own REVEAL_SCALE - not quite Megalodon-huge (that one's the
+  // single rarest thing in the game and is never seen swimming around as
+  // itself), but still an unmistakably enormous reveal.
+  humpback_whale: 2.2,
   old_boot: 1.1
 };
 
@@ -933,6 +941,10 @@ const SWIM_SCALE = {
   great_white: 1.15,
   tiger_shark: 1.0,
   bull_shark: 1.05,
+  // Bigger on-screen than any shark - a real humpback dwarfs every other
+  // swimmer in the game (Megalodon aside, which never actually swims
+  // around as itself).
+  humpback_whale: 1.8,
   old_boot: 0.5
 };
 const SWIM_SPEED = {
@@ -1061,7 +1073,10 @@ const SWIM_SPEED = {
   cownose_ray: 26,
   butterfly_ray: 16,
   electric_ray: 12,
-  torpedo_ray: 14,
+  // Looks like a plain Stingray (see tackle.js) but noticeably faster in
+  // the water - roughly double the Stingray's own speed, not just a
+  // recolor with the same swim feel.
+  torpedo_ray: 34,
   banjo_ray: 18,
   fiddler_ray: 18,
   barndoor_skate: 18,
@@ -1116,6 +1131,10 @@ const SWIM_SPEED = {
   great_white: 48,
   tiger_shark: 52,
   bull_shark: 46,
+  // Slower and more deliberate than any shark - a real humpback is a
+  // powerful swimmer but not a sprinter, and its sheer bulk should read as
+  // unhurried rather than darting.
+  humpback_whale: 24,
   old_boot: 18
 };
 
@@ -1883,6 +1902,26 @@ const RAY_BAIT = {
   banjo_ray: { squidChance: 0.15 / 3, prawnChance: 0.02 / 3 },
   fiddler_ray: { squidChance: 0.15 / 3, prawnChance: 0.02 / 3 }
 };
+// A Humpback Whale answers to the same real prey/bycatch a real one
+// actually feeds on out in open water: the same two stackable baits the
+// rays answer to (Squid/Prawn), plus Australian Salmon and every Mackerel
+// species as small schooling fish it lunge-feeds on. No depth gate, same
+// as the rays - it's the bait that matters, not how deep the hook is. Kept
+// deliberately below even the Manta Ray's own already-lowest chance in the
+// pool (see RAY_BAIT above) - a genuine once-in-a-great-while encounter.
+const WHALE_BAIT = [
+  'squid',
+  'prawn',
+  'australian_salmon',
+  'spotted_mackerel',
+  'spanish_mackerel',
+  'school_mackerel',
+  'king_mackerel',
+  'atlantic_mackerel',
+  'cero_mackerel'
+];
+const WHALE_CHANCE = 0.001;
+
 // Not part of the spawn roll at all - a Megalodon never swims around as
 // itself. Instead, right as one of the three real sharks above actually
 // bites (see updateSwimmers) at least this deep, there's this tiny chance
@@ -2141,6 +2180,9 @@ export default class OceanScene extends Phaser.Scene {
         const chance = baitId === 'squid' ? config.squidChance : config.prawnChance;
         if (Math.random() < chance) return rayId;
       }
+    }
+    if (baitId && WHALE_BAIT.includes(baitId) && Math.random() < WHALE_CHANCE) {
+      return 'humpback_whale';
     }
     const pool = NORMAL_POOL.filter((id) => {
       const limits = DEPTH_LIMITS[id];

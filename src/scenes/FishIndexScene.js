@@ -7,6 +7,16 @@ import { addStatusBar } from '../ui/fishIcon.js';
 import { DESIGN_WIDTH, DESIGN_HEIGHT } from '../constants.js';
 import { heading, subheading, label } from '../ui/textStyle.js';
 import { CATCH_DRAWERS } from './InventoryScene.js';
+import { drawMegalodon } from '../ui/tackle.js';
+import { sizeScaleFor } from '../data/catchables.js';
+
+// A couple of species read too small at CATCH_DRAWERS' own scale (tuned
+// for the sell/bag lists, not this grid) to feel right as the single
+// biggest thing in the game's whole index - this overrides just their box
+// here, without touching the shared scale used everywhere else.
+const INDEX_DRAWERS = {
+  megalodon: (g, x, y, weightKg) => drawMegalodon(g, x, y, 0.6 * sizeScaleFor('megalodon', weightKg))
+};
 
 const COLS = 3;
 const CELL_W = 225;
@@ -181,7 +191,7 @@ export default class FishIndexScene extends Phaser.Scene {
     const key = SILHOUETTE_PREFIX + itemId;
     if (this.textures.exists(key)) return key;
 
-    const drawer = CATCH_DRAWERS[itemId];
+    const drawer = INDEX_DRAWERS[itemId] || CATCH_DRAWERS[itemId];
     const info = FISH.find((f) => f.id === itemId);
     const g = this.make.graphics({ x: 0, y: 0 }, false);
     if (drawer && info) {
@@ -200,7 +210,7 @@ export default class FishIndexScene extends Phaser.Scene {
     const drawY = y - CELL_H / 2 + 40;
 
     if (discovered) {
-      const drawer = CATCH_DRAWERS[item.itemId];
+      const drawer = INDEX_DRAWERS[item.itemId] || CATCH_DRAWERS[item.itemId];
       const g = this.add.graphics();
       if (drawer) drawer(g, x, drawY, item.baseWeightKg);
       this.gridContainer.add(g);

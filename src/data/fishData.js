@@ -1483,8 +1483,8 @@ export const FISH = [
     id: 'torpedo_ray',
     name: 'Torpedo Ray',
     // Also only reachable via squid bait, rarely prawn (see
-    // OceanScene.RAY_BAIT) - a real, bigger, bolder-marked relative of
-    // the Electric Ray here.
+    // OceanScene.RAY_BAIT) - looks like the plain Stingray (see
+    // tackle.js) but a genuinely faster swimmer.
     baseWeightKg: 20.0,
     valuePerKg: 8,
     turnsRequired: 2.4,
@@ -2178,6 +2178,25 @@ export const FISH = [
     turnsRequired: 5.0,
     rarity: 'legendary',
     difficultyMultiplier: 5.0
+  },
+  {
+    id: 'humpback_whale',
+    name: 'Humpback Whale',
+    // Not a fish, and not in the normal spawn pool at all (see
+    // OceanScene.WHALE_BAIT) - only reachable while fishing with Squid,
+    // Prawn, Australian Salmon, or one of the Mackerel species, the same
+    // small schooling prey and incidental bycatch a real humpback actually
+    // feeds on out in open water. Even then the odds are kept far below the
+    // Manta Ray's own already-lowest chance in the game - a genuine
+    // once-in-a-great-while encounter, not a repeatable trophy. By a huge
+    // margin the single biggest thing that can ever turn up on the line,
+    // real adult humpbacks run to this kind of weight - but only modestly
+    // valuable per kilo, since its sheer rarity is the point, not a payout.
+    baseWeightKg: 30000,
+    valuePerKg: 1,
+    turnsRequired: 5.0,
+    rarity: 'legendary',
+    difficultyMultiplier: 3.0
   }
 ];
 
