@@ -8,6 +8,8 @@ import {
   drawHook,
   drawPrawn,
   drawSquid,
+  drawPlasticLure,
+  drawAbyssalBait,
   drawFlathead,
   drawRedMorwong,
   drawBandedMorwong,
@@ -195,6 +197,8 @@ import { subheading, label } from '../ui/textStyle.js';
 const DRAWERS = {
   prawn: drawPrawn,
   squid: drawSquid,
+  plastic_lure: drawPlasticLure,
+  abyssal_bait: drawAbyssalBait,
   flathead: drawFlathead,
   red_morwong: drawRedMorwong,
   banded_morwong: drawBandedMorwong,
@@ -382,6 +386,8 @@ const DRAWERS = {
 const BAIT_HOOK_SCALE = {
   prawn: 0.34,
   squid: 0.32,
+  plastic_lure: 0.75,
+  abyssal_bait: 0.85,
   flathead: 0.42,
   red_morwong: 0.38,
   banded_morwong: 0.38,
@@ -1993,12 +1999,19 @@ function colorAtDepth(depthPx) {
   return lerpColor(SURFACE_WATER_COLOR, DEEP_WATER_COLOR, t * t);
 }
 
+// Plastic Lure and Abyssal Bait (Bait Crate rewards - see baitData.js)
+// are universal: unlike every real bait here, nothing turns either one
+// down regardless of what it actually eats.
+const UNIVERSAL_BAIT = new Set(['plastic_lure', 'abyssal_bait']);
+
 // Whether a species will actually bite a given bait - species without a
 // `baits` list (sharks, Megalodon) accept whatever's equipped, since their
 // own eligibility is already gated by SHARK_BAIT at spawn time; everything
 // else only bites bait it's realistically listed as eating (see
-// fishData.js), so equipping the wrong one for a fish just never works.
+// fishData.js), so equipping the wrong one for a fish just never works -
+// unless it's one of the universal lures above.
 function speciesAcceptsBait(itemId, baitId) {
+  if (UNIVERSAL_BAIT.has(baitId)) return true;
   const info = getCatchable(itemId);
   return !info.baits || info.baits.includes(baitId);
 }

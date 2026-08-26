@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import GameState from '../systems/GameState.js';
-import { BAIT } from '../data/baitData.js';
-import { getCatchable, sizeScaleFor, rarityColorFor, rarityLabelFor } from '../data/catchables.js';
+import { BAIT, getBait } from '../data/baitData.js';
+import { getCatchable, sizeScaleFor, rarityColorFor, rarityLabelFor, RARITY_COLORS } from '../data/catchables.js';
 import { currentUpgrade, nextUpgrade } from '../data/upgradeData.js';
 import { createBubbleButton } from '../ui/BubbleButton.js';
 import { createIconButton, drawCloseIcon } from '../ui/iconButton.js';
@@ -10,6 +10,8 @@ import { addStatusBar } from '../ui/fishIcon.js';
 import {
   drawPrawn,
   drawSquid,
+  drawPlasticLure,
+  drawAbyssalBait,
   drawFlathead,
   drawRedMorwong,
   drawBandedMorwong,
@@ -386,8 +388,86 @@ const CATCH_DRAWERS = {
 // units are all identical.
 const BAIT_ICON_DRAWERS = {
   prawn: (g, x, y) => drawPrawn(g, x, y, 1.7),
-  squid: (g, x, y) => drawSquid(g, x, y, 1.7)
+  squid: (g, x, y) => drawSquid(g, x, y, 1.7),
+  plastic_lure: (g, x, y) => drawPlasticLure(g, x, y, 2.6),
+  abyssal_bait: (g, x, y) => drawAbyssalBait(g, x, y, 3.0)
 };
+
+// A simple wooden loot-crate icon, purely decorative for the Bait Crate
+// panel below - not a bait or a catchable, so it lives here rather than
+// tackle.js.
+function drawCrateIcon(g, x, y, scale = 1) {
+  const s = scale;
+  const wood = 0x8a5a2c;
+  const woodDark = 0x5c3a1c;
+  const metal = 0xd8c060;
+
+  g.fillStyle(wood, 1);
+  g.fillRoundedRect(x - 20 * s, y - 16 * s, 40 * s, 32 * s, 3 * s);
+  g.lineStyle(1.4 * s, woodDark, 0.9);
+  g.strokeRoundedRect(x - 20 * s, y - 16 * s, 40 * s, 32 * s, 3 * s);
+
+  g.lineStyle(1 * s, woodDark, 0.6);
+  [-10, 0, 10].forEach((dx) => {
+    g.beginPath();
+    g.moveTo(x + dx * s, y - 16 * s);
+    g.lineTo(x + dx * s, y + 16 * s);
+    g.strokePath();
+  });
+
+  g.fillStyle(metal, 1);
+  g.fillRect(x - 20 * s, y - 4 * s, 40 * s, 4 * s);
+  g.lineStyle(1 * s, woodDark, 0.7);
+  g.strokeRect(x - 20 * s, y - 4 * s, 40 * s, 4 * s);
+
+  g.fillStyle(metal, 1);
+  g.fillCircle(x, y - 2 * s, 3 * s);
+  g.fillStyle(woodDark, 1);
+  g.fillCircle(x, y - 2 * s, 1.2 * s);
+}
+
+// Bait Crate: costs CRATE_COST, rolls one of three outcomes. Odds are
+// deliberately front-loaded onto the common payout so Plastic Lure feels
+// like a real find and Abyssal Bait (the mythic pull) is a genuine rarity
+// - about 1 in 200 crates.
+const CRATE_COST = 1000;
+const CRATE_MYTHIC_CHANCE = 0.005;
+const CRATE_RARE_CHANCE = 0.145;
+// (the remaining ~0.85 is the common payout below)
+
+function rollCrate() {
+  const r = Math.random();
+  if (r < CRATE_MYTHIC_CHANCE) return { tier: 'mythic', itemId: 'abyssal_bait', qty: 1 };
+  if (r < CRATE_MYTHIC_CHANCE + CRATE_RARE_CHANCE) return { tier: 'rare', itemId: 'plastic_lure', qty: 1 };
+  const itemId = Math.random() < 0.5 ? 'prawn' : 'squid';
+  return { tier: 'common', itemId, qty: 25 };
+}
+
+// Filler pool/weights for the spinning strip - purely for visual variety
+// on the way past, NOT the real odds (see rollCrate above for those).
+// Mythic filler is capped low so the strip doesn't tip off a big win
+// early by looking mythic-heavy the whole way through.
+const CRATE_STRIP_POOL = [
+  { tier: 'common', itemId: 'prawn' },
+  { tier: 'common', itemId: 'squid' },
+  { tier: 'rare', itemId: 'plastic_lure' },
+  { tier: 'mythic', itemId: 'abyssal_bait' }
+];
+const CRATE_STRIP_WEIGHTS = [0.42, 0.42, 0.13, 0.03];
+function pickStripFiller() {
+  const r = Math.random();
+  let acc = 0;
+  for (let i = 0; i < CRATE_STRIP_POOL.length; i += 1) {
+    acc += CRATE_STRIP_WEIGHTS[i];
+    if (r < acc) return CRATE_STRIP_POOL[i];
+  }
+  return CRATE_STRIP_POOL[0];
+}
+
+const CRATE_CELL = 92;
+const CRATE_VISIBLE = 5;
+const CRATE_STRIP_LEN = 36;
+const CRATE_LANDING_INDEX = 28;
 
 export default class ShopScene extends Phaser.Scene {
   constructor() {
@@ -464,7 +544,11 @@ export default class ShopScene extends Phaser.Scene {
       .text(width / 2, height - 164, '', subheading('18px', { color: '#ffe17d' }))
       .setOrigin(0.5);
 
-    BAIT.forEach((bait, i) => this.buildBaitRow(bait, 200 + i * 110));
+    // Plastic Lure / Abyssal Bait are Bait Crate-only rewards (see
+    // baitData.js) - never sold as their own row here.
+    const buyableBait = BAIT.filter((bait) => !bait.crateOnly);
+    buyableBait.forEach((bait, i) => this.buildBaitRow(bait, 200 + i * 110));
+    this.buildCratePanel(200 + buyableBait.length * 110);
 
     this.buildBackButton(width, height);
   }
@@ -480,6 +564,146 @@ export default class ShopScene extends Phaser.Scene {
       .text(width / 2 - 120, y + 12, `${bait.packSize} for $${bait.cost}`, label('15px', { color: '#bfe9ff' }))
       .setOrigin(0, 0.5);
     createBubbleButton(this, width / 2 + 155, y, 120, 50, 'Buy', () => this.buyBait(bait), { fontSize: '18px' });
+  }
+
+  buildCratePanel(y) {
+    const width = DESIGN_WIDTH;
+    this.add.rectangle(width / 2, y, 460, 100, 0x145a73).setStrokeStyle(2, 0x0c3446);
+    const icon = this.add.graphics();
+    drawCrateIcon(icon, width / 2 - 175, y, 1.25);
+    this.add.text(width / 2 - 120, y - 26, 'Bait Crate', label('20px')).setOrigin(0, 0.5);
+    this.add
+      .text(
+        width / 2 - 120,
+        y + 6,
+        `25x Prawn/Squid, a rare Lure,\nor Abyssal Bait (${(CRATE_MYTHIC_CHANCE * 100).toFixed(1)}% odds)`,
+        label('11px', { color: '#bfe9ff', lineSpacing: 4 })
+      )
+      .setOrigin(0, 0.5);
+    this.crateOpenBtn = createBubbleButton(this, width / 2 + 155, y, 130, 54, `Open - $${CRATE_COST}`, () => this.openCrate(), {
+      fontSize: '14px'
+    });
+    if (GameState.coins < CRATE_COST) this.crateOpenBtn.setEnabled(false);
+  }
+
+  openCrate() {
+    if (!GameState.spendCoins(CRATE_COST)) {
+      this.flashMessage('Not enough coins!');
+      return;
+    }
+    this.statusBar.refresh();
+    if (this.crateOpenBtn) this.crateOpenBtn.setEnabled(false);
+    this.showCrateSpin(rollCrate());
+  }
+
+  // The spinning-strip crate-opening modal: a horizontally scrolling row
+  // of coloured, rarity-tinted cells masked to a small viewport, tweened
+  // to a stop under a fixed pointer so it visually "lands" on the exact
+  // reward `rollCrate` already picked - the same mechanic as any gacha
+  // case-opening animation, built from this game's own Graphics/tween
+  // primitives since there's no such widget in Phaser itself.
+  showCrateSpin(result) {
+    const width = DESIGN_WIDTH;
+    const height = DESIGN_HEIGHT;
+    const cy = height / 2 - 20;
+    const viewCenterX = width / 2;
+
+    const modal = this.add.container(0, 0);
+    const backdrop = this.add.rectangle(width / 2, height / 2, width, height, 0x02121c, 0.82).setInteractive();
+    modal.add(backdrop);
+    modal.add(this.add.text(viewCenterX, cy - 130, 'Opening Bait Crate...', heading('24px')).setOrigin(0.5));
+
+    const viewWidth = CRATE_CELL * CRATE_VISIBLE;
+    const viewLeft = viewCenterX - viewWidth / 2;
+
+    const strip = [];
+    for (let i = 0; i < CRATE_STRIP_LEN; i += 1) {
+      strip.push(i === CRATE_LANDING_INDEX ? { tier: result.tier, itemId: result.itemId } : pickStripFiller());
+    }
+
+    const startX = viewCenterX - CRATE_CELL / 2;
+    const finalX = viewCenterX - (CRATE_LANDING_INDEX * CRATE_CELL + CRATE_CELL / 2);
+
+    const stripContainer = this.add.container(startX, cy);
+    strip.forEach((entry, i) => {
+      const x = i * CRATE_CELL + CRATE_CELL / 2;
+      const cellColor = RARITY_COLORS[entry.tier];
+      const panel = this.add.rectangle(x, 0, CRATE_CELL - 6, 84, cellColor.fill).setStrokeStyle(2, cellColor.stroke);
+      stripContainer.add(panel);
+      const icon = this.add.graphics();
+      const drawer = BAIT_ICON_DRAWERS[entry.itemId];
+      if (drawer) drawer(icon, x, 0);
+      stripContainer.add(icon);
+    });
+    modal.add(stripContainer);
+
+    const maskG = this.make.graphics();
+    maskG.fillStyle(0xffffff);
+    maskG.fillRect(viewLeft, cy - 46, viewWidth, 92);
+    stripContainer.setMask(maskG.createGeometryMask());
+
+    // The fixed landing pointer, drawn over the strip so it always reads
+    // as "this is where it stops" regardless of what's spinning behind it.
+    const pointer = this.add.rectangle(viewCenterX, cy, CRATE_CELL + 4, 96, 0xffe17d, 0).setStrokeStyle(3, 0xffe17d, 0.9);
+    modal.add(pointer);
+    modal.add(this.add.polygon(viewCenterX, cy - 58, [0, -8, 9, 8, -9, 8], 0xffe17d));
+    modal.add(this.add.polygon(viewCenterX, cy + 58, [0, 8, 9, -8, -9, -8], 0xffe17d));
+
+    this.tweens.add({
+      targets: stripContainer,
+      x: finalX,
+      duration: 3400,
+      ease: 'Cubic.easeOut',
+      // The mask stays alive (destroyed only when the modal itself closes,
+      // see finishCrateSpin's button below) so the won item stays visible
+      // under the pointer instead of the strip vanishing the moment it
+      // lands - a geometry mask renders nothing once its source graphics
+      // is destroyed.
+      onComplete: () => this.finishCrateSpin(modal, maskG, result, cy, viewCenterX)
+    });
+  }
+
+  finishCrateSpin(modal, maskG, result, cy, viewCenterX) {
+    GameState.addItem(result.itemId, result.qty);
+    this.statusBar.refresh();
+
+    const color = RARITY_COLORS[result.tier];
+    const name = getBait(result.itemId).name;
+    const rewardLabel = result.qty > 1 ? `${result.qty}x ${name}` : name;
+
+    // A quick bright flash over the landing slot as the win lands.
+    const flash = this.add.rectangle(viewCenterX, cy, CRATE_CELL - 6, 84, 0xffffff, 0.8);
+    modal.add(flash);
+    this.tweens.add({ targets: flash, alpha: 0, duration: 500, onComplete: () => flash.destroy() });
+
+    const tierText = this.add
+      .text(viewCenterX, cy + 80, rarityLabelFor(result.itemId).toUpperCase(), subheading('16px', { color: color.tag }))
+      .setOrigin(0.5)
+      .setScale(0.6);
+    modal.add(tierText);
+    this.tweens.add({ targets: tierText, scale: 1, duration: 400, ease: 'Back.easeOut' });
+
+    const rewardText = this.add
+      .text(viewCenterX, cy + 110, `You got ${rewardLabel}!`, { ...heading('20px'), color: '#ffe17d' })
+      .setOrigin(0.5)
+      .setAlpha(0);
+    modal.add(rewardText);
+    this.tweens.add({ targets: rewardText, alpha: 1, duration: 400, delay: 150 });
+
+    createBubbleButton(
+      this,
+      viewCenterX,
+      cy + 165,
+      180,
+      50,
+      'Nice!',
+      () => {
+        modal.destroy(true);
+        maskG.destroy();
+        if (this.crateOpenBtn) this.crateOpenBtn.setEnabled(GameState.coins >= CRATE_COST);
+      },
+      { fontSize: '18px', container: modal }
+    );
   }
 
   buildSell(width, height) {

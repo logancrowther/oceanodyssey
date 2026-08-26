@@ -9,6 +9,8 @@ import { addStatusBar } from '../ui/fishIcon.js';
 import {
   drawPrawn,
   drawSquid,
+  drawPlasticLure,
+  drawAbyssalBait,
   drawFlathead,
   drawRedMorwong,
   drawBandedMorwong,
@@ -388,7 +390,9 @@ export const CATCH_DRAWERS = {
 // Icon drawer for each stackable bait item (see BAIT in baitData.js).
 const BAIT_ICON_DRAWERS = {
   prawn: (g, x, y) => drawPrawn(g, x, y, 1.3),
-  squid: (g, x, y) => drawSquid(g, x, y, 1.3)
+  squid: (g, x, y) => drawSquid(g, x, y, 1.3),
+  plastic_lure: (g, x, y) => drawPlasticLure(g, x, y, 2.2),
+  abyssal_bait: (g, x, y) => drawAbyssalBait(g, x, y, 2.6)
 };
 
 export default class InventoryScene extends Phaser.Scene {

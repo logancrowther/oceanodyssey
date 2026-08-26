@@ -177,6 +177,151 @@ export function drawPrawn(g, x, y, scale = 1, rotation = 0, alpha = 1) {
   g.restore();
 }
 
+// A classic "redhead" plastic minnow lure - an artificial bait, not flesh
+// of any kind, so nothing shared with the Prawn/Squid beyond "small thing
+// on the hook": a hard bullet-shaped body (painted red head, white/silver
+// body - the oldest, most recognisable lure paint job there is), a small
+// clear diving lip up front, a bead eye, and a barbed treble hook hanging
+// off the tail instead of any organic tail fan or tentacle.
+export function drawPlasticLure(g, x, y, scale = 1, rotation = 0, alpha = 1) {
+  g.save();
+  g.translateCanvas(x, y);
+  if (rotation) g.rotateCanvas(rotation);
+  const s = scale;
+
+  const bodyColor = 0xe8e4dc;
+  const headColor = 0xc0281e;
+  const darkColor = 0x2a2622;
+  const lipColor = 0xcfe8ec;
+  const hookColor = 0x8c8c90;
+
+  // Hard bullet-shaped body, tapering to a narrow tail.
+  const body = [
+    { x: -12, y: 0 },
+    { x: -9, y: -5 },
+    { x: -2, y: -6.5 },
+    { x: 8, y: -4.5 },
+    { x: 14, y: -1.5 },
+    { x: 14, y: 1.5 },
+    { x: 8, y: 4.5 },
+    { x: -2, y: 6.5 },
+    { x: -9, y: 5 }
+  ].map((p) => ({ x: p.x * s, y: p.y * s }));
+  g.fillStyle(bodyColor, alpha);
+  g.fillPoints(body, true);
+
+  // The painted red head - just the front third, a hard-edged colour
+  // block (unlike any fish's blended countershading).
+  g.fillStyle(headColor, alpha);
+  g.beginPath();
+  g.moveTo(-2 * s, -6.5 * s);
+  g.lineTo(-12 * s, 0);
+  g.lineTo(-2 * s, 6.5 * s);
+  g.lineTo(3 * s, 4 * s);
+  g.lineTo(3 * s, -4 * s);
+  g.closePath();
+  g.fillPath();
+
+  g.lineStyle(1 * s, darkColor, 0.7 * alpha);
+  g.strokePoints(body, true);
+
+  // The small clear diving lip, angled off the nose.
+  g.fillStyle(lipColor, 0.6 * alpha);
+  g.fillTriangle(-12 * s, 0, -18 * s, -4 * s, -18 * s, 4 * s);
+  g.lineStyle(0.8 * s, darkColor, 0.5 * alpha);
+  g.strokeTriangle(-12 * s, 0, -18 * s, -4 * s, -18 * s, 4 * s);
+
+  // A bright bead eye, unlike any real fish's own iris.
+  g.fillStyle(0xf5e050, alpha);
+  g.fillCircle(-6 * s, 0, 1.8 * s);
+  g.fillStyle(darkColor, alpha);
+  g.fillCircle(-6 * s, 0, 0.9 * s);
+
+  // A barbed treble hook hanging off the tail - three curved points, not
+  // the single J-hook every other bait's rigged on.
+  g.lineStyle(1 * s, hookColor, 0.9 * alpha);
+  [-1, 0, 1].forEach((dir) => {
+    g.beginPath();
+    g.moveTo(14 * s, 0);
+    quadCurveTo(g, 14 * s, 0, (20 + dir * 2) * s, (4 + dir * 5) * s, (17 + dir * 3) * s, (9 + dir * 4) * s);
+    g.strokePath();
+  });
+
+  g.restore();
+}
+
+// A glowing abyssal jig - not organic bait at all, a small dark artificial
+// lure built around a real photophore-style glowing core (the same
+// bioluminescent-lure trick the Dragonfish itself uses to hunt, borrowed
+// here since the bait is meant to work by imitating exactly that). Spiny,
+// dark, and radiating its own soft light - nothing else in the tackle box
+// looks remotely like it.
+export function drawAbyssalBait(g, x, y, scale = 1, rotation = 0, alpha = 1) {
+  g.save();
+  g.translateCanvas(x, y);
+  if (rotation) g.rotateCanvas(rotation);
+  const s = scale;
+
+  const shellColor = 0x151022;
+  const darkColor = 0x040308;
+  const glowColor = 0x6ad8f0;
+  const glowCore = 0xd8f8ff;
+  const hookColor = 0x6a6a72;
+
+  // A soft radiating glow behind the shell - the same layered-translucent
+  // -circles trick used for the catch-reveal glow, just small and local.
+  [
+    [7, 0.12],
+    [5, 0.2],
+    [3, 0.32]
+  ].forEach(([r, a]) => {
+    g.fillStyle(glowColor, a * alpha);
+    g.fillCircle(0, 0, r * s);
+  });
+
+  // A small, dark, spiny ovoid shell around the glowing core.
+  const shell = [
+    { x: -8, y: 0 },
+    { x: -6, y: -5 },
+    { x: 0, y: -7 },
+    { x: 6, y: -4 },
+    { x: 8, y: 0 },
+    { x: 6, y: 4 },
+    { x: 0, y: 7 },
+    { x: -6, y: 5 }
+  ].map((p) => ({ x: p.x * s, y: p.y * s }));
+  g.fillStyle(shellColor, alpha);
+  g.fillPoints(shell, true);
+  g.lineStyle(1 * s, darkColor, 0.8 * alpha);
+  g.strokePoints(shell, true);
+
+  // Thin spines radiating off the shell.
+  g.lineStyle(0.8 * s, darkColor, 0.75 * alpha);
+  [-2.4, -1.2, 0, 1.2, 2.4].forEach((angle) => {
+    const dx = Math.cos(angle) * 12 * s;
+    const dy = Math.sin(angle) * 12 * s;
+    g.beginPath();
+    g.moveTo(Math.cos(angle) * 6 * s, Math.sin(angle) * 6 * s);
+    g.lineTo(dx, dy);
+    g.strokePath();
+  });
+
+  // The glowing photophore core, visible through the shell.
+  g.fillStyle(glowColor, 0.9 * alpha);
+  g.fillCircle(0, 0, 2.6 * s);
+  g.fillStyle(glowCore, alpha);
+  g.fillCircle(0, 0, 1.2 * s);
+
+  // A single barbed hook trailing off the back.
+  g.lineStyle(1 * s, hookColor, 0.9 * alpha);
+  g.beginPath();
+  g.moveTo(8 * s, 0);
+  quadCurveTo(g, 8 * s, 0, 15 * s, 3 * s, 13 * s, 8 * s);
+  g.strokePath();
+
+  g.restore();
+}
+
 // A cut squid tentacle bait - a single smooth, curled, tapering strip (not
 // segmented armor plates like the Prawn's), with a row of small round
 // sucker discs down the inner curve - the real bait's own unmistakable

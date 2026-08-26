@@ -42,7 +42,16 @@ const RARITY_BANDS = [
   { max: 130, tier: 'uncommon' }
 ];
 
+// Bait Crate rewards (see baitData.js) aren't fish, so they have no value
+// rank to derive a tier from - their tier is exactly the one the crate
+// itself rolled them at.
+const SPECIAL_TIERS = {
+  plastic_lure: 'rare',
+  abyssal_bait: 'mythic'
+};
+
 export function rarityTierFor(id) {
+  if (SPECIAL_TIERS[id]) return SPECIAL_TIERS[id];
   const rank = VALUE_RANK[id];
   if (rank == null) return 'common';
   const band = RARITY_BANDS.find((b) => rank <= b.max);
