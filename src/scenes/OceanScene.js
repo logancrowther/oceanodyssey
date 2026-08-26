@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import GameState from '../systems/GameState.js';
-import { getCatchable, rarityColorFor } from '../data/catchables.js';
+import { getCatchable, rarityColorFor, rarityTierFor } from '../data/catchables.js';
 import { currentUpgrade } from '../data/upgradeData.js';
 import { createIconButton, drawShopIcon, drawBagIcon, drawPencilIcon } from '../ui/iconButton.js';
 import { addStatusBar } from '../ui/fishIcon.js';
@@ -1309,6 +1309,23 @@ const DEPTH_LIMITS = {
   angler_fish: { min: 48000 },
   old_boot: { max: 1800 }
 };
+
+// The deep-drop/deep-sea end of NORMAL_POOL - real species that only ever
+// turn up from a genuine depth (see their own DEPTH_LIMITS above), not the
+// shallower reef ones like Coral Trout or Hapuku. Abyssal Bait (see
+// pickSpawnId) blows straight through their depth gate and boosts them
+// hard on top of that - "come up from anywhere, and come up often" is the
+// entire point of fishing with it.
+const ABYSS_FISH = ['warsaw_grouper', 'blueline_tilefish', 'golden_tilefish', 'blue_eye_trevalla', 'dragonfish', 'angler_fish'];
+const ABYSS_BOOST_COPIES = 3;
+
+// Every NORMAL_POOL species that's Legendary tier by value rank (see
+// rarityTierFor) - computed once here rather than hand-picked, so it
+// tracks the same ranking the Index/Bag/Sell screens already colour-code
+// by. Sharks and rays are Legendary too, but they're gated by their own
+// specific realistic bait (SHARK_BAIT/RAY_BAIT) and untouched here -
+// this only ever nudges the ones that spawn through the normal pool.
+const NORMAL_POOL_LEGENDARY = NORMAL_POOL.filter((id) => rarityTierFor(id) === 'legendary');
 // Sharks only ever get rolled for when the equipped bait is one of their
 // own realistic prey species, and only once the hook is past
 // SHARK_MIN_DEPTH - which sits below the starting line's own max reach
@@ -1924,9 +1941,15 @@ const WHALE_BAIT = [
   'school_mackerel',
   'king_mackerel',
   'atlantic_mackerel',
-  'cero_mackerel'
+  'cero_mackerel',
+  'abyssal_bait'
 ];
 const WHALE_CHANCE = 0.001;
+// A slight bump over the baseline above - Abyssal Bait doesn't unlock the
+// Whale (it was already reachable on Squid/Prawn/Salmon/Mackerel), just
+// nudges the odds up a little further, on top of everything else the
+// bait already does (see ABYSS_FISH/NORMAL_POOL_LEGENDARY below).
+const WHALE_CHANCE_ABYSSAL = 0.0013;
 
 // Not part of the spawn roll at all - a Megalodon never swims around as
 // itself. Instead, right as one of the three real sharks above actually
@@ -2194,16 +2217,36 @@ export default class OceanScene extends Phaser.Scene {
         if (Math.random() < chance) return rayId;
       }
     }
-    if (baitId && WHALE_BAIT.includes(baitId) && Math.random() < WHALE_CHANCE) {
-      return 'humpback_whale';
+    if (baitId && WHALE_BAIT.includes(baitId)) {
+      const whaleChance = baitId === 'abyssal_bait' ? WHALE_CHANCE_ABYSSAL : WHALE_CHANCE;
+      if (Math.random() < whaleChance) return 'humpback_whale';
     }
+    const isAbyssalBait = baitId === 'abyssal_bait';
     const pool = NORMAL_POOL.filter((id) => {
       const limits = DEPTH_LIMITS[id];
       if (!limits) return true;
+      // Abyssal Bait blows straight through any abyss fish's own depth
+      // gate - the whole point of fishing with it is pulling something
+      // that deep up from anywhere.
+      if (isAbyssalBait && ABYSS_FISH.includes(id)) return true;
       if (limits.min != null && hookDepth < limits.min) return false;
       if (limits.max != null && hookDepth >= limits.max) return false;
       return true;
     });
+    if (isAbyssalBait) {
+      // Abyss fish get a real boost - and since their own depth gate was
+      // just bypassed above, they're always in the pool to boost in the
+      // first place. Legendary-tier normal-pool fish get a much smaller
+      // nudge, and only when they'd already be eligible here regardless -
+      // this never overrides a real depth gate for anything that isn't an
+      // abyss fish.
+      ABYSS_FISH.forEach((id) => {
+        for (let i = 0; i < ABYSS_BOOST_COPIES; i += 1) pool.push(id);
+      });
+      NORMAL_POOL_LEGENDARY.forEach((id) => {
+        if (pool.includes(id)) pool.push(id);
+      });
+    }
     return Phaser.Utils.Array.GetRandom(pool);
   }
 
