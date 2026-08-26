@@ -49,21 +49,41 @@ export function rarityTierFor(id) {
   return band ? band.tier : 'common';
 }
 
-// Panel fill/stroke per tier for the grid/list boxes in the Fishing
-// Index, Bag, and Sell screens - `common` is deliberately left as this
-// game's original panel colour ("just normal", not a distinct hue) since
-// most of the roster sits there.
+// Panel fill/stroke/tag-text colour per tier for the grid/list boxes in
+// the Fishing Index, Bag, and Sell screens - kept deliberately muted
+// (dark, low-saturation) so they read as a tint of the game's own panel
+// colour rather than a saturated paint swatch; `tag` is a touch brighter
+// than `stroke` so the label text stays legible against the fill.
+// `common` is deliberately left as this game's original panel colour
+// ("just normal", not a distinct hue) since most of the roster sits there.
+// `glow` is the same hue as `tag` (just numeric, for Graphics.fillStyle
+// rather than a CSS text colour) - used behind the catch-reveal art.
 export const RARITY_COLORS = {
-  common: { fill: 0x145a73, stroke: 0x0c3446 },
-  uncommon: { fill: 0x1f6b3a, stroke: 0x4ad991 },
-  rare: { fill: 0x1f4a8a, stroke: 0x4a9eff },
-  epic: { fill: 0x4a2170, stroke: 0xb066e0 },
-  legendary: { fill: 0x8a6d10, stroke: 0xffd93d },
-  mythic: { fill: 0x8a1f1f, stroke: 0xff5252 }
+  common: { fill: 0x145a73, stroke: 0x0c3446, tag: '#7fa8bd', glow: 0x7fa8bd },
+  uncommon: { fill: 0x1e4a37, stroke: 0x336a4d, tag: '#7fd1a0', glow: 0x7fd1a0 },
+  rare: { fill: 0x1c3a5c, stroke: 0x33568a, tag: '#7fb2e8', glow: 0x7fb2e8 },
+  epic: { fill: 0x362a4c, stroke: 0x54406e, tag: '#c19ee8', glow: 0xc19ee8 },
+  legendary: { fill: 0x4c4020, stroke: 0x6e5c2e, tag: '#e8cc6a', glow: 0xe8cc6a },
+  mythic: { fill: 0x4c2424, stroke: 0x6e3636, tag: '#e88a8a', glow: 0xe88a8a }
+};
+
+// Display name for each tier's tag ("Mythical" rather than "mythic" to
+// match how the game talks about it everywhere else).
+export const RARITY_LABELS = {
+  common: 'Common',
+  uncommon: 'Uncommon',
+  rare: 'Rare',
+  epic: 'Epic',
+  legendary: 'Legendary',
+  mythic: 'Mythical'
 };
 
 export function rarityColorFor(id) {
   return RARITY_COLORS[rarityTierFor(id)];
+}
+
+export function rarityLabelFor(id) {
+  return RARITY_LABELS[rarityTierFor(id)];
 }
 
 // How much bigger or smaller than its "icon" size a specific catch should

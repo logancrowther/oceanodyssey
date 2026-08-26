@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import GameState from '../systems/GameState.js';
 import { BAIT } from '../data/baitData.js';
-import { getCatchable, sizeScaleFor, rarityColorFor } from '../data/catchables.js';
+import { getCatchable, sizeScaleFor, rarityColorFor, rarityLabelFor } from '../data/catchables.js';
 import { currentUpgrade, nextUpgrade } from '../data/upgradeData.js';
 import { createBubbleButton } from '../ui/BubbleButton.js';
 import { createIconButton, drawCloseIcon } from '../ui/iconButton.js';
@@ -657,15 +657,19 @@ export default class ShopScene extends Phaser.Scene {
     const bg = this.add.rectangle(width / 2, y, 460, 72, color.fill).setStrokeStyle(2, color.stroke);
     const icon = this.add.graphics();
     if (draw) draw(icon, width / 2 - 175, y, c.weightKg);
-    const nameText = this.add.text(width / 2 - 120, y - 12, info.name, label('17px')).setOrigin(0, 0.5);
+    const tierText = this.add
+      .text(width / 2 - 120, y - 28, rarityLabelFor(c.itemId), label('10px', { color: color.tag }))
+      .setOrigin(0, 0.5);
+    const nameText = this.add.text(width / 2 - 120, y - 6, info.name, label('17px')).setOrigin(0, 0.5);
     const weightText = this.add
-      .text(width / 2 - 120, y + 12, `${c.weightKg}kg`, label('13px', { color: '#bfe9ff' }))
+      .text(width / 2 - 120, y + 16, `${c.weightKg}kg`, label('13px', { color: '#bfe9ff' }))
       .setOrigin(0, 0.5);
 
     // Added to the container before the button below, so the row panel
     // renders underneath it - added the other way round, the opaque panel
     // painted on top would bury the Sell button, making it unclickable.
-    if (container) container.add([bg, icon, nameText, weightText]);
+    // The tag is added after the icon so it stays on top of it.
+    if (container) container.add([bg, icon, tierText, nameText, weightText]);
 
     createBubbleButton(this, width / 2 + 155, y, 120, 46, `Sell +$${c.value}`, () => this.sellCatch(c.uid), {
       fontSize: '14px',

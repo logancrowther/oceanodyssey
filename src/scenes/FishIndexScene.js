@@ -8,7 +8,7 @@ import { DESIGN_WIDTH, DESIGN_HEIGHT } from '../constants.js';
 import { heading, subheading, label } from '../ui/textStyle.js';
 import { CATCH_DRAWERS } from './InventoryScene.js';
 import { drawMegalodon } from '../ui/tackle.js';
-import { sizeScaleFor, rarityColorFor } from '../data/catchables.js';
+import { sizeScaleFor, rarityColorFor, rarityLabelFor } from '../data/catchables.js';
 
 // A couple of species read too small at CATCH_DRAWERS' own scale (tuned
 // for the sell/bag lists, not this grid) to feel right as the single
@@ -208,7 +208,7 @@ export default class FishIndexScene extends Phaser.Scene {
     this.gridContainer.add(panel);
 
     const discovered = GameState.isDiscovered(item.itemId);
-    const drawY = y - CELL_H / 2 + 40;
+    const drawY = y - CELL_H / 2 + 46;
 
     if (discovered) {
       const drawer = INDEX_DRAWERS[item.itemId] || CATCH_DRAWERS[item.itemId];
@@ -220,6 +220,16 @@ export default class FishIndexScene extends Phaser.Scene {
       const img = this.add.image(x, drawY, key).setTint(0x000000);
       this.gridContainer.add(img);
     }
+
+    // The rarity tag, top-center of the box - added after the icon above
+    // so it always renders on top of it (a tall silhouette like a shark's
+    // dorsal fin can reach this high). Shown even for a locked "???"
+    // entry, same reasoning as the rank badge below: knowing the tier
+    // doesn't spoil anything the rank number hasn't already implied.
+    const tierText = this.add
+      .text(x, y - (CELL_H - 16) / 2 + 8, rarityLabelFor(item.itemId), label('11px', { color: color.tag }))
+      .setOrigin(0.5, 0);
+    this.gridContainer.add(tierText);
 
     const nameText = this.add
       .text(x, y - 16, discovered ? item.name : '???', label('15px', discovered ? {} : { color: '#4a6472' }))

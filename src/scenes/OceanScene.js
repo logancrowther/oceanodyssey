@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import GameState from '../systems/GameState.js';
-import { getCatchable } from '../data/catchables.js';
+import { getCatchable, rarityColorFor } from '../data/catchables.js';
 import { currentUpgrade } from '../data/upgradeData.js';
 import { createIconButton, drawShopIcon, drawBagIcon, drawPencilIcon } from '../ui/iconButton.js';
 import { addStatusBar } from '../ui/fishIcon.js';
@@ -2406,9 +2406,28 @@ export default class OceanScene extends Phaser.Scene {
     const height = DESIGN_HEIGHT;
     const cx = width / 2;
     const cy = height / 2 - 30;
+    const scale = REVEAL_SCALE[itemId] || 0.8;
+
+    // A soft rarity-coloured glow behind the reveal art - Phaser's Graphics
+    // has no native blur, so this is layered translucent rings (largest,
+    // most transparent first) approximating a radial glow instead. Drawn
+    // (and added to the fade tween) before the fish itself so it always
+    // sits behind it.
+    const glowG = this.add.graphics();
+    const glowColor = rarityColorFor(itemId).glow;
+    const glowRadius = Phaser.Math.Clamp(70 * scale, 50, 170);
+    [
+      [1, 0.05],
+      [0.75, 0.08],
+      [0.55, 0.12],
+      [0.35, 0.18]
+    ].forEach(([rf, a]) => {
+      glowG.fillStyle(glowColor, a);
+      glowG.fillCircle(cx, cy, glowRadius * rf);
+    });
+
     const g = this.add.graphics();
     const drawer = DRAWERS[itemId];
-    const scale = REVEAL_SCALE[itemId] || 0.8;
     if (drawer) drawer(g, cx, cy, scale, 0, 1);
 
     const txt = this.add
@@ -2418,15 +2437,17 @@ export default class OceanScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
 
+    glowG.setAlpha(0);
     g.setAlpha(0);
     txt.setAlpha(0);
     this.tweens.add({
-      targets: [g, txt],
+      targets: [glowG, g, txt],
       alpha: 1,
       duration: 250,
       yoyo: true,
       hold: 1300,
       onComplete: () => {
+        glowG.destroy();
         g.destroy();
         txt.destroy();
         onDone();

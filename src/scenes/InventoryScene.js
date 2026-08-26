@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import GameState from '../systems/GameState.js';
 import { BAIT } from '../data/baitData.js';
-import { getCatchable, sizeScaleFor, rarityColorFor } from '../data/catchables.js';
+import { getCatchable, sizeScaleFor, rarityColorFor, rarityLabelFor } from '../data/catchables.js';
 import { createBubbleButton } from '../ui/BubbleButton.js';
 import { createIconButton, drawCloseIcon } from '../ui/iconButton.js';
 import { createSearchBox } from '../ui/SearchBox.js';
@@ -582,8 +582,15 @@ export default class InventoryScene extends Phaser.Scene {
     this.gridContainer.add(panel);
 
     const g = this.add.graphics();
-    if (item.draw) item.draw(g, x, y - CELL_H / 2 + 40);
+    if (item.draw) item.draw(g, x, y - CELL_H / 2 + 46);
     this.gridContainer.add(g);
+
+    // Added after the icon above so it always renders on top of it (a
+    // tall silhouette can otherwise paint over it).
+    const tierText = this.add
+      .text(x, y - (CELL_H - 16) / 2 + 8, rarityLabelFor(item.itemId), label('11px', { color: color.tag }))
+      .setOrigin(0.5, 0);
+    this.gridContainer.add(tierText);
 
     const nameText = this.add.text(x, y - 16, item.name, label('15px')).setOrigin(0.5);
     this.gridContainer.add(nameText);
