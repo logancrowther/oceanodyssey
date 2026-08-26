@@ -2523,7 +2523,11 @@ export default class OceanScene extends Phaser.Scene {
         if (baitId && DRAWERS[baitId]) {
           const equippedCatch = GameState.data.catches.find((c) => c.uid === GameState.equippedCatchUid);
           const baitScale = BAIT_HOOK_SCALE[baitId] * (equippedCatch ? Phaser.Math.Clamp(equippedCatch.weightKg / (getCatchable(baitId).baseWeightKg || 1), 0.55, 1.9) : 1);
-          DRAWERS[baitId](hg, this.hook.x + 2, this.hook.y + 1, baitScale, dangle, 1);
+          // A solid plastic lure doesn't wriggle like real bait - it hangs
+          // still on the line, so it skips the same dangle wobble every
+          // other bait gets here.
+          const baitDangle = baitId === 'plastic_lure' ? 0 : dangle;
+          DRAWERS[baitId](hg, this.hook.x + 2, this.hook.y + 1, baitScale, baitDangle, 1);
         }
       }
       drawHook(hg, this.hook.x, this.hook.y, 0.6, 0, 1);

@@ -177,75 +177,65 @@ export function drawPrawn(g, x, y, scale = 1, rotation = 0, alpha = 1) {
   g.restore();
 }
 
-// A classic "redhead" plastic minnow lure - an artificial bait, not flesh
-// of any kind, so nothing shared with the Prawn/Squid beyond "small thing
-// on the hook": a hard bullet-shaped body (painted red head, white/silver
-// body - the oldest, most recognisable lure paint job there is), a small
-// clear diving lip up front, a bead eye, and a barbed treble hook hanging
-// off the tail instead of any organic tail fan or tentacle.
+// A small soft-plastic swimbait, molded in a single flat, solid yellow
+// (unlike any real bait's shading, a moulded lure is one uniform colour)
+// - a small generic baitfish shape with a flat paddle tail instead of a
+// forked one, a moulded gill crease instead of any real fin structure,
+// and a single jig hook piercing straight up through its back instead of
+// the Prawn/Squid's own hookless flesh. Never rigged with the old dangle
+// wobble every real bait gets on the hook (see OceanScene) - a solid
+// plastic lure hangs still, it doesn't wriggle.
 export function drawPlasticLure(g, x, y, scale = 1, rotation = 0, alpha = 1) {
   g.save();
   g.translateCanvas(x, y);
   if (rotation) g.rotateCanvas(rotation);
   const s = scale;
 
-  const bodyColor = 0xe8e4dc;
-  const headColor = 0xc0281e;
-  const darkColor = 0x2a2622;
-  const lipColor = 0xcfe8ec;
+  const bodyColor = 0xf5d520;
+  const bodyDark = 0xd4a800;
+  const darkColor = 0x2a2410;
   const hookColor = 0x8c8c90;
 
-  // Hard bullet-shaped body, tapering to a narrow tail.
   const body = [
-    { x: -12, y: 0 },
-    { x: -9, y: -5 },
-    { x: -2, y: -6.5 },
-    { x: 8, y: -4.5 },
-    { x: 14, y: -1.5 },
-    { x: 14, y: 1.5 },
-    { x: 8, y: 4.5 },
-    { x: -2, y: 6.5 },
-    { x: -9, y: 5 }
+    { x: -10, y: 0 },
+    { x: -7, y: -4.5 },
+    { x: -1, y: -6 },
+    { x: 6, y: -4 },
+    { x: 6, y: 4 },
+    { x: -1, y: 6 },
+    { x: -7, y: 4.5 }
   ].map((p) => ({ x: p.x * s, y: p.y * s }));
   g.fillStyle(bodyColor, alpha);
   g.fillPoints(body, true);
-
-  // The painted red head - just the front third, a hard-edged colour
-  // block (unlike any fish's blended countershading).
-  g.fillStyle(headColor, alpha);
-  g.beginPath();
-  g.moveTo(-2 * s, -6.5 * s);
-  g.lineTo(-12 * s, 0);
-  g.lineTo(-2 * s, 6.5 * s);
-  g.lineTo(3 * s, 4 * s);
-  g.lineTo(3 * s, -4 * s);
-  g.closePath();
-  g.fillPath();
-
-  g.lineStyle(1 * s, darkColor, 0.7 * alpha);
+  g.lineStyle(1 * s, darkColor, 0.6 * alpha);
   g.strokePoints(body, true);
 
-  // The small clear diving lip, angled off the nose.
-  g.fillStyle(lipColor, 0.6 * alpha);
-  g.fillTriangle(-12 * s, 0, -18 * s, -4 * s, -18 * s, 4 * s);
+  // A flat paddle tail - the real soft-plastic swimbait's own
+  // distinguishing feature, unlike any actual fish's forked tail.
+  g.fillStyle(bodyDark, alpha);
+  g.fillTriangle(6 * s, 0, 15 * s, -5 * s, 15 * s, 5 * s);
   g.lineStyle(0.8 * s, darkColor, 0.5 * alpha);
-  g.strokeTriangle(-12 * s, 0, -18 * s, -4 * s, -18 * s, 4 * s);
+  g.strokeTriangle(6 * s, 0, 15 * s, -5 * s, 15 * s, 5 * s);
 
-  // A bright bead eye, unlike any real fish's own iris.
-  g.fillStyle(0xf5e050, alpha);
-  g.fillCircle(-6 * s, 0, 1.8 * s);
+  // A moulded gill crease line, standing in for any real fin structure.
+  g.lineStyle(0.7 * s, bodyDark, 0.6 * alpha);
+  g.beginPath();
+  g.moveTo(-4 * s, -5 * s);
+  g.lineTo(-2 * s, 5 * s);
+  g.strokePath();
+
+  // Small bead eye.
   g.fillStyle(darkColor, alpha);
-  g.fillCircle(-6 * s, 0, 0.9 * s);
+  g.fillCircle(-6 * s, -1 * s, 1.1 * s);
 
-  // A barbed treble hook hanging off the tail - three curved points, not
-  // the single J-hook every other bait's rigged on.
+  // A single jig hook piercing straight up through the back - the real
+  // rigging for a soft-plastic swimbait like this, not a dangling treble.
   g.lineStyle(1 * s, hookColor, 0.9 * alpha);
-  [-1, 0, 1].forEach((dir) => {
-    g.beginPath();
-    g.moveTo(14 * s, 0);
-    quadCurveTo(g, 14 * s, 0, (20 + dir * 2) * s, (4 + dir * 5) * s, (17 + dir * 3) * s, (9 + dir * 4) * s);
-    g.strokePath();
-  });
+  g.beginPath();
+  g.moveTo(-1 * s, -5 * s);
+  g.lineTo(-1 * s, -11 * s);
+  quadCurveTo(g, -1 * s, -11 * s, 3 * s, -12 * s, 3 * s, -8 * s);
+  g.strokePath();
 
   g.restore();
 }

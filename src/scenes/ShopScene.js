@@ -571,15 +571,8 @@ export default class ShopScene extends Phaser.Scene {
     this.add.rectangle(width / 2, y, 460, 100, 0x145a73).setStrokeStyle(2, 0x0c3446);
     const icon = this.add.graphics();
     drawCrateIcon(icon, width / 2 - 175, y, 1.25);
-    this.add.text(width / 2 - 120, y - 26, 'Bait Crate', label('20px')).setOrigin(0, 0.5);
-    this.add
-      .text(
-        width / 2 - 120,
-        y + 6,
-        `25x Prawn/Squid, a rare Lure,\nor Abyssal Bait (${(CRATE_MYTHIC_CHANCE * 100).toFixed(1)}% odds)`,
-        label('11px', { color: '#bfe9ff', lineSpacing: 4 })
-      )
-      .setOrigin(0, 0.5);
+    this.add.text(width / 2 - 120, y - 12, 'Bait Crate', label('20px')).setOrigin(0, 0.5);
+    this.add.text(width / 2 - 120, y + 14, 'Roll an Item', label('13px', { color: '#bfe9ff' })).setOrigin(0, 0.5);
     this.crateOpenBtn = createBubbleButton(this, width / 2 + 155, y, 130, 54, `Open - $${CRATE_COST}`, () => this.openCrate(), {
       fontSize: '14px'
     });
