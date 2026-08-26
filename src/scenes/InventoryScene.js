@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import GameState from '../systems/GameState.js';
 import { BAIT } from '../data/baitData.js';
-import { getCatchable, sizeScaleFor } from '../data/catchables.js';
+import { getCatchable, sizeScaleFor, rarityColorFor } from '../data/catchables.js';
 import { createBubbleButton } from '../ui/BubbleButton.js';
 import { createIconButton, drawCloseIcon } from '../ui/iconButton.js';
 import { createSearchBox } from '../ui/SearchBox.js';
@@ -577,7 +577,8 @@ export default class InventoryScene extends Phaser.Scene {
   }
 
   buildCell(item, x, y) {
-    const panel = this.add.rectangle(x, y, CELL_W - 16, CELL_H - 16, 0x145a73).setStrokeStyle(2, 0x0c3446);
+    const color = rarityColorFor(item.itemId);
+    const panel = this.add.rectangle(x, y, CELL_W - 16, CELL_H - 16, color.fill).setStrokeStyle(2, color.stroke);
     this.gridContainer.add(panel);
 
     const g = this.add.graphics();

@@ -8,7 +8,7 @@ import { DESIGN_WIDTH, DESIGN_HEIGHT } from '../constants.js';
 import { heading, subheading, label } from '../ui/textStyle.js';
 import { CATCH_DRAWERS } from './InventoryScene.js';
 import { drawMegalodon } from '../ui/tackle.js';
-import { sizeScaleFor } from '../data/catchables.js';
+import { sizeScaleFor, rarityColorFor } from '../data/catchables.js';
 
 // A couple of species read too small at CATCH_DRAWERS' own scale (tuned
 // for the sell/bag lists, not this grid) to feel right as the single
@@ -203,7 +203,8 @@ export default class FishIndexScene extends Phaser.Scene {
   }
 
   buildCell(item, x, y) {
-    const panel = this.add.rectangle(x, y, CELL_W - 16, CELL_H - 16, 0x145a73).setStrokeStyle(2, 0x0c3446);
+    const color = rarityColorFor(item.itemId);
+    const panel = this.add.rectangle(x, y, CELL_W - 16, CELL_H - 16, color.fill).setStrokeStyle(2, color.stroke);
     this.gridContainer.add(panel);
 
     const discovered = GameState.isDiscovered(item.itemId);

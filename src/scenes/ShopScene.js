@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import GameState from '../systems/GameState.js';
 import { BAIT } from '../data/baitData.js';
-import { getCatchable, sizeScaleFor } from '../data/catchables.js';
+import { getCatchable, sizeScaleFor, rarityColorFor } from '../data/catchables.js';
 import { currentUpgrade, nextUpgrade } from '../data/upgradeData.js';
 import { createBubbleButton } from '../ui/BubbleButton.js';
 import { createIconButton, drawCloseIcon } from '../ui/iconButton.js';
@@ -653,7 +653,8 @@ export default class ShopScene extends Phaser.Scene {
     const info = getCatchable(c.itemId);
     const draw = CATCH_DRAWERS[c.itemId];
 
-    const bg = this.add.rectangle(width / 2, y, 460, 72, 0x145a73).setStrokeStyle(2, 0x0c3446);
+    const color = rarityColorFor(c.itemId);
+    const bg = this.add.rectangle(width / 2, y, 460, 72, color.fill).setStrokeStyle(2, color.stroke);
     const icon = this.add.graphics();
     if (draw) draw(icon, width / 2 - 175, y, c.weightKg);
     const nameText = this.add.text(width / 2 - 120, y - 12, info.name, label('17px')).setOrigin(0, 0.5);
