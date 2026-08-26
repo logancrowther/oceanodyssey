@@ -21725,6 +21725,99 @@ export function drawDragonfish(g, x, y, scale = 1, rotation = 0, alpha = 1) {
   g.restore();
 }
 
+// A fangtooth - the deepest-common abyssal ambush predator here short of
+// the Angler Fish, and instantly recognisable for one real reason alone:
+// two huge, curved lower fangs so long the real fish has sockets on
+// either side of its own brain just to let its jaw fully close around
+// them - they still show even with the mouth shut, unlike any other
+// predator's teeth in the game. A tiny, short, deep-bodied fish (almost
+// as tall as it is long), unlike the Dragonfish's elongated, eel-like
+// build right next to it.
+export function drawFangtooth(g, x, y, scale = 1, rotation = 0, alpha = 1) {
+  g.save();
+  g.translateCanvas(x, y);
+  if (rotation) g.rotateCanvas(rotation);
+  const s = scale;
+
+  const bodyColor = 0x241814;
+  const bellyColor = 0x3c2c20;
+  const finColor = 0x1c130f;
+  const darkColor = 0x000000;
+  const fangColor = 0xe8e2d4;
+
+  // A short, deep, compressed body - almost as tall as it is long, unlike
+  // any of the game's other elongated deep-sea species.
+  const body = [
+    { x: -14, y: 0 },
+    { x: -12, y: -8 },
+    { x: -4, y: -13 },
+    { x: 6, y: -11 },
+    { x: 12, y: -4 },
+    { x: 12, y: 4 },
+    { x: 6, y: 11 },
+    { x: -4, y: 13 },
+    { x: -12, y: 8 }
+  ].map((p) => ({ x: p.x * s, y: p.y * s }));
+
+  // A small, rounded tail fin.
+  g.fillStyle(finColor, alpha);
+  g.fillTriangle(11 * s, -4 * s, 21 * s, -7 * s, 15 * s, 0);
+  g.fillTriangle(11 * s, 4 * s, 21 * s, 7 * s, 15 * s, 0);
+  g.lineStyle(1 * s, darkColor, 0.6 * alpha);
+  g.strokeTriangle(11 * s, -4 * s, 21 * s, -7 * s, 15 * s, 0);
+  g.strokeTriangle(11 * s, 4 * s, 21 * s, 7 * s, 15 * s, 0);
+
+  // A tall, spiny dorsal fin, and a small rounded pectoral fin.
+  g.fillStyle(finColor, alpha);
+  g.fillTriangle(-3 * s, -12 * s, 5 * s, -11 * s, 0, -21 * s);
+  g.lineStyle(1 * s, darkColor, 0.6 * alpha);
+  g.strokeTriangle(-3 * s, -12 * s, 5 * s, -11 * s, 0, -21 * s);
+  g.fillStyle(finColor, alpha);
+  g.fillTriangle(-6 * s, 3 * s, -14 * s, 9 * s, -3 * s, 9 * s);
+
+  // Body.
+  g.fillStyle(bodyColor, alpha);
+  g.fillPoints(body, true);
+  // A faint, barely-there paler underside - deep-sea camouflage means
+  // almost no visible countershading, same as the Angler Fish.
+  g.fillStyle(bellyColor, 0.4 * alpha);
+  g.fillEllipse(-1 * s, 6 * s, 16 * s, 7 * s);
+  g.lineStyle(1.2 * s, darkColor, 0.9 * alpha);
+  g.strokePoints(body, true);
+
+  // The closed jawline.
+  g.lineStyle(1 * s, darkColor, 0.7 * alpha);
+  g.beginPath();
+  g.moveTo(-14 * s, 0);
+  g.lineTo(-6 * s, 3 * s);
+  g.strokePath();
+
+  // The two huge lower fangs - the real animal's own unmistakable field
+  // mark, so long they still show past the closed jaw.
+  g.fillStyle(fangColor, alpha);
+  g.fillTriangle(-12 * s, -1 * s, -9 * s, -9 * s, -7 * s, -1 * s);
+  g.fillTriangle(-9 * s, 2 * s, -5 * s, -6 * s, -3 * s, 3 * s);
+  g.lineStyle(0.6 * s, darkColor, 0.4 * alpha);
+  g.strokeTriangle(-12 * s, -1 * s, -9 * s, -9 * s, -7 * s, -1 * s);
+  g.strokeTriangle(-9 * s, 2 * s, -5 * s, -6 * s, -3 * s, 3 * s);
+
+  // Small, dark, deep-set eye - real Fangtooth eyes are surprisingly
+  // small for a deep-sea fish, unlike most others'.
+  g.fillStyle(darkColor, alpha);
+  g.fillCircle(-9 * s, -6 * s, 1.4 * s);
+
+  // A few spiny skin ridges along the head, the same rough abyssal
+  // texture the Angler Fish carries.
+  g.fillStyle(finColor, 0.7 * alpha);
+  [
+    [-2, -9, 1.1],
+    [4, -6, 1],
+    [-7, -10, 0.9]
+  ].forEach(([sx, sy, sr]) => g.fillCircle(sx * s, sy * s, sr * s));
+
+  g.restore();
+}
+
 // A humpback whale - not a fish or a shark, and drawn nothing like either:
 // a real humpback's own unmistakable field marks are a much deeper, chunkier
 // body than any shark here, a small stubby dorsal fin sat on a "hump" far

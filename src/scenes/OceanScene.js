@@ -183,6 +183,7 @@ import {
   drawCoralTrout,
   drawAngler,
   drawDragonfish,
+  drawFangtooth,
   drawGreatWhite,
   drawTigerShark,
   drawBullShark,
@@ -372,6 +373,7 @@ const DRAWERS = {
   coral_trout: drawCoralTrout,
   angler_fish: drawAngler,
   dragonfish: drawDragonfish,
+  fangtooth: drawFangtooth,
   great_white: drawGreatWhite,
   tiger_shark: drawTigerShark,
   bull_shark: drawBullShark,
@@ -561,6 +563,7 @@ const BAIT_HOOK_SCALE = {
   coral_trout: 0.36,
   angler_fish: 0.4,
   dragonfish: 0.32,
+  fangtooth: 0.4,
   // Sharks are a deliberate exception to "modest" - their SWIM_SCALE below
   // is already huge (1.0-1.15, "unmistakable the moment one shows up"), so
   // a small bait-on-hook scale here made them visibly collapse the instant
@@ -751,6 +754,7 @@ const REVEAL_SCALE = {
   coral_trout: 0.85,
   angler_fish: 0.8,
   dragonfish: 0.7,
+  fangtooth: 0.85,
   great_white: 1.3,
   tiger_shark: 1.15,
   bull_shark: 1.2,
@@ -944,6 +948,7 @@ const SWIM_SCALE = {
   coral_trout: 0.5,
   angler_fish: 0.44,
   dragonfish: 0.34,
+  fangtooth: 0.4,
   great_white: 1.15,
   tiger_shark: 1.0,
   bull_shark: 1.05,
@@ -1134,6 +1139,7 @@ const SWIM_SPEED = {
   coral_trout: 32,
   angler_fish: 16,
   dragonfish: 18,
+  fangtooth: 14,
   great_white: 48,
   tiger_shark: 52,
   bull_shark: 46,
@@ -1272,6 +1278,7 @@ const NORMAL_POOL = [
   'coral_trout',
   'angler_fish',
   'dragonfish',
+  'fangtooth',
   'barndoor_skate',
   'winter_skate',
   'clearnose_skate',
@@ -1306,6 +1313,9 @@ const DEPTH_LIMITS = {
   // A real deep-sea dragonfish - sits between the Blue-eye Trevalla's
   // continental-shelf 600m and the Angler Fish's abyssal 4000m.
   dragonfish: { min: 18000 },
+  // A real fangtooth - sits between the Dragonfish's 1500m and the
+  // Angler Fish's abyssal 4000m.
+  fangtooth: { min: 24000 },
   angler_fish: { min: 48000 },
   old_boot: { max: 1800 }
 };
@@ -1316,7 +1326,7 @@ const DEPTH_LIMITS = {
 // pickSpawnId) blows straight through their depth gate and boosts them
 // hard on top of that - "come up from anywhere, and come up often" is the
 // entire point of fishing with it.
-const ABYSS_FISH = ['warsaw_grouper', 'blueline_tilefish', 'golden_tilefish', 'blue_eye_trevalla', 'dragonfish', 'angler_fish'];
+const ABYSS_FISH = ['warsaw_grouper', 'blueline_tilefish', 'golden_tilefish', 'blue_eye_trevalla', 'dragonfish', 'fangtooth', 'angler_fish'];
 const ABYSS_BOOST_COPIES = 3;
 
 // Every NORMAL_POOL species that's Legendary tier by value rank (see

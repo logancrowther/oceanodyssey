@@ -2087,6 +2087,25 @@ export const FISH = [
     baits: ['prawn', 'squid']
   },
   {
+    id: 'fangtooth',
+    name: 'Fangtooth',
+    // Only turns up once the hook is past 2000m (see
+    // OceanScene.NORMAL_POOL/DEPTH_LIMITS/ABYSS_FISH) - sits between the
+    // Dragonfish's 1500m and the Angler Fish's abyssal 4000m. Also, unlike
+    // any other depth-gated species, reachable at ANY depth while fishing
+    // with Abyssal Bait, same as the rest of ABYSS_FISH. Tiny like the
+    // real animal (rarely over 16cm), priced high per kg for the same
+    // reason the Dragonfish is.
+    baseWeightKg: 0.5,
+    valuePerKg: 50,
+    turnsRequired: 2.1,
+    rarity: 'legendary',
+    difficultyMultiplier: 1.3,
+    // A passive abyssal ambush predator like the Angler Fish and
+    // Dragonfish - not picky about what's drifting on the hook.
+    baits: ['prawn', 'squid']
+  },
+  {
     id: 'whiting',
     name: 'Whiting',
     // A small, prized table fish - much lighter than the others and no real
