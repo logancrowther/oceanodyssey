@@ -1960,16 +1960,20 @@ const WHALE_BAIT = [
   'cero_mackerel',
   'abyssal_bait',
   'plastic_lure',
-  'shimmering_lure'
+  'shimmering_lure',
+  'deep_sea_bait'
 ];
 const WHALE_CHANCE = 0.001;
 // A graduated ladder of slight bumps over the baseline above - none of
-// the three Bait Crate rewards (see baitData.js) unlock the Whale
+// the four Bait Crate rewards (see baitData.js) unlock the Whale
 // outright (it was already reachable on Squid/Prawn/Salmon/Mackerel),
 // they just nudge the odds up a little further each, on top of
 // everything else each bait already does (see ABYSS_FISH/
-// NORMAL_POOL_LEGENDARY/luckTierFor below): Plastic Lure the smallest
-// bump, Shimmering Lure a bit more, Abyssal Bait the most.
+// NORMAL_POOL_LEGENDARY below): Deep Sea Bait the tiniest bump (it's
+// real bait, not a lure - barely more than plain Squid/Prawn), Plastic
+// Lure a proper step up from that, Shimmering Lure more still, Abyssal
+// Bait the most.
+const WHALE_CHANCE_DEEP_SEA = 0.00105;
 const WHALE_CHANCE_LURE = 0.0011;
 const WHALE_CHANCE_SHIMMERING = 0.0012;
 const WHALE_CHANCE_ABYSSAL = 0.0013;
@@ -2047,8 +2051,10 @@ function colorAtDepth(depthPx) {
 
 // Plastic Lure, Shimmering Lure, and Abyssal Bait (Bait Crate rewards -
 // see baitData.js) are universal: unlike every real bait here, nothing
-// turns any of them down regardless of what it actually eats.
-const UNIVERSAL_BAIT = new Set(['deep_sea_bait', 'plastic_lure', 'shimmering_lure', 'abyssal_bait']);
+// turns any of them down regardless of what it actually eats. Deep Sea
+// Bait is NOT universal - it's real bait, not a lure, so it only tempts
+// what Squid itself would (see speciesAcceptsBait below).
+const UNIVERSAL_BAIT = new Set(['plastic_lure', 'shimmering_lure', 'abyssal_bait']);
 
 // Neither lure is food - nothing's actually eating it - so unlike real
 // bait, a lure survives a catch most of the time (see catchFish) instead
@@ -2061,11 +2067,14 @@ const LURE_LOSS_CHANCE = 0.2;
 // own eligibility is already gated by SHARK_BAIT at spawn time; everything
 // else only bites bait it's realistically listed as eating (see
 // fishData.js), so equipping the wrong one for a fish just never works -
-// unless it's one of the universal lures above.
+// unless it's one of the universal lures above, or Deep Sea Bait, which
+// counts as Squid itself for this check (it's not universal, just always
+// treated as the same real bait Squid already is).
 function speciesAcceptsBait(itemId, baitId) {
   if (UNIVERSAL_BAIT.has(baitId)) return true;
   const info = getCatchable(itemId);
-  return !info.baits || info.baits.includes(baitId);
+  const effectiveBaitId = baitId === 'deep_sea_bait' ? 'squid' : baitId;
+  return !info.baits || info.baits.includes(effectiveBaitId);
 }
 
 // No fish can realistically swallow bait dramatically bigger than itself -
@@ -2251,6 +2260,7 @@ export default class OceanScene extends Phaser.Scene {
       if (baitId === 'abyssal_bait') whaleChance = WHALE_CHANCE_ABYSSAL;
       else if (baitId === 'shimmering_lure') whaleChance = WHALE_CHANCE_SHIMMERING;
       else if (baitId === 'plastic_lure') whaleChance = WHALE_CHANCE_LURE;
+      else if (baitId === 'deep_sea_bait') whaleChance = WHALE_CHANCE_DEEP_SEA;
       if (Math.random() < whaleChance) return 'humpback_whale';
     }
     const isAbyssalBait = baitId === 'abyssal_bait';
