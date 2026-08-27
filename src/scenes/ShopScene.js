@@ -11,7 +11,6 @@ import {
   drawPrawn,
   drawSquid,
   drawDeepSeaBait,
-  drawChumBait,
   drawColossalBait,
   drawPlasticLure,
   drawShimmeringLure,
@@ -396,7 +395,6 @@ const BAIT_ICON_DRAWERS = {
   prawn: (g, x, y) => drawPrawn(g, x, y, 1.7),
   squid: (g, x, y) => drawSquid(g, x, y, 1.7),
   deep_sea_bait: (g, x, y) => drawDeepSeaBait(g, x, y, 1.7),
-  chum_bait: (g, x, y) => drawChumBait(g, x, y, 1.8),
   colossal_bait: (g, x, y) => drawColossalBait(g, x, y, 1.9),
   plastic_lure: (g, x, y) => drawPlasticLure(g, x, y, 2.6),
   shimmering_lure: (g, x, y) => drawShimmeringLure(g, x, y, 2.6),
@@ -439,9 +437,8 @@ function drawCrateIcon(g, x, y, scale = 1) {
 // Bait Crate: costs CRATE_COST, rolls one of seven outcomes. Odds are
 // deliberately front-loaded onto the common payout so Deep Sea Bait feels
 // like a modest step up, Plastic Lure a real find, Colossal Bait a
-// genuine step up from that, Shimmering Lure more again, and the two
-// Mythic pulls (Abyssal Bait, Chum Bait - an even split of the same
-// overall Mythic odds) a true rarity - about 1 in 200 crates for either.
+// genuine step up from that, Shimmering Lure more again, and Abyssal
+// Bait (the Mythic pull) a true rarity - about 1 in 200 crates.
 const CRATE_COST = 1000;
 const CRATE_MYTHIC_CHANCE = 0.005;
 const CRATE_LEGENDARY_CHANCE = 0.02;
@@ -453,8 +450,7 @@ const CRATE_UNCOMMON_CHANCE = 0.25;
 function rollCrate() {
   const r = Math.random();
   if (r < CRATE_MYTHIC_CHANCE) {
-    const itemId = Math.random() < 0.5 ? 'abyssal_bait' : 'chum_bait';
-    return { tier: 'mythic', itemId, qty: 1 };
+    return { tier: 'mythic', itemId: 'abyssal_bait', qty: 1 };
   }
   if (r < CRATE_MYTHIC_CHANCE + CRATE_LEGENDARY_CHANCE) {
     return { tier: 'legendary', itemId: 'shimmering_lure', qty: 1 };
@@ -483,10 +479,9 @@ const CRATE_STRIP_POOL = [
   { tier: 'rare', itemId: 'plastic_lure' },
   { tier: 'epic', itemId: 'colossal_bait' },
   { tier: 'legendary', itemId: 'shimmering_lure' },
-  { tier: 'mythic', itemId: 'abyssal_bait' },
-  { tier: 'mythic', itemId: 'chum_bait' }
+  { tier: 'mythic', itemId: 'abyssal_bait' }
 ];
-const CRATE_STRIP_WEIGHTS = [0.3, 0.3, 0.18, 0.1, 0.06, 0.04, 0.01, 0.01];
+const CRATE_STRIP_WEIGHTS = [0.3, 0.3, 0.18, 0.1, 0.06, 0.04, 0.02];
 function pickStripFiller() {
   const r = Math.random();
   let acc = 0;

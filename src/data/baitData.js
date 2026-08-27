@@ -2,8 +2,8 @@
 // eat (see FISH[].baits in fishData.js and OceanScene's bait-matching
 // check), so which one's equipped actually matters, not just whether one is.
 //
-// Deep Sea Bait, Plastic Lure, Shimmering Lure, Colossal Bait, Abyssal
-// Bait, and Chum Bait are never sold directly here (see `crateOnly` and
+// Deep Sea Bait, Plastic Lure, Shimmering Lure, Colossal Bait, and
+// Abyssal Bait are never sold directly here (see `crateOnly` and
 // ShopScene's Buy list, which filters them out) - the only way to get any
 // of them is a Bait Crate roll. Every one of them but Deep Sea Bait is
 // universal (see OceanScene.speciesAcceptsBait) - unlike Prawn/Squid,
@@ -11,12 +11,8 @@
 // Deep Sea Bait is real bait, not a reusable lure - it's consumed on
 // every catch same as Prawn/Squid, catches exactly what Squid does (not
 // universal), and carries only the tiniest bit of the others' extra
-// "luck". Chum Bait is real bait too (consumed every catch, same as Deep
-// Sea Bait/Prawn/Squid), but carries its own Mythic-tier specialty: it's
-// the one bait that also tempts a shark or a ray regardless of their own
-// realistic diet (see OceanScene.SHARK_BAIT/RAY_BAIT) - real chum draws
-// in anything. Colossal Bait carries its own Epic-tier specialty: it
-// skews the whole spawn pool toward the biggest species in it (see
+// "luck". Colossal Bait carries its own Epic-tier specialty: it skews the
+// whole spawn pool toward the biggest species in it (see
 // OceanScene.NORMAL_POOL_BIG) - real "big bait catches big fish".
 export const BAIT = [
   { id: 'prawn', name: 'Prawns', cost: 5, packSize: 6 },
@@ -25,7 +21,6 @@ export const BAIT = [
   { id: 'plastic_lure', name: 'Plastic Lure', crateOnly: true },
   { id: 'colossal_bait', name: 'Colossal Bait', crateOnly: true },
   { id: 'shimmering_lure', name: 'Shimmering Lure', crateOnly: true },
-  { id: 'chum_bait', name: 'Chum Bait', crateOnly: true },
   { id: 'abyssal_bait', name: 'Abyssal Bait', crateOnly: true }
 ];
 

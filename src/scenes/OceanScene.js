@@ -9,7 +9,6 @@ import {
   drawPrawn,
   drawSquid,
   drawDeepSeaBait,
-  drawChumBait,
   drawColossalBait,
   drawPlasticLure,
   drawShimmeringLure,
@@ -203,7 +202,6 @@ const DRAWERS = {
   prawn: drawPrawn,
   squid: drawSquid,
   deep_sea_bait: drawDeepSeaBait,
-  chum_bait: drawChumBait,
   colossal_bait: drawColossalBait,
   plastic_lure: drawPlasticLure,
   shimmering_lure: drawShimmeringLure,
@@ -397,7 +395,6 @@ const BAIT_HOOK_SCALE = {
   prawn: 0.34,
   squid: 0.32,
   deep_sea_bait: 0.32,
-  chum_bait: 0.34,
   colossal_bait: 0.4,
   plastic_lure: 0.75,
   shimmering_lure: 0.75,
@@ -1977,7 +1974,6 @@ const WHALE_BAIT = [
   'atlantic_mackerel',
   'cero_mackerel',
   'abyssal_bait',
-  'chum_bait',
   'plastic_lure',
   'colossal_bait',
   'shimmering_lure',
@@ -1985,7 +1981,7 @@ const WHALE_BAIT = [
 ];
 const WHALE_CHANCE = 0.001;
 // A graduated ladder of slight bumps over the baseline above - none of
-// the six Bait Crate rewards (see baitData.js) unlock the Whale outright
+// the five Bait Crate rewards (see baitData.js) unlock the Whale outright
 // (it was already reachable on Squid/Prawn/Salmon/Mackerel), they just
 // nudge the odds up a little further each, on top of everything else
 // each bait already does (see ABYSS_FISH/NORMAL_POOL_LEGENDARY/
@@ -1993,15 +1989,13 @@ const WHALE_CHANCE = 0.001;
 // (Uncommon < Rare < Epic < Legendary < Mythic): Deep Sea Bait the
 // tiniest bump, Plastic Lure a proper step up, Colossal Bait more still
 // (the Whale is the single biggest thing a line can catch, right in its
-// own wheelhouse), Shimmering Lure more again, and the two Mythic
-// rewards (Abyssal Bait, Chum Bait) the most, tied - each Mythic in its
-// own different specialty, not one strictly better than the other.
+// own wheelhouse), Shimmering Lure more again, and Abyssal Bait (the
+// Mythic reward) the most.
 const WHALE_CHANCE_DEEP_SEA = 0.00105;
 const WHALE_CHANCE_LURE = 0.0011;
 const WHALE_CHANCE_COLOSSAL = 0.00115;
 const WHALE_CHANCE_SHIMMERING = 0.0012;
 const WHALE_CHANCE_ABYSSAL = 0.0013;
-const WHALE_CHANCE_CHUM = 0.0013;
 
 // Not part of the spawn roll at all - a Megalodon never swims around as
 // itself. Instead, right as one of the three real sharks above actually
@@ -2074,13 +2068,12 @@ function colorAtDepth(depthPx) {
   return lerpColor(SURFACE_WATER_COLOR, DEEP_WATER_COLOR, t * t);
 }
 
-// Plastic Lure, Colossal Bait, Shimmering Lure, Abyssal Bait, and Chum
-// Bait (Bait Crate rewards - see baitData.js) are universal: unlike every
-// real bait here, nothing turns any of them down regardless of what it
-// actually eats. Deep Sea Bait is NOT universal - it's real bait, not a
-// lure, so it only tempts what Squid itself would (see
-// speciesAcceptsBait below).
-const UNIVERSAL_BAIT = new Set(['plastic_lure', 'colossal_bait', 'shimmering_lure', 'abyssal_bait', 'chum_bait']);
+// Plastic Lure, Colossal Bait, Shimmering Lure, and Abyssal Bait (Bait
+// Crate rewards - see baitData.js) are universal: unlike every real bait
+// here, nothing turns any of them down regardless of what it actually
+// eats. Deep Sea Bait is NOT universal - it's real bait, not a lure, so
+// it only tempts what Squid itself would (see speciesAcceptsBait below).
+const UNIVERSAL_BAIT = new Set(['plastic_lure', 'colossal_bait', 'shimmering_lure', 'abyssal_bait']);
 
 // Neither lure is food - nothing's actually eating it - so unlike real
 // bait, a lure survives a catch most of the time (see catchFish) instead
@@ -2268,29 +2261,22 @@ export default class OceanScene extends Phaser.Scene {
         // handful of genuine deep-water species (the Six Gilled Shark) carry
         // their own deeper minDepth override on top of it.
         if (config.minDepth != null && hookDepth < config.minDepth) continue;
-        // Chum Bait's own Mythic-tier specialty (see baitData.js) - it
-        // tempts a shark regardless of the real prey species list every
-        // other bait is held to here.
-        const sharkBites = config.baits.includes(baitId) || baitId === 'chum_bait';
-        if (sharkBites && Math.random() < config.chance) return sharkId;
+        if (config.baits.includes(baitId) && Math.random() < config.chance) return sharkId;
       }
     }
     // Rays answer to the stackable bait item itself, not a caught fish -
     // no depth gate, since (unlike the sharks) they're meant to be a
-    // realistic, fairly reachable outcome of fishing with Squid. Chum
-    // Bait works here too, at Squid's own strength - the same Mythic
-    // specialty as the shark check above.
-    if (baitId === 'squid' || baitId === 'prawn' || baitId === 'chum_bait') {
+    // realistic, fairly reachable outcome of fishing with Squid.
+    if (baitId === 'squid' || baitId === 'prawn') {
       for (const rayId of Object.keys(RAY_BAIT)) {
         const config = RAY_BAIT[rayId];
-        const chance = baitId === 'prawn' ? config.prawnChance : config.squidChance;
+        const chance = baitId === 'squid' ? config.squidChance : config.prawnChance;
         if (Math.random() < chance) return rayId;
       }
     }
     if (baitId && WHALE_BAIT.includes(baitId)) {
       let whaleChance = WHALE_CHANCE;
       if (baitId === 'abyssal_bait') whaleChance = WHALE_CHANCE_ABYSSAL;
-      else if (baitId === 'chum_bait') whaleChance = WHALE_CHANCE_CHUM;
       else if (baitId === 'shimmering_lure') whaleChance = WHALE_CHANCE_SHIMMERING;
       else if (baitId === 'colossal_bait') whaleChance = WHALE_CHANCE_COLOSSAL;
       else if (baitId === 'plastic_lure') whaleChance = WHALE_CHANCE_LURE;

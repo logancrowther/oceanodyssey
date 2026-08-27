@@ -50,8 +50,7 @@ const SPECIAL_TIERS = {
   plastic_lure: 'rare',
   colossal_bait: 'epic',
   shimmering_lure: 'legendary',
-  abyssal_bait: 'mythic',
-  chum_bait: 'mythic'
+  abyssal_bait: 'mythic'
 };
 
 export function rarityTierFor(id) {
