@@ -20450,75 +20450,81 @@ export function drawButterflyRay(g, x, y, scale = 1, rotation = 0, alpha = 1) {
   g.restore();
 }
 
-// An electric ray - a real, soft-skinned ray built with a construction
-// nothing else in the game shares: a plain CIRCULAR disc (not diamond-
-// shaped like every other ray here), with the real animal's own field
-// mark - visible pale, kidney-bean-shaped electric organ patches sitting
-// under the skin on either side of the head - plus a short, thick, real
-// finned tail with two small dorsal fins and an actual caudal fin,
-// unlike the whip tails every other ray here carries.
+// An electric ray - built the exact same simple way as the Torpedo Ray
+// right beside it (a smooth disc blending straight into the head, one
+// venomous-looking tail spine, plain mottled blotching underneath), the
+// one deliberate difference being a scatter of vivid, black-ringed
+// electric-blue spots across the disc - a genuine, real field mark on
+// several actual ray species, and a fitting one for an "Electric" Ray to
+// be the one here that carries it. Distinguished from the Torpedo Ray in
+// the water by its own, different SWIM_SPEED, not by a different
+// silhouette.
 export function drawElectricRay(g, x, y, scale = 1, rotation = 0, alpha = 1) {
   g.save();
   g.translateCanvas(x, y);
   if (rotation) g.rotateCanvas(rotation);
   const s = scale;
 
-  const bodyColor = 0x746858;
-  const backColor = 0x4c4438;
-  const bellyColor = 0xc4bcac;
-  const finColor = 0x5c5344;
-  const darkColor = 0x1c1810;
-  const organColor = 0xa8a08c;
+  const bodyColor = 0x5c5040;
+  const backColor = 0x3c342a;
+  const finColor = 0x483e30;
+  const darkColor = 0x140f08;
+  const mottleColor = 0x241e14;
+  const spotColor = 0x2ab0e8;
+  const spotRing = 0x0c2c3c;
 
-  // A plain circular disc - not diamond-shaped like every other ray
-  // here, the real Electric Ray's own genuine silhouette.
-  const disc = { cx: 0, cy: -2, rx: 20, ry: 18 };
+  // Same whip tail and venomous-looking spine as the Torpedo
+  // Ray/Stingray right beside it.
+  g.lineStyle(1.4 * s, finColor, alpha);
+  g.beginPath();
+  g.moveTo(0, 26 * s);
+  quadCurveTo(g, 0, 26 * s, 4 * s, 44 * s, 2 * s, 60 * s);
+  g.strokePath();
+  g.fillStyle(0xe4d8b8, alpha);
+  g.fillTriangle(2 * s, 36 * s, 6 * s, 41 * s, 3.4 * s, 34 * s);
 
-  // The short, thick, real finned tail with two dorsal fins and an
-  // actual caudal fin - a construction unique to this and the Torpedo
-  // Ray among the rays here.
-  g.fillStyle(finColor, alpha);
-  g.fillEllipse(30 * s, 22 * s, 8 * s, 7 * s);
-  g.lineStyle(1 * s, darkColor, 0.5 * alpha);
-  g.strokeEllipse(30 * s, 22 * s, 8 * s, 7 * s);
-
-  const tailTop = [
-    { x: 4, y: 12 },
-    { x: 14, y: 16 },
-    { x: 24, y: 20 }
-  ];
-  const tailBottom = tailTop.map((p) => ({ x: p.x + 2, y: p.y + 8 })).reverse();
-  const tail = tailTop.concat(tailBottom).map((p) => ({ x: p.x * s, y: p.y * s }));
+  // The same smooth, rounded oval disc as the Torpedo Ray.
   g.fillStyle(bodyColor, alpha);
-  g.fillPoints(tail, true);
-  g.lineStyle(1 * s, darkColor, 0.45 * alpha);
-  g.strokePoints(tail, true);
+  g.fillEllipse(0, 0, 48 * s, 52 * s);
 
-  g.fillStyle(finColor, alpha);
-  g.fillTriangle(10 * s, 15 * s, 15 * s, 15.5 * s, 12 * s, 9.5 * s);
-  g.fillTriangle(18 * s, 18 * s, 23 * s, 18.5 * s, 20 * s, 12.5 * s);
-  g.lineStyle(1 * s, darkColor, 0.45 * alpha);
-  g.strokeTriangle(10 * s, 15 * s, 15 * s, 15.5 * s, 12 * s, 9.5 * s);
-  g.strokeTriangle(18 * s, 18 * s, 23 * s, 18.5 * s, 20 * s, 12.5 * s);
+  g.fillStyle(backColor, 0.35 * alpha);
+  g.fillEllipse(0, -4 * s, 32 * s, 40 * s);
 
-  g.fillStyle(bodyColor, alpha);
-  g.fillEllipse(disc.cx * s, disc.cy * s, disc.rx * s, disc.ry * s);
+  g.fillStyle(mottleColor, 0.25 * alpha);
+  [
+    [-6, -10, 3.4],
+    [7, 4, 3.6],
+    [-8, 8, 2.8],
+    [4, -8, 3]
+  ].forEach(([bx, by, br]) => g.fillEllipse(bx * s, by * s, br * 1.3 * s, br * s));
 
-  // The visible pale kidney-shaped electric organ patches under the
-  // skin - the real Electric Ray's own genuine field mark.
-  g.fillStyle(organColor, 0.55 * alpha);
-  g.fillEllipse(-9 * s, -4 * s, 6 * s, 10 * s);
-  g.fillEllipse(9 * s, -4 * s, 6 * s, 10 * s);
+  // The one deliberate difference from the Torpedo Ray - a scatter of
+  // vivid, black-ringed electric-blue spots across the disc.
+  [
+    [-11, -14, 2.2],
+    [10, -12, 1.9],
+    [-3, -3, 2.4],
+    [13, 2, 1.7],
+    [-14, 4, 1.8],
+    [1, 12, 2.1],
+    [-8, 15, 1.6],
+    [12, 14, 1.5]
+  ].forEach(([bx, by, br]) => {
+    g.lineStyle(0.9 * s, spotRing, 0.7 * alpha);
+    g.strokeCircle(bx * s, by * s, br * s);
+    g.fillStyle(spotColor, 0.85 * alpha);
+    g.fillCircle(bx * s, by * s, br * 0.72 * s);
+  });
 
-  g.lineStyle(1.2 * s, darkColor, 0.5 * alpha);
-  g.strokeEllipse(disc.cx * s, disc.cy * s, disc.rx * s, disc.ry * s);
+  g.lineStyle(1.2 * s, darkColor, 0.6 * alpha);
+  g.strokeEllipse(0, 0, 48 * s, 52 * s);
 
-  g.fillStyle(0xe8e0d0, alpha);
-  g.fillCircle(-5 * s, -12 * s, 1.5 * s);
-  g.fillCircle(5 * s, -12 * s, 1.5 * s);
+  g.fillStyle(0xe8dcc4, alpha);
+  g.fillCircle(-6 * s, -13.5 * s, 1.6 * s);
+  g.fillCircle(6 * s, -13.5 * s, 1.6 * s);
   g.fillStyle(0x0e0a06, alpha);
-  g.fillCircle(-4.7 * s, -12 * s, 0.85 * s);
-  g.fillCircle(5.3 * s, -12 * s, 0.85 * s);
+  g.fillCircle(-5.7 * s, -13.5 * s, 0.9 * s);
+  g.fillCircle(6.3 * s, -13.5 * s, 0.9 * s);
 
   g.restore();
 }
