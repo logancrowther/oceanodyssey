@@ -453,6 +453,153 @@ export function drawDeepSeaBait(g, x, y, scale = 1, rotation = 0, alpha = 1) {
   g.restore();
 }
 
+// Chum Bait - real bait, not a lure (no rigged hook, same as the
+// Prawn/Squid/Deep Sea Bait it sits next to in the crate): a rough scoop
+// of minced, bloody flesh and bone scraps, not a single clean cut piece
+// like any of the others - a loose cluster of irregular chunks instead of
+// one smooth shape, with a soft red blood haze dispersing off it into the
+// water. The real animal-attracting mess this bait actually is.
+export function drawChumBait(g, x, y, scale = 1, rotation = 0, alpha = 1) {
+  g.save();
+  g.translateCanvas(x, y);
+  if (rotation) g.rotateCanvas(rotation);
+  const s = scale;
+
+  const fleshColor = 0x7a2020;
+  const fleshDark = 0x4a1414;
+  const boneColor = 0xd8c8b0;
+  const darkColor = 0x2a0c0c;
+  const bloodColor = 0xb02828;
+
+  // A soft, drifting blood haze - the real reason chum works, dispersing
+  // outward unlike any other bait's own tight, contained shape.
+  [
+    [12, -4, 8, 0.1],
+    [-10, 6, 7, 0.12],
+    [4, 10, 6, 0.14]
+  ].forEach(([cx, cy, r, a]) => {
+    g.fillStyle(bloodColor, a * alpha);
+    g.fillCircle(cx * s, cy * s, r * s);
+  });
+
+  // A loose cluster of irregular chunks - a rough scoop, not one clean
+  // piece.
+  const chunks = [
+    [
+      { x: -9, y: -2 },
+      { x: -5, y: -7 },
+      { x: 1, y: -6 },
+      { x: 2, y: -1 },
+      { x: -3, y: 2 }
+    ],
+    [
+      { x: 0, y: -1 },
+      { x: 5, y: -4 },
+      { x: 10, y: -1 },
+      { x: 8, y: 4 },
+      { x: 2, y: 4 }
+    ],
+    [
+      { x: -6, y: 1 },
+      { x: -1, y: 2 },
+      { x: 0, y: 7 },
+      { x: -5, y: 9 },
+      { x: -9, y: 6 }
+    ]
+  ];
+  chunks.forEach((chunk, i) => {
+    const pts = chunk.map((p) => ({ x: p.x * s, y: p.y * s }));
+    g.fillStyle(i === 1 ? fleshColor : fleshDark, alpha);
+    g.fillPoints(pts, true);
+    g.lineStyle(1 * s, darkColor, 0.7 * alpha);
+    g.strokePoints(pts, true);
+  });
+
+  // A couple of pale bone/scrap flecks, unlike any single clean fillet.
+  g.fillStyle(boneColor, 0.85 * alpha);
+  g.fillCircle(-2 * s, -3 * s, 1.1 * s);
+  g.fillCircle(4 * s, 0, 0.9 * s);
+  g.fillCircle(-4 * s, 5 * s, 0.9 * s);
+
+  g.restore();
+}
+
+// Colossal Bait - real bait, not a lure (no dangling treble, no moulded
+// plastic - a genuine rigged deadbait), and built deliberately bulkier
+// and deeper-bodied than anything else in the tackle box: a whole oily
+// baitfish, silver-blue and scaled, rigged nose-to-tail on a single
+// oversized hook - the real big-game trick of using a big whole fish to
+// draw a bigger one in, not a small scrap of flesh like the rest.
+export function drawColossalBait(g, x, y, scale = 1, rotation = 0, alpha = 1) {
+  g.save();
+  g.translateCanvas(x, y);
+  if (rotation) g.rotateCanvas(rotation);
+  const s = scale;
+
+  const bodyColor = 0x8aa0b8;
+  const backColor = 0x445868;
+  const bellyColor = 0xd8e0e4;
+  const darkColor = 0x1c2630;
+  const hookColor = 0x8c8c90;
+
+  // A deep, chunky whole-fish body - noticeably bulkier than the Deep Sea
+  // Bait's thin strip or the Prawn/Squid's own slim curves.
+  const body = [
+    { x: -15, y: 0 },
+    { x: -12, y: -6 },
+    { x: -4, y: -9 },
+    { x: 5, y: -8 },
+    { x: 12, y: -5 },
+    { x: 12, y: 5 },
+    { x: 5, y: 8 },
+    { x: -4, y: 9 },
+    { x: -12, y: 6 }
+  ].map((p) => ({ x: p.x * s, y: p.y * s }));
+
+  // A real forked tail - this is a whole fish, not a scrap.
+  g.fillStyle(backColor, alpha);
+  g.fillTriangle(11 * s, -3 * s, 20 * s, -8 * s, 14 * s, 0);
+  g.fillTriangle(11 * s, 3 * s, 20 * s, 8 * s, 14 * s, 0);
+  g.lineStyle(1 * s, darkColor, 0.6 * alpha);
+  g.strokeTriangle(11 * s, -3 * s, 20 * s, -8 * s, 14 * s, 0);
+  g.strokeTriangle(11 * s, 3 * s, 20 * s, 8 * s, 14 * s, 0);
+
+  g.fillStyle(bodyColor, alpha);
+  g.fillPoints(body, true);
+
+  // Pale belly, dark oily-blue back - real baitfish countershading, the
+  // opposite of Deep Sea Bait/Chum Bait's own uniformly dark flesh.
+  g.fillStyle(bellyColor, 0.75 * alpha);
+  g.fillEllipse(-1 * s, 4 * s, 22 * s, 8 * s);
+  g.fillStyle(backColor, 0.55 * alpha);
+  g.fillEllipse(-1 * s, -5 * s, 22 * s, 7 * s);
+  g.lineStyle(1.2 * s, darkColor, 0.7 * alpha);
+  g.strokePoints(body, true);
+
+  // A row of faint scale lines - a whole real fish, not moulded plastic.
+  g.lineStyle(0.6 * s, darkColor, 0.3 * alpha);
+  [-8, -3, 2, 7].forEach((sx) => {
+    g.beginPath();
+    g.moveTo(sx * s, -6 * s);
+    g.lineTo(sx * s, 6 * s);
+    g.strokePath();
+  });
+
+  g.fillStyle(darkColor, alpha);
+  g.fillCircle(-10 * s, -1 * s, 1.3 * s);
+
+  // The single oversized hook, rigged straight through the body nose to
+  // tail - the real big-game deadbait rig, not a treble or a jig hook.
+  g.lineStyle(1.3 * s, hookColor, 0.9 * alpha);
+  g.beginPath();
+  g.moveTo(-11 * s, 0);
+  g.lineTo(9 * s, 0);
+  quadCurveTo(g, 9 * s, 0, 16 * s, 2 * s, 13 * s, 9 * s);
+  g.strokePath();
+
+  g.restore();
+}
+
 // A cut squid tentacle bait - a single smooth, curled, tapering strip (not
 // segmented armor plates like the Prawn's), with a row of small round
 // sucker discs down the inner curve - the real bait's own unmistakable

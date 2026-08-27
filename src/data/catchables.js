@@ -48,8 +48,10 @@ const RARITY_BANDS = [
 const SPECIAL_TIERS = {
   deep_sea_bait: 'uncommon',
   plastic_lure: 'rare',
+  colossal_bait: 'epic',
   shimmering_lure: 'legendary',
-  abyssal_bait: 'mythic'
+  abyssal_bait: 'mythic',
+  chum_bait: 'mythic'
 };
 
 export function rarityTierFor(id) {
