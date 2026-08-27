@@ -9,6 +9,7 @@ import { addStatusBar } from '../ui/fishIcon.js';
 import {
   drawPrawn,
   drawSquid,
+  drawDeepSeaBait,
   drawPlasticLure,
   drawShimmeringLure,
   drawAbyssalBait,
@@ -394,6 +395,7 @@ export const CATCH_DRAWERS = {
 const BAIT_ICON_DRAWERS = {
   prawn: (g, x, y) => drawPrawn(g, x, y, 1.3),
   squid: (g, x, y) => drawSquid(g, x, y, 1.3),
+  deep_sea_bait: (g, x, y) => drawDeepSeaBait(g, x, y, 1.5),
   plastic_lure: (g, x, y) => drawPlasticLure(g, x, y, 2.2),
   shimmering_lure: (g, x, y) => drawShimmeringLure(g, x, y, 2.2),
   abyssal_bait: (g, x, y) => drawAbyssalBait(g, x, y, 2.6)

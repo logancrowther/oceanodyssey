@@ -382,6 +382,77 @@ export function drawAbyssalBait(g, x, y, scale = 1, rotation = 0, alpha = 1) {
   g.restore();
 }
 
+// Deep Sea Bait - real bait, not a lure (no rigged hook, same as the
+// Prawn/Squid it sits next to in the crate), cut from something pulled up
+// from real depth: a single smooth, curled, tapering strip like the
+// Squid's own, but dark, cold-toned flesh instead of pale pink, with a
+// faint bioluminescent sheen along one edge and a couple of tiny glowing
+// flecks - a real field mark of the deep, but understated next to the
+// Abyssal Bait's own much brighter glow.
+export function drawDeepSeaBait(g, x, y, scale = 1, rotation = 0, alpha = 1) {
+  g.save();
+  g.translateCanvas(x, y);
+  if (rotation) g.rotateCanvas(rotation);
+  const s = scale;
+
+  const fleshColor = 0x2c2438;
+  const fleshDark = 0x1a1522;
+  const darkColor = 0x0c0910;
+  const glowColor = 0x6ad8c8;
+
+  const centerR = 15 * s;
+  const startA = Math.PI * 0.1;
+  const endA = Math.PI * 1.35;
+  const steps = 14;
+  const spine = [];
+  for (let i = 0; i <= steps; i += 1) {
+    const a = startA + (endA - startA) * (i / steps);
+    spine.push({ x: Math.cos(a) * centerR, y: Math.sin(a) * centerR });
+  }
+
+  const left = [];
+  const right = [];
+  for (let i = 0; i <= steps; i += 1) {
+    const p0 = spine[Math.max(0, i - 1)];
+    const p1 = spine[Math.min(steps, i + 1)];
+    const dx = p1.x - p0.x;
+    const dy = p1.y - p0.y;
+    const len = Math.hypot(dx, dy) || 1;
+    const nx = -dy / len;
+    const ny = dx / len;
+    const w = (5 - (i / steps) * 4.2) * s;
+    left.push({ x: spine[i].x + nx * w, y: spine[i].y + ny * w });
+    right.push({ x: spine[i].x - nx * w, y: spine[i].y - ny * w });
+  }
+  const outline = left.concat(right.reverse());
+
+  g.fillStyle(fleshColor, alpha);
+  g.fillPoints(outline, true);
+  g.fillStyle(fleshDark, 0.4 * alpha);
+  g.fillPoints(left.concat(spine.slice().reverse()), true);
+  g.lineStyle(1 * s, darkColor, 0.6 * alpha);
+  g.strokePoints(outline, true);
+
+  // A faint bioluminescent sheen along the outer edge - a real trait of
+  // whatever this was cut from, not the Squid's own blood blush.
+  g.lineStyle(1.4 * s, glowColor, 0.3 * alpha);
+  g.beginPath();
+  left.forEach((p, i) => (i === 0 ? g.moveTo(p.x, p.y) : g.lineTo(p.x, p.y)));
+  g.strokePath();
+
+  // A couple of tiny glowing flecks - understated next to the Abyssal
+  // Bait's own much bigger, brighter glow.
+  [4, 9].forEach((i) => {
+    const p = spine[i];
+    g.fillStyle(glowColor, 0.25 * alpha);
+    g.fillCircle(p.x, p.y, 2 * s);
+    g.fillStyle(glowColor, 0.8 * alpha);
+    g.fillCircle(p.x, p.y, 0.7 * s);
+  });
+
+  g.restore();
+}
+
 // A cut squid tentacle bait - a single smooth, curled, tapering strip (not
 // segmented armor plates like the Prawn's), with a row of small round
 // sucker discs down the inner curve - the real bait's own unmistakable

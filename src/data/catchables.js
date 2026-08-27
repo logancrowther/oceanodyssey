@@ -46,6 +46,7 @@ const RARITY_BANDS = [
 // rank to derive a tier from - their tier is exactly the one the crate
 // itself rolled them at.
 const SPECIAL_TIERS = {
+  deep_sea_bait: 'uncommon',
   plastic_lure: 'rare',
   shimmering_lure: 'legendary',
   abyssal_bait: 'mythic'

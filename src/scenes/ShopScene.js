@@ -10,6 +10,7 @@ import { addStatusBar } from '../ui/fishIcon.js';
 import {
   drawPrawn,
   drawSquid,
+  drawDeepSeaBait,
   drawPlasticLure,
   drawShimmeringLure,
   drawAbyssalBait,
@@ -392,6 +393,7 @@ const CATCH_DRAWERS = {
 const BAIT_ICON_DRAWERS = {
   prawn: (g, x, y) => drawPrawn(g, x, y, 1.7),
   squid: (g, x, y) => drawSquid(g, x, y, 1.7),
+  deep_sea_bait: (g, x, y) => drawDeepSeaBait(g, x, y, 1.7),
   plastic_lure: (g, x, y) => drawPlasticLure(g, x, y, 2.6),
   shimmering_lure: (g, x, y) => drawShimmeringLure(g, x, y, 2.6),
   abyssal_bait: (g, x, y) => drawAbyssalBait(g, x, y, 3.0)
@@ -430,15 +432,17 @@ function drawCrateIcon(g, x, y, scale = 1) {
   g.fillCircle(x, y - 2 * s, 1.2 * s);
 }
 
-// Bait Crate: costs CRATE_COST, rolls one of four outcomes. Odds are
-// deliberately front-loaded onto the common payout so Plastic Lure feels
-// like a real find, Shimmering Lure a genuine step up from that, and
-// Abyssal Bait (the mythic pull) a true rarity - about 1 in 200 crates.
+// Bait Crate: costs CRATE_COST, rolls one of five outcomes. Odds are
+// deliberately front-loaded onto the common payout so Deep Sea Bait feels
+// like a modest step up, Plastic Lure a real find, Shimmering Lure a
+// genuine step up from that, and Abyssal Bait (the mythic pull) a true
+// rarity - about 1 in 200 crates.
 const CRATE_COST = 1000;
 const CRATE_MYTHIC_CHANCE = 0.005;
 const CRATE_LEGENDARY_CHANCE = 0.02;
 const CRATE_RARE_CHANCE = 0.145;
-// (the remaining ~0.83 is the common payout below)
+const CRATE_UNCOMMON_CHANCE = 0.25;
+// (the remaining ~0.58 is the common payout below)
 
 function rollCrate() {
   const r = Math.random();
@@ -448,6 +452,9 @@ function rollCrate() {
   }
   if (r < CRATE_MYTHIC_CHANCE + CRATE_LEGENDARY_CHANCE + CRATE_RARE_CHANCE) {
     return { tier: 'rare', itemId: 'plastic_lure', qty: 1 };
+  }
+  if (r < CRATE_MYTHIC_CHANCE + CRATE_LEGENDARY_CHANCE + CRATE_RARE_CHANCE + CRATE_UNCOMMON_CHANCE) {
+    return { tier: 'uncommon', itemId: 'deep_sea_bait', qty: 5 };
   }
   const itemId = Math.random() < 0.5 ? 'prawn' : 'squid';
   return { tier: 'common', itemId, qty: 25 };
@@ -460,11 +467,12 @@ function rollCrate() {
 const CRATE_STRIP_POOL = [
   { tier: 'common', itemId: 'prawn' },
   { tier: 'common', itemId: 'squid' },
+  { tier: 'uncommon', itemId: 'deep_sea_bait' },
   { tier: 'rare', itemId: 'plastic_lure' },
   { tier: 'legendary', itemId: 'shimmering_lure' },
   { tier: 'mythic', itemId: 'abyssal_bait' }
 ];
-const CRATE_STRIP_WEIGHTS = [0.4, 0.4, 0.12, 0.05, 0.03];
+const CRATE_STRIP_WEIGHTS = [0.32, 0.32, 0.2, 0.1, 0.04, 0.02];
 function pickStripFiller() {
   const r = Math.random();
   let acc = 0;

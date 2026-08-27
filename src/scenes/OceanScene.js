@@ -8,6 +8,7 @@ import {
   drawHook,
   drawPrawn,
   drawSquid,
+  drawDeepSeaBait,
   drawPlasticLure,
   drawShimmeringLure,
   drawAbyssalBait,
@@ -199,6 +200,7 @@ import { subheading, label } from '../ui/textStyle.js';
 const DRAWERS = {
   prawn: drawPrawn,
   squid: drawSquid,
+  deep_sea_bait: drawDeepSeaBait,
   plastic_lure: drawPlasticLure,
   shimmering_lure: drawShimmeringLure,
   abyssal_bait: drawAbyssalBait,
@@ -390,6 +392,7 @@ const DRAWERS = {
 const BAIT_HOOK_SCALE = {
   prawn: 0.34,
   squid: 0.32,
+  deep_sea_bait: 0.32,
   plastic_lure: 0.75,
   shimmering_lure: 0.75,
   abyssal_bait: 0.85,
@@ -2045,7 +2048,7 @@ function colorAtDepth(depthPx) {
 // Plastic Lure, Shimmering Lure, and Abyssal Bait (Bait Crate rewards -
 // see baitData.js) are universal: unlike every real bait here, nothing
 // turns any of them down regardless of what it actually eats.
-const UNIVERSAL_BAIT = new Set(['plastic_lure', 'shimmering_lure', 'abyssal_bait']);
+const UNIVERSAL_BAIT = new Set(['deep_sea_bait', 'plastic_lure', 'shimmering_lure', 'abyssal_bait']);
 
 // Neither lure is food - nothing's actually eating it - so unlike real
 // bait, a lure survives a catch most of the time (see catchFish) instead
