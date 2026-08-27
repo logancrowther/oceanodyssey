@@ -47,6 +47,7 @@ const RARITY_BANDS = [
 // itself rolled them at.
 const SPECIAL_TIERS = {
   plastic_lure: 'rare',
+  shimmering_lure: 'legendary',
   abyssal_bait: 'mythic'
 };
 

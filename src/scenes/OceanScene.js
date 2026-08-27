@@ -9,6 +9,7 @@ import {
   drawPrawn,
   drawSquid,
   drawPlasticLure,
+  drawShimmeringLure,
   drawAbyssalBait,
   drawFlathead,
   drawRedMorwong,
@@ -199,6 +200,7 @@ const DRAWERS = {
   prawn: drawPrawn,
   squid: drawSquid,
   plastic_lure: drawPlasticLure,
+  shimmering_lure: drawShimmeringLure,
   abyssal_bait: drawAbyssalBait,
   flathead: drawFlathead,
   red_morwong: drawRedMorwong,
@@ -389,6 +391,7 @@ const BAIT_HOOK_SCALE = {
   prawn: 0.34,
   squid: 0.32,
   plastic_lure: 0.75,
+  shimmering_lure: 0.75,
   abyssal_bait: 0.85,
   flathead: 0.42,
   red_morwong: 0.38,
@@ -1952,13 +1955,20 @@ const WHALE_BAIT = [
   'king_mackerel',
   'atlantic_mackerel',
   'cero_mackerel',
-  'abyssal_bait'
+  'abyssal_bait',
+  'plastic_lure',
+  'shimmering_lure'
 ];
 const WHALE_CHANCE = 0.001;
-// A slight bump over the baseline above - Abyssal Bait doesn't unlock the
-// Whale (it was already reachable on Squid/Prawn/Salmon/Mackerel), just
-// nudges the odds up a little further, on top of everything else the
-// bait already does (see ABYSS_FISH/NORMAL_POOL_LEGENDARY below).
+// A graduated ladder of slight bumps over the baseline above - none of
+// the three Bait Crate rewards (see baitData.js) unlock the Whale
+// outright (it was already reachable on Squid/Prawn/Salmon/Mackerel),
+// they just nudge the odds up a little further each, on top of
+// everything else each bait already does (see ABYSS_FISH/
+// NORMAL_POOL_LEGENDARY/luckTierFor below): Plastic Lure the smallest
+// bump, Shimmering Lure a bit more, Abyssal Bait the most.
+const WHALE_CHANCE_LURE = 0.0011;
+const WHALE_CHANCE_SHIMMERING = 0.0012;
 const WHALE_CHANCE_ABYSSAL = 0.0013;
 
 // Not part of the spawn roll at all - a Megalodon never swims around as
@@ -2032,10 +2042,16 @@ function colorAtDepth(depthPx) {
   return lerpColor(SURFACE_WATER_COLOR, DEEP_WATER_COLOR, t * t);
 }
 
-// Plastic Lure and Abyssal Bait (Bait Crate rewards - see baitData.js)
-// are universal: unlike every real bait here, nothing turns either one
-// down regardless of what it actually eats.
-const UNIVERSAL_BAIT = new Set(['plastic_lure', 'abyssal_bait']);
+// Plastic Lure, Shimmering Lure, and Abyssal Bait (Bait Crate rewards -
+// see baitData.js) are universal: unlike every real bait here, nothing
+// turns any of them down regardless of what it actually eats.
+const UNIVERSAL_BAIT = new Set(['plastic_lure', 'shimmering_lure', 'abyssal_bait']);
+
+// Neither lure is food - nothing's actually eating it - so unlike real
+// bait, a lure survives a catch most of the time (see catchFish) instead
+// of being consumed on every single one.
+const LURE_ITEMS = new Set(['plastic_lure', 'shimmering_lure']);
+const LURE_LOSS_CHANCE = 0.2;
 
 // Whether a species will actually bite a given bait - species without a
 // `baits` list (sharks, Megalodon) accept whatever's equipped, since their
@@ -2228,10 +2244,21 @@ export default class OceanScene extends Phaser.Scene {
       }
     }
     if (baitId && WHALE_BAIT.includes(baitId)) {
-      const whaleChance = baitId === 'abyssal_bait' ? WHALE_CHANCE_ABYSSAL : WHALE_CHANCE;
+      let whaleChance = WHALE_CHANCE;
+      if (baitId === 'abyssal_bait') whaleChance = WHALE_CHANCE_ABYSSAL;
+      else if (baitId === 'shimmering_lure') whaleChance = WHALE_CHANCE_SHIMMERING;
+      else if (baitId === 'plastic_lure') whaleChance = WHALE_CHANCE_LURE;
       if (Math.random() < whaleChance) return 'humpback_whale';
     }
     const isAbyssalBait = baitId === 'abyssal_bait';
+    // The three Bait Crate lures (see baitData.js) each carry a bit of
+    // "luck" - a graduated ladder, not a single on/off flag: Plastic Lure
+    // the least, Shimmering Lure a bit more, Abyssal Bait the most (the
+    // only one that also blows through an abyss fish's own depth gate,
+    // see below). None of this ever overrides a real depth gate for a
+    // species that isn't already eligible here.
+    const legendaryBoostCopies = isAbyssalBait ? 1 : baitId === 'shimmering_lure' ? 2 : baitId === 'plastic_lure' ? 1 : 0;
+    const abyssBoostCopies = baitId === 'shimmering_lure' ? 1 : 0;
     const pool = NORMAL_POOL.filter((id) => {
       const limits = DEPTH_LIMITS[id];
       if (!limits) return true;
@@ -2246,15 +2273,28 @@ export default class OceanScene extends Phaser.Scene {
     if (isAbyssalBait) {
       // Abyss fish get a real boost - and since their own depth gate was
       // just bypassed above, they're always in the pool to boost in the
-      // first place. Legendary-tier normal-pool fish get a much smaller
-      // nudge, and only when they'd already be eligible here regardless -
-      // this never overrides a real depth gate for anything that isn't an
-      // abyss fish.
+      // first place.
       ABYSS_FISH.forEach((id) => {
         for (let i = 0; i < ABYSS_BOOST_COPIES; i += 1) pool.push(id);
       });
+    } else if (abyssBoostCopies > 0) {
+      // Shimmering Lure's much smaller version of the above - only for
+      // abyss fish already eligible at the current depth, never bypassing
+      // their gate the way Abyssal Bait does.
+      ABYSS_FISH.forEach((id) => {
+        if (pool.includes(id)) {
+          for (let i = 0; i < abyssBoostCopies; i += 1) pool.push(id);
+        }
+      });
+    }
+    if (legendaryBoostCopies > 0) {
+      // Legendary-tier normal-pool fish get a nudge, and only when they'd
+      // already be eligible here regardless - this never overrides a real
+      // depth gate for anything.
       NORMAL_POOL_LEGENDARY.forEach((id) => {
-        if (pool.includes(id)) pool.push(id);
+        if (pool.includes(id)) {
+          for (let i = 0; i < legendaryBoostCopies; i += 1) pool.push(id);
+        }
       });
     }
     return Phaser.Utils.Array.GetRandom(pool);
@@ -2457,7 +2497,15 @@ export default class OceanScene extends Phaser.Scene {
       ease: 'Cubic.easeIn',
       onComplete: () => {
         if (GameState.equippedBait) {
-          GameState.consumeEquippedBait();
+          // Neither lure is food - nothing's actually eating it, so it
+          // doesn't get used up on every single catch the way real bait
+          // does. Instead it only has a chance of being lost/damaged in
+          // the process, same idea as a snagged or bitten-off lure in
+          // real fishing.
+          const isLure = LURE_ITEMS.has(GameState.equippedBait);
+          if (!isLure || Math.random() < LURE_LOSS_CHANCE) {
+            GameState.consumeEquippedBait();
+          }
         }
         GameState.addCatch(f.itemId, weightKg, value);
         this.statusBar.refresh();
@@ -2576,10 +2624,10 @@ export default class OceanScene extends Phaser.Scene {
         if (baitId && DRAWERS[baitId]) {
           const equippedCatch = GameState.data.catches.find((c) => c.uid === GameState.equippedCatchUid);
           const baitScale = BAIT_HOOK_SCALE[baitId] * (equippedCatch ? Phaser.Math.Clamp(equippedCatch.weightKg / (getCatchable(baitId).baseWeightKg || 1), 0.55, 1.9) : 1);
-          // A solid plastic lure doesn't wriggle like real bait - it hangs
-          // still on the line, so it skips the same dangle wobble every
-          // other bait gets here.
-          const baitDangle = baitId === 'plastic_lure' ? 0 : dangle;
+          // A solid lure doesn't wriggle like real bait - it hangs still
+          // on the line, so it skips the same dangle wobble every other
+          // bait gets here.
+          const baitDangle = LURE_ITEMS.has(baitId) ? 0 : dangle;
           DRAWERS[baitId](hg, this.hook.x + 2, this.hook.y + 1, baitScale, baitDangle, 1);
         }
       }

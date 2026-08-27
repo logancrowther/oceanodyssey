@@ -240,6 +240,76 @@ export function drawPlasticLure(g, x, y, scale = 1, rotation = 0, alpha = 1) {
   g.restore();
 }
 
+// The same small soft-plastic swimbait as the Plastic Lure right above -
+// identical shape, rigging, and stillness on the hook - just moulded in a
+// shimmering gold instead of plain yellow, and radiating its own soft
+// glow the way the Abyssal Bait does. A rarer, fancier cousin of the
+// same lure, not a different design.
+export function drawShimmeringLure(g, x, y, scale = 1, rotation = 0, alpha = 1) {
+  g.save();
+  g.translateCanvas(x, y);
+  if (rotation) g.rotateCanvas(rotation);
+  const s = scale;
+
+  const bodyColor = 0xffd84a;
+  const bodyDark = 0xc99000;
+  const darkColor = 0x3a2c08;
+  const hookColor = 0x8c8c90;
+  const glowColor = 0xffe680;
+
+  // A soft golden glow behind the shell - the same layered-translucent
+  // -circles trick used for the Abyssal Bait/catch-reveal glows.
+  [
+    [9, 0.1],
+    [6.5, 0.16],
+    [4, 0.26]
+  ].forEach(([r, a]) => {
+    g.fillStyle(glowColor, a * alpha);
+    g.fillCircle(0, 0, r * s);
+  });
+
+  const body = [
+    { x: -10, y: 0 },
+    { x: -7, y: -4.5 },
+    { x: -1, y: -6 },
+    { x: 6, y: -4 },
+    { x: 6, y: 4 },
+    { x: -1, y: 6 },
+    { x: -7, y: 4.5 }
+  ].map((p) => ({ x: p.x * s, y: p.y * s }));
+  g.fillStyle(bodyColor, alpha);
+  g.fillPoints(body, true);
+  g.lineStyle(1 * s, darkColor, 0.6 * alpha);
+  g.strokePoints(body, true);
+
+  g.fillStyle(bodyDark, alpha);
+  g.fillTriangle(6 * s, 0, 15 * s, -5 * s, 15 * s, 5 * s);
+  g.lineStyle(0.8 * s, darkColor, 0.5 * alpha);
+  g.strokeTriangle(6 * s, 0, 15 * s, -5 * s, 15 * s, 5 * s);
+
+  g.lineStyle(0.7 * s, bodyDark, 0.6 * alpha);
+  g.beginPath();
+  g.moveTo(-4 * s, -5 * s);
+  g.lineTo(-2 * s, 5 * s);
+  g.strokePath();
+
+  // A bright glinting bead eye - shimmering, unlike the Plastic Lure's
+  // plain dark one.
+  g.fillStyle(0xfff6d0, alpha);
+  g.fillCircle(-6 * s, -1 * s, 1.1 * s);
+  g.fillStyle(darkColor, alpha);
+  g.fillCircle(-6 * s, -1 * s, 0.5 * s);
+
+  g.lineStyle(1 * s, hookColor, 0.9 * alpha);
+  g.beginPath();
+  g.moveTo(-1 * s, -5 * s);
+  g.lineTo(-1 * s, -11 * s);
+  quadCurveTo(g, -1 * s, -11 * s, 3 * s, -12 * s, 3 * s, -8 * s);
+  g.strokePath();
+
+  g.restore();
+}
+
 // A glowing abyssal jig - not organic bait at all, a small dark artificial
 // lure built around a real photophore-style glowing core (the same
 // bioluminescent-lure trick the Dragonfish itself uses to hunt, borrowed
