@@ -7,7 +7,7 @@ import { addStatusBar } from '../ui/fishIcon.js';
 import { DESIGN_WIDTH, DESIGN_HEIGHT } from '../constants.js';
 import { heading, subheading, label } from '../ui/textStyle.js';
 import { CATCH_DRAWERS } from './InventoryScene.js';
-import { drawMegalodon } from '../ui/tackle.js';
+import { drawMegalodon, drawKraken } from '../ui/tackle.js';
 import { sizeScaleFor, rarityColorFor, rarityLabelFor } from '../data/catchables.js';
 
 // A couple of species read too small at CATCH_DRAWERS' own scale (tuned
@@ -15,7 +15,8 @@ import { sizeScaleFor, rarityColorFor, rarityLabelFor } from '../data/catchables
 // biggest thing in the game's whole index - this overrides just their box
 // here, without touching the shared scale used everywhere else.
 const INDEX_DRAWERS = {
-  megalodon: (g, x, y, weightKg) => drawMegalodon(g, x, y, 0.6 * sizeScaleFor('megalodon', weightKg))
+  megalodon: (g, x, y, weightKg) => drawMegalodon(g, x, y, 0.6 * sizeScaleFor('megalodon', weightKg)),
+  kraken: (g, x, y, weightKg) => drawKraken(g, x, y, 0.65 * sizeScaleFor('kraken', weightKg))
 };
 
 const COLS = 3;

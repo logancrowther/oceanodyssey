@@ -22253,3 +22253,190 @@ export function drawHumpbackWhale(g, x, y, scale = 1, rotation = 0, alpha = 1) {
 
   g.restore();
 }
+
+// The Kraken - not a real animal at all, unlike everything else in the
+// game (even Megalodon is a real extinct species): a purely mythical
+// sea monster, and drawn like nothing else here as a result - no fins,
+// no gills, no shark/fish silhouette whatsoever. A bulbous, torpedo-
+// finned mantle like a monstrous squid, one huge unblinking eye, a
+// hooked beak, and a radiating cluster of long, curling, sucker-lined
+// tentacles standing in for everything a real catch would have instead.
+// Never spawns as itself - the one and only moment one can turn up is a
+// Ray genuinely on the hook this deep (see OceanScene.updateSwimmers),
+// swapped in at the very last instant the same way Megalodon swaps in
+// for a shark.
+export function drawKraken(g, x, y, scale = 1, rotation = 0, alpha = 1) {
+  g.save();
+  g.translateCanvas(x, y);
+  if (rotation) g.rotateCanvas(rotation);
+  const s = scale;
+
+  const bodyColor = 0x581832;
+  const bodyDark = 0x330c1e;
+  const finColor = 0x40122a;
+  const tentacleColor = 0x4c1428;
+  const tentacleDark = 0x2c0a18;
+  const darkColor = 0x0a0306;
+  const suckerColor = 0xe8c8b0;
+  const suckerDark = 0xa87858;
+  const eyeColor = 0xc8e050;
+  const eyeDark = 0x7a9a20;
+  const beakColor = 0x140a08;
+  const mottleColor = 0x220818;
+
+  // Traces one curling, whip-like tentacle as a proper curved ribbon - a
+  // local tangent-based offset (the same technique the Squid bait uses
+  // for its own curled body), not a straight radiating spike, so it
+  // genuinely curls and undulates along its own length instead of just
+  // bending at one joint.
+  function tentacle(baseAngle, len, curlDir, wiggleFreq, phase, clubbed) {
+    const steps = 16;
+    const dirX = Math.sin(baseAngle);
+    const dirY = Math.cos(baseAngle) * 0.55;
+    const perpX = dirY;
+    const perpY = -dirX;
+    const spine = [];
+    for (let t = 0; t <= steps; t += 1) {
+      const tt = t / steps;
+      const r = 16 + len * tt;
+      const wave = Math.sin(tt * Math.PI * wiggleFreq + phase) * 16 * tt * curlDir;
+      const curl = tt * tt * 22 * curlDir;
+      spine.push({
+        x: dirX * r + perpX * (wave + curl),
+        y: 10 + dirY * r + perpY * (wave + curl) + tt * tt * 14
+      });
+    }
+    const left = [];
+    const right = [];
+    for (let t = 0; t <= steps; t += 1) {
+      const tt = t / steps;
+      const p0 = spine[Math.max(0, t - 1)];
+      const p1 = spine[Math.min(steps, t + 1)];
+      const dx = p1.x - p0.x;
+      const dy = p1.y - p0.y;
+      const dlen = Math.hypot(dx, dy) || 1;
+      const nx = -dy / dlen;
+      const ny = dx / dlen;
+      let w = 4.6 - tt * 3.8;
+      if (clubbed && tt > 0.8) w = 1 + (tt - 0.8) * 12;
+      left.push({ x: (spine[t].x + nx * w) * s, y: (spine[t].y + ny * w) * s });
+      right.push({ x: (spine[t].x - nx * w) * s, y: (spine[t].y - ny * w) * s });
+    }
+    const shape = left.concat(right.slice().reverse());
+    g.fillStyle(tentacleColor, alpha);
+    g.fillPoints(shape, true);
+    g.fillStyle(tentacleDark, 0.35 * alpha);
+    g.fillPoints(right.slice().reverse().concat(spine.map((p) => ({ x: p.x * s, y: p.y * s }))), true);
+    g.lineStyle(0.9 * s, darkColor, 0.55 * alpha);
+    g.strokePoints(shape, true);
+
+    // Sucker dots down the inner edge, denser and bolder on the clubbed
+    // tip of a feeding tentacle - a real giant squid's own field mark.
+    for (let t = 2; t < steps; t += clubbed ? 1 : 2) {
+      const tt = t / steps;
+      const p = left[t];
+      const r = clubbed && tt > 0.8 ? 1.3 : 0.9;
+      g.fillStyle(suckerDark, 0.5 * alpha);
+      g.fillCircle(p.x, p.y, r * 1.4 * s);
+      g.fillStyle(suckerColor, 0.85 * alpha);
+      g.fillCircle(p.x, p.y, r * s);
+    }
+  }
+
+  // Eight shorter arms in a wide fan, curling outward in alternating
+  // directions - drawn first so the mantle overlaps their base.
+  const arms = [
+    [-2.7, 40, -1],
+    [-2.15, 46, 1],
+    [-1.55, 42, -1],
+    [-0.85, 38, 1],
+    [0.85, 38, -1],
+    [1.55, 42, 1],
+    [2.15, 46, -1],
+    [2.7, 40, 1]
+  ];
+  arms.forEach(([angle, len, curlDir], i) => tentacle(angle, len, curlDir, 1.6, i * 1.1, false));
+
+  // Two much longer, thinner feeding tentacles with a wide clubbed tip -
+  // a real giant squid's own most distinctive feature, and the reach
+  // that sells this thing as genuinely huge.
+  tentacle(-0.35, 78, -1, 1.1, 0.4, true);
+  tentacle(0.35, 78, 1, 1.1, 2.6, true);
+
+  // The bulbous, torpedo-finned mantle - a squid's own body shape, not a
+  // fish's.
+  const mantle = [
+    { x: 0, y: -32 },
+    { x: -14, y: -24 },
+    { x: -19, y: -7 },
+    { x: -15, y: 11 },
+    { x: -7, y: 20 },
+    { x: 0, y: 23 },
+    { x: 7, y: 20 },
+    { x: 15, y: 11 },
+    { x: 19, y: -7 },
+    { x: 14, y: -24 }
+  ].map((p) => ({ x: p.x * s, y: p.y * s }));
+
+  // A pair of broad, wing-like fins low on the mantle - filled brighter
+  // than the tentacles so they actually read as a distinct feature.
+  g.fillStyle(finColor, alpha);
+  g.fillTriangle(-15 * s, 2 * s, -32 * s, 12 * s, -9 * s, 18 * s);
+  g.fillTriangle(15 * s, 2 * s, 32 * s, 12 * s, 9 * s, 18 * s);
+  g.lineStyle(1.1 * s, darkColor, 0.6 * alpha);
+  g.strokeTriangle(-15 * s, 2 * s, -32 * s, 12 * s, -9 * s, 18 * s);
+  g.strokeTriangle(15 * s, 2 * s, 32 * s, 12 * s, 9 * s, 18 * s);
+
+  g.fillStyle(bodyColor, alpha);
+  g.fillPoints(mantle, true);
+
+  // A darker dorsal wash and a few mottled blotches - the same skin
+  // texture trick as the game's sharks, so the mantle reads as living
+  // hide rather than a flat colour fill.
+  g.fillStyle(bodyDark, 0.5 * alpha);
+  g.fillEllipse(0, -16 * s, 30 * s, 20 * s);
+  g.fillStyle(mottleColor, 0.35 * alpha);
+  [
+    [-9, -18, 5],
+    [8, -10, 4],
+    [-6, 4, 4.5],
+    [10, -22, 3.5]
+  ].forEach(([mx, my, mr]) => g.fillEllipse(mx * s, my * s, mr * s, mr * 0.7 * s));
+
+  g.lineStyle(1.5 * s, darkColor, 0.85 * alpha);
+  g.strokePoints(mantle, true);
+
+  // A crown of short, jagged spines along the top of the head - a
+  // monster's silhouette, not a real animal's smooth crown.
+  g.fillStyle(finColor, alpha);
+  [-8, -3, 3, 8].forEach((sx, i) => {
+    const spineLen = i % 2 === 0 ? 9 : 12;
+    g.fillTriangle(sx * s, -27 * s, (sx + 4) * s, -27 * s, (sx + 2) * s, (-27 - spineLen) * s);
+  });
+
+  // The hooked beak, at the base of the tentacles.
+  g.fillStyle(beakColor, alpha);
+  g.fillTriangle(-5 * s, 15 * s, 5 * s, 15 * s, 0, 26 * s);
+  g.lineStyle(0.8 * s, 0x000000, 0.4 * alpha);
+  g.strokeTriangle(-5 * s, 15 * s, 5 * s, 15 * s, 0, 26 * s);
+
+  // One huge, unblinking eye - the real Kraken's own unmistakable field
+  // mark, deliberately singular and centred rather than a symmetric
+  // pair like every real fish here.
+  g.fillStyle(darkColor, 0.6 * alpha);
+  g.fillCircle(0.6 * s, -7.4 * s, 9.2 * s);
+  g.fillStyle(eyeColor, alpha);
+  g.fillCircle(0, -8 * s, 8.6 * s);
+  g.fillStyle(eyeDark, 0.5 * alpha);
+  g.fillEllipse(2.5 * s, -5 * s, 5 * s, 6 * s);
+  g.lineStyle(1.3 * s, darkColor, 0.75 * alpha);
+  g.strokeCircle(0, -8 * s, 8.6 * s);
+  g.fillStyle(darkColor, alpha);
+  g.fillEllipse(0, -8 * s, 2.4 * s, 7.6 * s);
+  // A small bright glint, so the huge eye reads as wet and alive rather
+  // than a flat painted disc.
+  g.fillStyle(0xf0ffe0, 0.8 * alpha);
+  g.fillCircle(-2.6 * s, -11.5 * s, 1.4 * s);
+
+  g.restore();
+}

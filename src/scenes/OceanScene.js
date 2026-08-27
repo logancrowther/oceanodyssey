@@ -191,6 +191,7 @@ import {
   drawTigerShark,
   drawBullShark,
   drawMegalodon,
+  drawKraken,
   drawHumpbackWhale,
   drawOldBoot
 } from '../ui/tackle.js';
@@ -384,6 +385,7 @@ const DRAWERS = {
   tiger_shark: drawTigerShark,
   bull_shark: drawBullShark,
   megalodon: drawMegalodon,
+  kraken: drawKraken,
   humpback_whale: drawHumpbackWhale,
   old_boot: drawOldBoot
 };
@@ -582,6 +584,7 @@ const BAIT_HOOK_SCALE = {
   tiger_shark: 0.75,
   bull_shark: 0.78,
   megalodon: 4,
+  kraken: 5,
   humpback_whale: 1.3,
   old_boot: 0.55
 };
@@ -771,9 +774,15 @@ const REVEAL_SCALE = {
   // fills the screen at the moment of the reveal, the one time it's ever
   // seen at all.
   megalodon: 7.5,
+  // Mythically huge on purpose - the sprawling tentacle reach already
+  // gives it a bigger footprint per scale unit than Megalodon's own
+  // compact body, so this alone comes out genuinely larger on screen
+  // without needing as high a multiplier. Like Megalodon it's never
+  // seen swimming around as itself, only in this one reveal.
+  kraken: 6.5,
   // A real trophy encounter in its own right, sitting well above every
-  // shark's own REVEAL_SCALE - not quite Megalodon-huge (that one's the
-  // single rarest thing in the game and is never seen swimming around as
+  // shark's own REVEAL_SCALE - not quite Megalodon/Kraken-huge (the two
+  // rarest things in the game, neither ever seen swimming around as
   // itself), but still an unmistakably enormous reveal.
   humpback_whale: 2.2,
   old_boot: 1.1
@@ -2006,6 +2015,15 @@ const WHALE_CHANCE_ABYSSAL = 0.0013;
 const MEGALODON_CHANCE = 0.01;
 const MEGALODON_MIN_DEPTH = 6000; // 500m
 
+// The Kraken's own version of the exact same trick, on Rays instead of
+// sharks - it's not part of the spawn roll either, and never swims
+// around as itself. Right as a Ray genuinely bites this deep (see
+// updateSwimmers), there's this tiny chance the catch turns out to be a
+// Kraken instead. Kept even rarer than Megalodon's own already-tiny odds
+// - the single hardest thing to encounter in the whole game.
+const KRAKEN_CHANCE = 0.006;
+const KRAKEN_MIN_DEPTH = 6000; // 500m
+
 const WATERLINE_Y = 340; // matches TitleScene, so the dive starts from the identical framing
 const SKY_COLOR = 0x9fd9f0;
 const SURFACE_WATER_COLOR = 0x3fa9e0;
@@ -2369,6 +2387,8 @@ export default class OceanScene extends Phaser.Scene {
       // them ever spawn), so checking membership there covers all 23 of
       // them without hardcoding a growing list of species names.
       isShark: itemId in SHARK_BAIT,
+      // Same idea, for the Kraken's own swap-in check below.
+      isRay: itemId in RAY_BAIT,
       wariness,
       spooked: false,
       x,
@@ -2502,9 +2522,13 @@ export default class OceanScene extends Phaser.Scene {
       if (f.state === 'attracted' && dist < CATCH_RADIUS) {
         // A shark is genuinely on the hook right now, this deep - the one
         // and only moment a Megalodon can turn up, swapped in at the last
-        // instant instead of ever swimming around as itself.
+        // instant instead of ever swimming around as itself. A Ray gets
+        // the exact same treatment for the Kraken, at an even smaller
+        // chance - the single rarest thing in the whole game.
         if (f.isShark && hookDepth >= MEGALODON_MIN_DEPTH && Math.random() < MEGALODON_CHANCE) {
           f.itemId = 'megalodon';
+        } else if (f.isRay && hookDepth >= KRAKEN_MIN_DEPTH && Math.random() < KRAKEN_CHANCE) {
+          f.itemId = 'kraken';
         }
         this.catchFish(f);
         this.swimmers.splice(i, 1);

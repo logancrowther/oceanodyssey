@@ -193,6 +193,7 @@ import {
   drawTigerShark,
   drawBullShark,
   drawMegalodon,
+  drawKraken,
   drawOldBoot
 } from '../ui/tackle.js';
 import { DESIGN_WIDTH, DESIGN_HEIGHT } from '../constants.js';
@@ -385,6 +386,7 @@ const CATCH_DRAWERS = {
   // this keeps a caught one from blowing out the row instead of just
   // looking bigger like the other legendary catches do.
   megalodon: (g, x, y, weightKg) => drawMegalodon(g, x, y, 0.35 * sizeScaleFor('megalodon', weightKg)),
+  kraken: (g, x, y, weightKg) => drawKraken(g, x, y, 0.37 * sizeScaleFor('kraken', weightKg)),
   old_boot: (g, x, y, weightKg) => drawOldBoot(g, x, y, 1.3 * sizeScaleFor('old_boot', weightKg))
 };
 

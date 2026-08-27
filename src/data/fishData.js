@@ -2216,6 +2216,26 @@ export const FISH = [
     turnsRequired: 5.0,
     rarity: 'legendary',
     difficultyMultiplier: 3.0
+  },
+  {
+    id: 'kraken',
+    name: 'Kraken',
+    // Not a real animal at all, unlike anything else on this list (even
+    // Megalodon is a real extinct species) - a purely mythical sea
+    // monster, and not in the normal spawn pool at all. The one and only
+    // way to ever see one is OceanScene.KRAKEN_CHANCE swapping in at the
+    // very last instant a Ray genuinely bites this deep, the same trick
+    // Megalodon pulls on a shark's own bite - it never swims around as
+    // itself. Kept an even smaller chance than Megalodon's own already-
+    // tiny odds, and mythically bigger than anything real in the game -
+    // heavier even than the Humpback Whale - but priced far below it per
+    // kilo, so the encounter itself stays the whole point rather than the
+    // payout.
+    baseWeightKg: 50000,
+    valuePerKg: 0.25,
+    turnsRequired: 5.0,
+    rarity: 'legendary',
+    difficultyMultiplier: 4.5
   }
 ];
 

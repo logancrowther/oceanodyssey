@@ -32,10 +32,10 @@ export function valueRankOf(id) {
 // around it automatically instead of needing a hand-picked label. Bands
 // widen further down the list (fewer, more exclusive top tiers; the
 // long common tail), matching how the Index/Bag/Sell screens read: the
-// two rarest things in the game (Megalodon, Humpback Whale) are Mythic,
-// the next 33 are Legendary, and it tapers from there.
+// three rarest things in the game (Megalodon, Humpback Whale, Kraken)
+// are Mythic, the next 32 are Legendary, and it tapers from there.
 const RARITY_BANDS = [
-  { max: 2, tier: 'mythic' },
+  { max: 3, tier: 'mythic' },
   { max: 35, tier: 'legendary' },
   { max: 55, tier: 'epic' },
   { max: 85, tier: 'rare' },
