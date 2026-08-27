@@ -193,6 +193,7 @@ import {
   drawBullShark,
   drawMegalodon,
   drawKraken,
+  drawSpinosaurus,
   drawHumpbackWhale,
   drawOldBoot
 } from '../ui/tackle.js';
@@ -390,6 +391,7 @@ export const CATCH_DRAWERS = {
   bull_shark: (g, x, y, weightKg) => drawBullShark(g, x, y, 0.58 * sizeScaleFor('bull_shark', weightKg)),
   megalodon: (g, x, y, weightKg) => drawMegalodon(g, x, y, 0.3 * sizeScaleFor('megalodon', weightKg)),
   kraken: (g, x, y, weightKg) => drawKraken(g, x, y, 0.32 * sizeScaleFor('kraken', weightKg)),
+  spinosaurus: (g, x, y, weightKg) => drawSpinosaurus(g, x, y, 0.22 * sizeScaleFor('spinosaurus', weightKg)),
   humpback_whale: (g, x, y, weightKg) => drawHumpbackWhale(g, x, y, 0.26 * sizeScaleFor('humpback_whale', weightKg)),
   old_boot: (g, x, y, weightKg) => drawOldBoot(g, x, y, 1.1 * sizeScaleFor('old_boot', weightKg))
 };

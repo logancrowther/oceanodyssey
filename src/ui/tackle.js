@@ -22440,3 +22440,225 @@ export function drawKraken(g, x, y, scale = 1, rotation = 0, alpha = 1) {
 
   g.restore();
 }
+
+// Spinosaurus - a real animal, unlike the Kraken, but the only dinosaur
+// in the game: the biggest known carnivorous dinosaur, and (per the real
+// fossil record) a genuinely semi-aquatic river/estuary hunter, not a
+// landlubber that wandered in. Built around its own two unmistakable
+// real field marks - a long, narrow, crocodile-like snout lined with
+// conical fish-catching teeth (nothing like a fish's own jaw, and
+// nothing like Megalodon's serrated shark bite either), and the huge
+// sail-like fin along its back, a smooth membrane over elongated spines,
+// not a jagged crest - plus a tall, deep, paddle-like tail for the
+// swimming stroke recent fossils showed it actually had.
+export function drawSpinosaurus(g, x, y, scale = 1, rotation = 0, alpha = 1) {
+  g.save();
+  g.translateCanvas(x, y);
+  if (rotation) g.rotateCanvas(rotation);
+  const s = scale;
+
+  const bodyColor = 0x4a5c2c;
+  const backColor = 0x2e3c1a;
+  const bellyColor = 0xcfc49a;
+  const darkColor = 0x0e1206;
+  const clawColor = 0xe8dfc0;
+  const toothColor = 0xf0ead8;
+  const sailColor = 0x8a1c1c;
+  const sailEdge = 0xb03424;
+  const sailDark = 0x4c0e0e;
+
+  // A smooth, rounded dome/fan silhouette - one shared shape for both the
+  // big back sail and the smaller crest riding the tail, so neither ever
+  // reads as a sharp party-hat triangle the way a naive symmetric peak
+  // would. `peakPos` slides the dome's high point off-centre.
+  function domeShape(baseXStart, baseXEnd, baseY, peakHeight, peakPos, steps) {
+    const top = [];
+    for (let i = 0; i <= steps; i += 1) {
+      const t = i / steps;
+      const xx = baseXStart + (baseXEnd - baseXStart) * t;
+      const tt = t < peakPos ? (0.5 * t) / peakPos : 0.5 + (0.5 * (t - peakPos)) / (1 - peakPos);
+      const h = peakHeight * Math.sin(Math.PI * tt) ** 0.75;
+      top.push({ x: xx, y: baseY - h });
+    }
+    return top;
+  }
+
+  // Short, powerful hind legs - solid bent shapes with the foot claws
+  // attached directly to the same silhouette, not floating triangles.
+  function leg(hipX, hipY, flip) {
+    const footY = 27;
+    const foot = [-4, -1, 2, 5].map((fx) => ({ x: fx * flip, y: footY }));
+    const shaft = [
+      { x: 2 * flip, y: 0 },
+      { x: 5 * flip, y: 6 },
+      { x: 6 * flip, y: 15 },
+      { x: 3 * flip, y: 16 },
+      { x: 2 * flip, y: 22 },
+      foot[3],
+      foot[0],
+      { x: -2 * flip, y: 20 },
+      { x: -1 * flip, y: 8 }
+    ].map((p) => ({ x: (hipX + p.x) * s, y: (hipY + p.y) * s }));
+    g.fillStyle(backColor, alpha);
+    g.fillPoints(shaft, true);
+    g.lineStyle(1.2 * s, darkColor, 0.7 * alpha);
+    g.strokePoints(shaft, true);
+
+    // Three clawed toes, their bases exactly on the foot's own bottom
+    // edge above (shared vertices, not a separate offset shape), so
+    // there's never a gap between leg and claw.
+    g.fillStyle(clawColor, alpha);
+    for (let i = 0; i < foot.length - 1; i += 1) {
+      const a = foot[i];
+      const b = foot[i + 1];
+      const mx = (a.x + b.x) / 2;
+      g.fillTriangle(
+        (hipX + a.x) * s,
+        (hipY + a.y) * s,
+        (hipX + b.x) * s,
+        (hipY + b.y) * s,
+        (hipX + mx) * s,
+        (hipY + footY + 5) * s
+      );
+    }
+  }
+  leg(10, 9, 1);
+  leg(1, 8, -1);
+
+  // A small clawed arm, a solid tapered shape (not a thin stroked line)
+  // reaching forward under the chest - real theropod arms were modest
+  // next to the body, not an afterthought, but still deliberately kept
+  // visible below the belly line rather than fully tucked away.
+  const arm = [
+    { x: -10, y: 3 },
+    { x: -18, y: 10 },
+    { x: -27, y: 19 },
+    { x: -32, y: 24 },
+    { x: -27, y: 25 },
+    { x: -19, y: 18 },
+    { x: -13, y: 10 },
+    { x: -8, y: 6 }
+  ].map((p) => ({ x: p.x * s, y: p.y * s }));
+  g.fillStyle(backColor, alpha);
+  g.fillPoints(arm, true);
+  g.lineStyle(1.1 * s, darkColor, 0.6 * alpha);
+  g.strokePoints(arm, true);
+  g.fillStyle(clawColor, alpha);
+  [
+    [-32, 24, -37, 27],
+    [-29, 27, -33, 32],
+    [-24, 27, -26, 32]
+  ].forEach(([x1, y1, x2, y2]) => g.fillTriangle(x1 * s, y1 * s, x2 * s, y2 * s, (x1 - 1) * s, (y1 + 4) * s));
+
+  // The whole body in one unbroken outline, snout to tail tip - no seam
+  // between torso and tail the way two separately-stroked shapes would
+  // leave.
+  const topEdge = [
+    { x: -78, y: -2 },
+    { x: -74, y: -6 },
+    { x: -60, y: -8 },
+    { x: -44, y: -9 },
+    { x: -28, y: -10 },
+    { x: -12, y: -11 },
+    { x: 4, y: -10 },
+    { x: 20, y: -8 },
+    { x: 34, y: -6 },
+    // A gentle raised hump along the tail - the low fin recent fossils
+    // showed it actually swam with, built right into this same outline
+    // instead of a second shape that could ever float free of it.
+    { x: 46, y: -11 },
+    { x: 58, y: -12 },
+    { x: 70, y: -9 },
+    { x: 82, y: -4 },
+    { x: 92, y: -1 }
+  ];
+  const bottomEdge = [
+    { x: 88, y: 3 },
+    { x: 72, y: 4 },
+    { x: 56, y: 5 },
+    { x: 40, y: 6 },
+    { x: 26, y: 10 },
+    { x: 10, y: 12 },
+    { x: -8, y: 12 },
+    { x: -24, y: 9 },
+    { x: -40, y: 5 },
+    { x: -54, y: 2 },
+    { x: -66, y: 0 },
+    { x: -74, y: -1 }
+  ];
+  const body = [{ x: -78, y: -2 }].concat(topEdge.slice(1)).concat([{ x: 100, y: 0 }]).concat(bottomEdge).map((p) => ({
+    x: p.x * s,
+    y: p.y * s
+  }));
+  g.fillStyle(bodyColor, alpha);
+  g.fillPoints(body, true);
+  g.fillStyle(bellyColor, 0.6 * alpha);
+  g.fillEllipse(-15 * s, 6 * s, 68 * s, 10 * s);
+  g.lineStyle(1.6 * s, darkColor, 0.85 * alpha);
+  g.strokePoints(body, true);
+
+  // The huge back sail - a wide, low, rounded dome (roughly twice as
+  // long along the spine as it is tall), not a narrow tent - the real
+  // fossil's own proportions, and immediately readable as a sail rather
+  // than a hat.
+  const sailBaseY = -10.5;
+  const sailXStart = -16;
+  const sailXEnd = 28;
+  const sailTop = domeShape(sailXStart, sailXEnd, sailBaseY, 34, 0.4, 20);
+  const sailShape = [{ x: sailXStart, y: sailBaseY }].concat(sailTop).concat([{ x: sailXEnd, y: sailBaseY }]).map((p) => ({
+    x: p.x * s,
+    y: p.y * s
+  }));
+  g.fillStyle(sailColor, alpha);
+  g.fillPoints(sailShape, true);
+  // A brighter band just inside the rim - the sail reading as taut,
+  // blood-filled skin rather than a flat cutout.
+  g.lineStyle(2.2 * s, sailEdge, 0.55 * alpha);
+  g.beginPath();
+  sailTop.forEach((p, i) => (i === 0 ? g.moveTo(p.x * s, p.y * s) : g.lineTo(p.x * s, p.y * s)));
+  g.strokePath();
+  g.lineStyle(1.6 * s, darkColor, 0.85 * alpha);
+  g.strokePoints(sailShape, true);
+
+  // Dark radiating veins from the base to the top edge - the real spine
+  // structure showing faintly through the membrane, kept subtle so the
+  // sail still reads as one smooth shape first.
+  g.lineStyle(1 * s, sailDark, 0.4 * alpha);
+  for (let i = 2; i < sailTop.length - 1; i += 3) {
+    const top = sailTop[i];
+    g.beginPath();
+    g.moveTo(top.x * s, sailBaseY * s);
+    g.lineTo(top.x * s, top.y * s);
+    g.strokePath();
+  }
+
+  // The long jaw line and the conical, interlocking teeth - the real
+  // animal's own fish-catching bite, unlike any serrated shark tooth.
+  g.lineStyle(1.2 * s, darkColor, 0.7 * alpha);
+  g.beginPath();
+  g.moveTo(-78 * s, -2 * s);
+  g.lineTo(-42 * s, 2 * s);
+  g.strokePath();
+  g.fillStyle(toothColor, alpha);
+  for (let i = 0; i < 9; i += 1) {
+    const tx = -76 + i * 4.2;
+    const ty = -2 + i * 0.45;
+    g.fillTriangle(tx * s, ty * s, (tx + 2.4) * s, (ty + 0.3) * s, (tx + 1) * s, (ty + 3.6) * s);
+  }
+  // A slight bulbous rosette at the very tip of the snout - a real,
+  // genuine field mark (like a gharial's), not a smooth taper to a point.
+  g.fillStyle(bodyColor, alpha);
+  g.fillEllipse(-77 * s, -4 * s, 5 * s, 4 * s);
+  g.lineStyle(1 * s, darkColor, 0.6 * alpha);
+  g.strokeEllipse(-77 * s, -4 * s, 5 * s, 4 * s);
+
+  // Small nostril and eye, set well back up on the skull.
+  g.fillStyle(darkColor, 0.8 * alpha);
+  g.fillEllipse(-62 * s, -8 * s, 1.6 * s, 0.9 * s);
+  g.fillStyle(darkColor, alpha);
+  g.fillCircle(-40 * s, -9 * s, 2 * s);
+  g.fillStyle(0xd8cc9a, alpha);
+  g.fillCircle(-40.6 * s, -9.6 * s, 0.7 * s);
+
+  g.restore();
+}

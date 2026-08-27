@@ -194,6 +194,7 @@ import {
   drawBullShark,
   drawMegalodon,
   drawKraken,
+  drawSpinosaurus,
   drawOldBoot
 } from '../ui/tackle.js';
 import { DESIGN_WIDTH, DESIGN_HEIGHT } from '../constants.js';
@@ -387,6 +388,7 @@ const CATCH_DRAWERS = {
   // looking bigger like the other legendary catches do.
   megalodon: (g, x, y, weightKg) => drawMegalodon(g, x, y, 0.35 * sizeScaleFor('megalodon', weightKg)),
   kraken: (g, x, y, weightKg) => drawKraken(g, x, y, 0.37 * sizeScaleFor('kraken', weightKg)),
+  spinosaurus: (g, x, y, weightKg) => drawSpinosaurus(g, x, y, 0.25 * sizeScaleFor('spinosaurus', weightKg)),
   old_boot: (g, x, y, weightKg) => drawOldBoot(g, x, y, 1.3 * sizeScaleFor('old_boot', weightKg))
 };
 

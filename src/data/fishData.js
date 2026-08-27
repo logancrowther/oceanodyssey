@@ -2207,10 +2207,11 @@ export const FISH = [
     // small schooling prey and incidental bycatch a real humpback actually
     // feeds on out in open water. Even then the odds are kept far below the
     // Manta Ray's own already-lowest chance in the game - a genuine
-    // once-in-a-great-while encounter, not a repeatable trophy. By a huge
-    // margin the single biggest thing that can ever turn up on the line,
-    // real adult humpbacks run to this kind of weight - but only modestly
-    // valuable per kilo, since its sheer rarity is the point, not a payout.
+    // once-in-a-great-while encounter, not a repeatable trophy. The
+    // single biggest REAL thing that can ever turn up on the line (the
+    // mythical Kraken outweighs it, but nothing else does) - real adult
+    // humpbacks run to this kind of weight - but only modestly valuable
+    // per kilo, since its sheer rarity is the point, not a payout.
     baseWeightKg: 30000,
     valuePerKg: 1,
     turnsRequired: 5.0,
@@ -2228,14 +2229,34 @@ export const FISH = [
     // Megalodon pulls on a shark's own bite - it never swims around as
     // itself. Kept an even smaller chance than Megalodon's own already-
     // tiny odds, and mythically bigger than anything real in the game -
-    // heavier even than the Humpback Whale - but priced far below it per
-    // kilo, so the encounter itself stays the whole point rather than the
-    // payout.
+    // heavier even than the Humpback Whale, and priced at the same
+    // value-per-kilo the Whale itself carries, so its sheer size alone
+    // puts it ahead of the Whale in total worth - the second most
+    // valuable thing in the game, right behind Megalodon.
     baseWeightKg: 50000,
-    valuePerKg: 0.25,
+    valuePerKg: 1,
     turnsRequired: 5.0,
     rarity: 'legendary',
     difficultyMultiplier: 4.5
+  },
+  {
+    id: 'spinosaurus',
+    name: 'Spinosaurus',
+    // A real animal, unlike the Kraken - the biggest known carnivorous
+    // dinosaur, and (per the real fossil record) a genuine river/estuary
+    // hunter that shared its world, and its prey, with real sharks. Not
+    // in the normal spawn pool at all - the one and only way to ever see
+    // one is OceanScene.SPINOSAURUS_CHANCE swapping in at the very last
+    // instant a shark genuinely bites this deep, the exact same trick
+    // Megalodon pulls, on the exact same bite - the fossil record's own
+    // two real rivals, both possible from that one moment. The fourth
+    // and least valuable of the game's Mythic tier, but still priced
+    // well above anything outside it.
+    baseWeightKg: 12000,
+    valuePerKg: 1,
+    turnsRequired: 5.0,
+    rarity: 'legendary',
+    difficultyMultiplier: 4.0
   }
 ];
 
