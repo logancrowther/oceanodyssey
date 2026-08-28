@@ -2191,10 +2191,10 @@ export const FISH = [
     // OceanScene.MEGALODON_MIN_DEPTH/MEGALODON_CHANCE) - past 500m, with
     // bait that would draw in any shark at all (a real shark prey
     // species, or a caught shark itself equipped as bait), and even then
-    // it's an extremely long shot. The single rarest and by a huge
-    // margin the most valuable catch in the game.
+    // it's an extremely long shot. Priced below the Kraken now - the
+    // second most valuable thing in the game, not the first.
     baseWeightKg: 6000,
-    valuePerKg: 20,
+    valuePerKg: 8,
     turnsRequired: 5.0,
     rarity: 'legendary',
     difficultyMultiplier: 5.0
@@ -2233,8 +2233,8 @@ export const FISH = [
     // bigger than anything real in the game - heavier even than the
     // Humpback Whale, and priced at the same value-per-kilo the Whale
     // itself carries, so its sheer size alone puts it ahead of the Whale
-    // in total worth - the second most valuable thing in the game, right
-    // behind Megalodon.
+    // in total worth. The single most valuable thing in the game -
+    // Megalodon's own price was cut back below it.
     baseWeightKg: 50000,
     valuePerKg: 1,
     turnsRequired: 5.0,
