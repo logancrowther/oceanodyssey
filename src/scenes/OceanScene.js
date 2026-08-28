@@ -978,9 +978,19 @@ const SWIM_SCALE = {
   tiger_shark: 1.0,
   bull_shark: 1.05,
   // Bigger on-screen than any shark - a real humpback dwarfs every other
-  // swimmer in the game (Megalodon aside, which never actually swims
-  // around as itself).
+  // regular swimmer in the game.
   humpback_whale: 1.8,
+  // The single biggest, most unmistakable thing that can swim into view
+  // - noticeably bigger than even the Whale, matching its own status as
+  // by far the most valuable catch there is.
+  megalodon: 2.1,
+  // Its own sprawling tentacle reach already reads huge at a much more
+  // modest multiplier than a compact body would need.
+  kraken: 0.95,
+  // A long, low, chunky silhouette - big, but not as tall on screen as
+  // the Whale/Megalodon/Kraken, closer to how it actually swims: lower
+  // in the water, not looming.
+  spinosaurus: 0.65,
   old_boot: 0.5
 };
 const SWIM_SPEED = {
@@ -1172,6 +1182,12 @@ const SWIM_SPEED = {
   // powerful swimmer but not a sprinter, and its sheer bulk should read as
   // unhurried rather than darting.
   humpback_whale: 24,
+  // A genuine apex predator, faster than any real shark here.
+  megalodon: 44,
+  // A slow, lurking horror rather than a darting fish.
+  kraken: 14,
+  // A real, powerful swimmer - built for exactly this.
+  spinosaurus: 34,
   old_boot: 18
 };
 
@@ -2013,30 +2029,30 @@ const WHALE_CHANCE_COLOSSAL = 0.00115;
 const WHALE_CHANCE_SHIMMERING = 0.0012;
 const WHALE_CHANCE_ABYSSAL = 0.0013;
 
-// Not part of the spawn roll at all - a Megalodon never swims around as
-// itself. Instead, right as one of the three real sharks above actually
-// bites (see updateSwimmers) at least this deep, there's this tiny chance
-// the catch turns out to be a Megalodon instead - "a shark was on the hook,
-// this far down" is the precondition, not a separate encounter, and it's
-// kept deliberately far rarer than any individual shark's own spawn chance.
-const MEGALODON_CHANCE = 0.01;
+// Megalodon spawns and swims around like everything else now (no more
+// last-instant swap on a shark's own bite) - past 500m, with bait that
+// would draw in any shark at all: either a real shark prey species (the
+// union of every SHARK_BAIT list, computed below) or a caught shark
+// itself equipped as bait. Even then it's an extremely long shot.
+const MEGALODON_CHANCE = 0.0005;
 const MEGALODON_MIN_DEPTH = 6000; // 500m
+const SHARK_ATTRACT_BAITS = new Set(Object.values(SHARK_BAIT).flatMap((cfg) => cfg.baits));
+Object.keys(SHARK_BAIT).forEach((id) => SHARK_ATTRACT_BAITS.add(id));
 
-// The Kraken's own version of the exact same trick, on Rays instead of
-// sharks - it's not part of the spawn roll either, and never swims
-// around as itself. Right as a Ray genuinely bites this deep (see
-// updateSwimmers), there's this tiny chance the catch turns out to be a
-// Kraken instead. Kept even rarer than Megalodon's own already-tiny odds
-// - the single hardest thing to encounter in the whole game.
-const KRAKEN_CHANCE = 0.006;
-const KRAKEN_MIN_DEPTH = 6000; // 500m
+// The Kraken spawns two different ways: a genuinely big fish (250kg+)
+// equipped as bait in water shallower than 2500m, or Abyssal Bait, which
+// drops the depth restriction entirely. Either way it's still a really
+// low chance.
+const KRAKEN_CHANCE = 0.0003;
+const KRAKEN_MAX_DEPTH = 30000; // 2500m
+const KRAKEN_MIN_CATCH_WEIGHT = 250; // kg
 
-// Spinosaurus rides the exact same shark-bite moment Megalodon does - a
-// real fossil-record rival of real sharks, not a separate encounter. A
-// slightly smaller chance than Megalodon's own, so the rarest single
-// pull off a shark bite is still Megalodon itself.
-const SPINOSAURUS_CHANCE = 0.007;
-const SPINOSAURUS_MIN_DEPTH = 6000; // 500m
+// Spinosaurus only ever turns up shallower than 750m - a real river/
+// estuary hunter, not a deep-sea creature - and only once a genuinely
+// big fish (150kg+) is equipped as bait. Even then, a very small chance.
+const SPINOSAURUS_CHANCE = 0.0004;
+const SPINOSAURUS_MAX_DEPTH = 9000; // 750m
+const SPINOSAURUS_MIN_CATCH_WEIGHT = 150; // kg
 
 const WATERLINE_Y = 340; // matches TitleScene, so the dive starts from the identical framing
 const SKY_COLOR = 0x9fd9f0;
@@ -2315,6 +2331,30 @@ export default class OceanScene extends Phaser.Scene {
       else if (baitId === 'deep_sea_bait') whaleChance = WHALE_CHANCE_DEEP_SEA;
       if (Math.random() < whaleChance) return 'humpback_whale';
     }
+    if (baitId && hookDepth >= MEGALODON_MIN_DEPTH && SHARK_ATTRACT_BAITS.has(baitId) && Math.random() < MEGALODON_CHANCE) {
+      return 'megalodon';
+    }
+    // Both Spinosaurus and the Kraken care about the equipped bait's own
+    // weight, not just what species it is - only a genuinely big fish
+    // used as bait counts, so this is the one place that actually looks
+    // at the specific caught-fish record behind GameState.equippedBait
+    // rather than just the bait id.
+    const equippedBaitCatch =
+      GameState.equippedCatchUid != null ? GameState.data.catches.find((c) => c.uid === GameState.equippedCatchUid) : null;
+    if (
+      hookDepth < SPINOSAURUS_MAX_DEPTH &&
+      equippedBaitCatch &&
+      equippedBaitCatch.weightKg >= SPINOSAURUS_MIN_CATCH_WEIGHT &&
+      Math.random() < SPINOSAURUS_CHANCE
+    ) {
+      return 'spinosaurus';
+    }
+    const krakenEligible =
+      (hookDepth < KRAKEN_MAX_DEPTH && equippedBaitCatch && equippedBaitCatch.weightKg >= KRAKEN_MIN_CATCH_WEIGHT) ||
+      baitId === 'abyssal_bait';
+    if (krakenEligible && Math.random() < KRAKEN_CHANCE) {
+      return 'kraken';
+    }
     const isAbyssalBait = baitId === 'abyssal_bait';
     // The three Bait Crate lures (see baitData.js) each carry a bit of
     // "luck" - a graduated ladder, not a single on/off flag: Plastic Lure
@@ -2401,8 +2441,6 @@ export default class OceanScene extends Phaser.Scene {
       // them ever spawn), so checking membership there covers all 23 of
       // them without hardcoding a growing list of species names.
       isShark: itemId in SHARK_BAIT,
-      // Same idea, for the Kraken's own swap-in check below.
-      isRay: itemId in RAY_BAIT,
       wariness,
       spooked: false,
       x,
@@ -2534,19 +2572,6 @@ export default class OceanScene extends Phaser.Scene {
       f.y = Phaser.Math.Clamp(f.y, this.depthOrigin, this.depthOrigin + this.maxDepthPx);
 
       if (f.state === 'attracted' && dist < CATCH_RADIUS) {
-        // A shark is genuinely on the hook right now, this deep - the one
-        // and only moment a Megalodon (or, on the same bite, a real
-        // fossil-record rival, Spinosaurus) can turn up, swapped in at
-        // the last instant instead of ever swimming around as itself. A
-        // Ray gets the exact same treatment for the Kraken.
-        const r = Math.random();
-        if (f.isShark && hookDepth >= MEGALODON_MIN_DEPTH && r < MEGALODON_CHANCE) {
-          f.itemId = 'megalodon';
-        } else if (f.isShark && hookDepth >= SPINOSAURUS_MIN_DEPTH && r < MEGALODON_CHANCE + SPINOSAURUS_CHANCE) {
-          f.itemId = 'spinosaurus';
-        } else if (f.isRay && hookDepth >= KRAKEN_MIN_DEPTH && Math.random() < KRAKEN_CHANCE) {
-          f.itemId = 'kraken';
-        }
         this.catchFish(f);
         this.swimmers.splice(i, 1);
         continue;

@@ -2187,11 +2187,12 @@ export const FISH = [
   {
     id: 'megalodon',
     name: 'Megalodon',
-    // Not reachable through the normal spawn roll at all - the only way to
-    // ever see one is OceanScene.MEGALODON_CHANCE swapping in a Megalodon
-    // at the very instant one of the three real sharks bites, and that
-    // chance is deliberately tiny. The single rarest and by a huge margin
-    // the most valuable catch in the game.
+    // Swims around like any other spawn once the conditions are met (see
+    // OceanScene.MEGALODON_MIN_DEPTH/MEGALODON_CHANCE) - past 500m, with
+    // bait that would draw in any shark at all (a real shark prey
+    // species, or a caught shark itself equipped as bait), and even then
+    // it's an extremely long shot. The single rarest and by a huge
+    // margin the most valuable catch in the game.
     baseWeightKg: 6000,
     valuePerKg: 20,
     turnsRequired: 5.0,
@@ -2211,7 +2212,9 @@ export const FISH = [
     // single biggest REAL thing that can ever turn up on the line (the
     // mythical Kraken outweighs it, but nothing else does) - real adult
     // humpbacks run to this kind of weight - but only modestly valuable
-    // per kilo, since its sheer rarity is the point, not a payout.
+    // per kilo, since its sheer rarity is the point, not a payout. Now
+    // the third most valuable thing in the game - both the Kraken and
+    // Spinosaurus outrank it.
     baseWeightKg: 30000,
     valuePerKg: 1,
     turnsRequired: 5.0,
@@ -2223,16 +2226,15 @@ export const FISH = [
     name: 'Kraken',
     // Not a real animal at all, unlike anything else on this list (even
     // Megalodon is a real extinct species) - a purely mythical sea
-    // monster, and not in the normal spawn pool at all. The one and only
-    // way to ever see one is OceanScene.KRAKEN_CHANCE swapping in at the
-    // very last instant a Ray genuinely bites this deep, the same trick
-    // Megalodon pulls on a shark's own bite - it never swims around as
-    // itself. Kept an even smaller chance than Megalodon's own already-
-    // tiny odds, and mythically bigger than anything real in the game -
-    // heavier even than the Humpback Whale, and priced at the same
-    // value-per-kilo the Whale itself carries, so its sheer size alone
-    // puts it ahead of the Whale in total worth - the second most
-    // valuable thing in the game, right behind Megalodon.
+    // monster. Swims around like any other spawn once the conditions are
+    // met (see OceanScene.KRAKEN_CHANCE): a genuinely big fish (250kg+)
+    // equipped as bait in water shallower than 2500m, or Abyssal Bait at
+    // any depth at all - either way, a really low chance. Mythically
+    // bigger than anything real in the game - heavier even than the
+    // Humpback Whale, and priced at the same value-per-kilo the Whale
+    // itself carries, so its sheer size alone puts it ahead of the Whale
+    // in total worth - the second most valuable thing in the game, right
+    // behind Megalodon.
     baseWeightKg: 50000,
     valuePerKg: 1,
     turnsRequired: 5.0,
@@ -2244,16 +2246,14 @@ export const FISH = [
     name: 'Spinosaurus',
     // A real animal, unlike the Kraken - the biggest known carnivorous
     // dinosaur, and (per the real fossil record) a genuine river/estuary
-    // hunter that shared its world, and its prey, with real sharks. Not
-    // in the normal spawn pool at all - the one and only way to ever see
-    // one is OceanScene.SPINOSAURUS_CHANCE swapping in at the very last
-    // instant a shark genuinely bites this deep, the exact same trick
-    // Megalodon pulls, on the exact same bite - the fossil record's own
-    // two real rivals, both possible from that one moment. The fourth
-    // and least valuable of the game's Mythic tier, but still priced
-    // well above anything outside it.
+    // hunter, not a deep-sea creature. Swims around like any other spawn
+    // once the conditions are met (see OceanScene.SPINOSAURUS_CHANCE):
+    // shallower than 750m, with a genuinely big fish (150kg+) equipped as
+    // bait, and even then it's a very small chance. Priced above the
+    // Humpback Whale but below the Kraken - the third most valuable
+    // thing in the game.
     baseWeightKg: 12000,
-    valuePerKg: 1,
+    valuePerKg: 3.5,
     turnsRequired: 5.0,
     rarity: 'legendary',
     difficultyMultiplier: 4.0
