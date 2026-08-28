@@ -2034,7 +2034,7 @@ const WHALE_CHANCE_ABYSSAL = 0.0013;
 // would draw in any shark at all: either a real shark prey species (the
 // union of every SHARK_BAIT list, computed below) or a caught shark
 // itself equipped as bait. Even then it's an extremely long shot.
-const MEGALODON_CHANCE = 0.0005;
+const MEGALODON_CHANCE = 0.0004;
 const MEGALODON_MIN_DEPTH = 6000; // 500m
 const SHARK_ATTRACT_BAITS = new Set(Object.values(SHARK_BAIT).flatMap((cfg) => cfg.baits));
 Object.keys(SHARK_BAIT).forEach((id) => SHARK_ATTRACT_BAITS.add(id));
