@@ -450,6 +450,47 @@ function drawCrateIcon(g, x, y, scale = 1) {
   g.fillCircle(x, y - 2 * s, 1.2 * s);
 }
 
+// The Hook Crate's own icon - dark, near-black wood banded in the same
+// glowing teal as the Abyssal Hook's crack/aura, with a glowing rune-eye
+// clasp in place of the Bait Crate's plain gold rivet, so it reads as a
+// distinct object at a glance rather than the same crate relabelled.
+function drawHookCrateIcon(g, x, y, scale = 1) {
+  const s = scale;
+  const wood = 0x241c2c;
+  const woodDark = 0x0e0a14;
+  const glow = 0x5ad8e8;
+  const glowCore = 0xd8f8ff;
+
+  g.fillStyle(wood, 1);
+  g.fillRoundedRect(x - 20 * s, y - 16 * s, 40 * s, 32 * s, 3 * s);
+  g.lineStyle(1.4 * s, woodDark, 0.9);
+  g.strokeRoundedRect(x - 20 * s, y - 16 * s, 40 * s, 32 * s, 3 * s);
+
+  g.lineStyle(1 * s, glow, 0.35);
+  [-10, 0, 10].forEach((dx) => {
+    g.beginPath();
+    g.moveTo(x + dx * s, y - 16 * s);
+    g.lineTo(x + dx * s, y + 16 * s);
+    g.strokePath();
+  });
+
+  g.fillStyle(woodDark, 1);
+  g.fillRect(x - 20 * s, y - 4 * s, 40 * s, 4 * s);
+  g.lineStyle(1 * s, glow, 0.6);
+  g.strokeRect(x - 20 * s, y - 4 * s, 40 * s, 4 * s);
+
+  // A soft aura behind the clasp, matching the Abyssal Hook's own glow.
+  g.fillStyle(glow, 0.18);
+  g.fillCircle(x, y - 2 * s, 6.5 * s);
+
+  g.fillStyle(woodDark, 1);
+  g.fillCircle(x, y - 2 * s, 3.4 * s);
+  g.lineStyle(1 * s, glow, 0.9);
+  g.strokeCircle(x, y - 2 * s, 3.4 * s);
+  g.fillStyle(glowCore, 1);
+  g.fillCircle(x, y - 2 * s, 1.1 * s);
+}
+
 // Bait Crate: costs CRATE_COST, rolls one of seven outcomes. Odds are
 // deliberately front-loaded onto the common payout so Deep Sea Bait feels
 // like a modest step up, Plastic Lure a real find, Colossal Bait a
@@ -519,7 +560,7 @@ const CRATE_LANDING_INDEX = 28;
 // is just a "no new reward" outcome (ownHook is a no-op) rather than being
 // re-rolled away, keeping the odds exactly as stated regardless of what the
 // player already has.
-const HOOK_CRATE_COST = 1000;
+const HOOK_CRATE_COST = 2000;
 const HOOK_CRATE_MYTHIC_CHANCE = 0.001;
 const HOOK_CRATE_RARE_CHANCE = 0.0075;
 
@@ -623,22 +664,30 @@ export default class ShopScene extends Phaser.Scene {
   buildBuy(width, height) {
     this.add.text(width / 2, 98, 'Buy Bait', heading('30px')).setOrigin(0.5);
 
-    this.messageText = this.add
-      .text(width / 2, height - 164, '', subheading('18px', { color: '#ffe17d' }))
-      .setOrigin(0.5);
+    this.messageText = this.add.text(width / 2, 130, '', subheading('15px', { color: '#ffe17d' })).setOrigin(0.5);
 
     // Plastic Lure / Abyssal Bait are Bait Crate-only rewards (see
     // baitData.js) - never sold as their own row here.
     const buyableBait = BAIT.filter((bait) => !bait.crateOnly);
     buyableBait.forEach((bait, i) => this.buildBaitRow(bait, 200 + i * 110));
-    // Bait Crate and Hook Crate sit side by side in one compact row rather
-    // than stacking (which would run the second crate into the Back
-    // button) - see buildCratePanel/buildHookCratePanel below.
+    // Bait Crate, then Hook Crate stacked below it (not side by side) -
+    // both compact rows so the two crates plus the Back button all still
+    // fit under the bait rows without running off the bottom of the panel.
     const crateRowY = 200 + buyableBait.length * 110;
-    this.buildCratePanel(width / 2 - 120, crateRowY);
-    this.buildHookCratePanel(width / 2 + 120, crateRowY);
+    this.buildCratePanel(crateRowY);
+    const hookCrateRowY = crateRowY + 78;
+    this.buildHookCratePanel(hookCrateRowY);
 
-    this.buildBackButton(width, height);
+    createBubbleButton(
+      this,
+      width / 2,
+      hookCrateRowY + 56,
+      220,
+      48,
+      'Back',
+      () => this.scene.restart({ mode: 'menu' }),
+      { fontSize: '18px' }
+    );
   }
 
   buildBaitRow(bait, y) {
@@ -654,12 +703,14 @@ export default class ShopScene extends Phaser.Scene {
     createBubbleButton(this, width / 2 + 155, y, 120, 50, 'Buy', () => this.buyBait(bait), { fontSize: '18px' });
   }
 
-  buildCratePanel(x, y) {
-    this.add.rectangle(x, y, 220, 116, 0x145a73).setStrokeStyle(2, 0x0c3446);
+  buildCratePanel(y) {
+    const width = DESIGN_WIDTH;
+    this.add.rectangle(width / 2, y, 460, 80, 0x145a73).setStrokeStyle(2, 0x0c3446);
     const icon = this.add.graphics();
-    drawCrateIcon(icon, x, y - 30, 1.05);
-    this.add.text(x, y + 2, 'Bait Crate', label('17px')).setOrigin(0.5);
-    this.crateOpenBtn = createBubbleButton(this, x, y + 38, 160, 42, `Open - $${CRATE_COST}`, () => this.openCrate(), {
+    drawCrateIcon(icon, width / 2 - 175, y, 1.0);
+    this.add.text(width / 2 - 120, y - 10, 'Bait Crate', label('18px')).setOrigin(0, 0.5);
+    this.add.text(width / 2 - 120, y + 13, 'Roll an Item', label('12px', { color: '#bfe9ff' })).setOrigin(0, 0.5);
+    this.crateOpenBtn = createBubbleButton(this, width / 2 + 155, y, 120, 42, `Open - $${CRATE_COST}`, () => this.openCrate(), {
       fontSize: '13px'
     });
     if (GameState.coins < CRATE_COST) this.crateOpenBtn.setEnabled(false);
@@ -675,19 +726,22 @@ export default class ShopScene extends Phaser.Scene {
     this.showCrateSpin(rollCrate());
   }
 
-  // Hook Crate - same wooden crate icon (it's still just a crate), its own
-  // panel/button/spin/reward wiring so it stays entirely independent of the
-  // Bait Crate above (own cost constant, own odds, own GameState call).
-  buildHookCratePanel(x, y) {
-    this.add.rectangle(x, y, 220, 116, 0x145a73).setStrokeStyle(2, 0x0c3446);
+  // Hook Crate - its own dark, teal-glowing crate icon (see
+  // drawHookCrateIcon below) and its own panel tint, so it visually reads
+  // as a different object from the plain wooden Bait Crate above, not just
+  // a relabelled copy - own cost constant, own odds, own GameState call.
+  buildHookCratePanel(y) {
+    const width = DESIGN_WIDTH;
+    this.add.rectangle(width / 2, y, 460, 80, 0x0c2430).setStrokeStyle(2, 0x1f4a58);
     const icon = this.add.graphics();
-    drawCrateIcon(icon, x, y - 30, 1.05);
-    this.add.text(x, y + 2, 'Hook Crate', label('17px')).setOrigin(0.5);
+    drawHookCrateIcon(icon, width / 2 - 175, y, 1.0);
+    this.add.text(width / 2 - 120, y - 10, 'Hook Crate', label('18px')).setOrigin(0, 0.5);
+    this.add.text(width / 2 - 120, y + 13, 'Roll a Hook', label('12px', { color: '#7fe8e0' })).setOrigin(0, 0.5);
     this.hookCrateOpenBtn = createBubbleButton(
       this,
-      x,
-      y + 38,
-      160,
+      width / 2 + 155,
+      y,
+      120,
       42,
       `Open - $${HOOK_CRATE_COST}`,
       () => this.openHookCrate(),
