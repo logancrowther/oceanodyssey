@@ -1,12 +1,16 @@
 import Phaser from 'phaser';
 import GameState from '../systems/GameState.js';
 import { BAIT } from '../data/baitData.js';
+import { HOOKS } from '../data/hookData.js';
 import { getCatchable, sizeScaleFor, rarityColorFor, rarityLabelFor } from '../data/catchables.js';
 import { createBubbleButton } from '../ui/BubbleButton.js';
 import { createIconButton, drawCloseIcon } from '../ui/iconButton.js';
 import { createSearchBox } from '../ui/SearchBox.js';
 import { addStatusBar } from '../ui/fishIcon.js';
 import {
+  drawHook,
+  drawAdvancedHook,
+  drawAbyssalHook,
   drawPrawn,
   drawSquid,
   drawDeepSeaBait,
@@ -407,6 +411,18 @@ const BAIT_ICON_DRAWERS = {
   abyssal_bait: (g, x, y) => drawAbyssalBait(g, x, y, 2.6)
 };
 
+// Icon drawer for each hook (see HOOKS in hookData.js).
+// Unlike fish/bait (drawn lying flat, so wide but short), a hook is a tall
+// vertical shape - the eye sits well above its own anchor point and the
+// barb well below, so at the same scale/anchor other icons use here it
+// crowds both the tier tag above and the name below. Scaled down and
+// nudged up to center that taller silhouette in the same icon slot.
+const HOOK_ICON_DRAWERS = {
+  basic_hook: (g, x, y) => drawHook(g, x, y - 4, 0.8),
+  advanced_hook: (g, x, y) => drawAdvancedHook(g, x, y - 4, 0.8),
+  abyssal_hook: (g, x, y) => drawAbyssalHook(g, x, y - 4, 0.8)
+};
+
 export default class InventoryScene extends Phaser.Scene {
   constructor() {
     super('InventoryScene');
@@ -448,6 +464,19 @@ export default class InventoryScene extends Phaser.Scene {
           value: bait.cost
         });
       }
+    });
+    // Hooks (see hookData.js) - boolean ownership, so every owned one
+    // always shows (unlike bait, there's no "0 owned" state to hide).
+    HOOKS.forEach((hook) => {
+      if (!GameState.ownsHook(hook.id)) return;
+      this.allItems.push({
+        itemId: hook.id,
+        isHook: true,
+        name: hook.name,
+        sub: 'Hook',
+        draw: HOOK_ICON_DRAWERS[hook.id],
+        value: 0
+      });
     });
     GameState.data.catches.forEach((c) => {
       const info = getCatchable(c.itemId);
@@ -613,7 +642,7 @@ export default class InventoryScene extends Phaser.Scene {
     const subText = this.add.text(x, y + 3, item.sub, label('11px', { color: '#bfe9ff' })).setOrigin(0.5);
     this.gridContainer.add(subText);
 
-    const equipBtn = createBubbleButton(this, x, y + 34, 116, 32, '', () => this.equip(item.itemId, item.uid), {
+    const equipBtn = createBubbleButton(this, x, y + 34, 116, 32, '', () => this.equip(item), {
       fontSize: '12px',
       container: this.gridContainer
     });
@@ -622,9 +651,15 @@ export default class InventoryScene extends Phaser.Scene {
     // An individual catch is equipped by its own uid - so with three
     // Flatheads in the bag, equipping one only marks that exact card as
     // Equipped, not all three (each could be a different weight/value).
+    // A hook is equipped purely by id - there's no "unequip" state for a
+    // hook to ever fall back to, so the button just always shows whether
+    // this exact hook is the one currently on the line.
     const refresh = () => {
-      const equipped =
-        item.uid != null ? GameState.equippedCatchUid === item.uid : GameState.equippedBait === item.itemId && GameState.equippedCatchUid == null;
+      const equipped = item.isHook
+        ? GameState.equippedHook === item.itemId
+        : item.uid != null
+          ? GameState.equippedCatchUid === item.uid
+          : GameState.equippedBait === item.itemId && GameState.equippedCatchUid == null;
       equipBtn.setLabel(equipped ? 'Equipped' : 'Equip');
       equipBtn.setEnabled(!equipped);
     };
@@ -633,8 +668,9 @@ export default class InventoryScene extends Phaser.Scene {
     this.cells.push({ refresh });
   }
 
-  equip(itemId, uid) {
-    if (!GameState.equipBait(itemId, uid)) return;
+  equip(item) {
+    const ok = item.isHook ? GameState.equipHook(item.itemId) : GameState.equipBait(item.itemId, item.uid);
+    if (!ok) return;
     this.cells.forEach((cell) => cell.refresh());
   }
 }

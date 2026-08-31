@@ -45,13 +45,16 @@ const RARITY_BANDS = [
 
 // Bait Crate rewards (see baitData.js) aren't fish, so they have no value
 // rank to derive a tier from - their tier is exactly the one the crate
-// itself rolled them at.
+// itself rolled them at. Hooks (see hookData.js) work the same way.
 const SPECIAL_TIERS = {
   deep_sea_bait: 'uncommon',
   plastic_lure: 'rare',
   colossal_bait: 'epic',
   shimmering_lure: 'legendary',
-  abyssal_bait: 'mythic'
+  abyssal_bait: 'mythic',
+  basic_hook: 'common',
+  advanced_hook: 'rare',
+  abyssal_hook: 'mythic'
 };
 
 export function rarityTierFor(id) {

@@ -6,6 +6,8 @@ import { createIconButton, drawShopIcon, drawBagIcon, drawPencilIcon } from '../
 import { addStatusBar } from '../ui/fishIcon.js';
 import {
   drawHook,
+  drawAdvancedHook,
+  drawAbyssalHook,
   drawPrawn,
   drawSquid,
   drawDeepSeaBait,
@@ -390,6 +392,15 @@ const DRAWERS = {
   spinosaurus: drawSpinosaurus,
   humpback_whale: drawHumpbackWhale,
   old_boot: drawOldBoot
+};
+
+// Which hook sprite to actually draw on the line, keyed by
+// GameState.equippedHook (see hookData.js) - Basic Hook falls back to
+// the plain drawHook import above if it's ever missing its own key.
+const HOOK_DRAWERS = {
+  basic_hook: drawHook,
+  advanced_hook: drawAdvancedHook,
+  abyssal_hook: drawAbyssalHook
 };
 
 // Modest, natural-looking scale for whatever's actually dangling on the
@@ -2740,7 +2751,8 @@ export default class OceanScene extends Phaser.Scene {
           DRAWERS[baitId](hg, this.hook.x + 2, this.hook.y + 1, baitScale, baitDangle, 1);
         }
       }
-      drawHook(hg, this.hook.x, this.hook.y, 0.6, 0, 1);
+      const hookDrawer = HOOK_DRAWERS[GameState.equippedHook] || drawHook;
+      hookDrawer(hg, this.hook.x, this.hook.y, 0.6, 0, 1);
     }
   }
 

@@ -74,6 +74,161 @@ export function drawHook(g, x, y, scale = 1, rotation = 0, alpha = 1) {
   g.restore();
 }
 
+// Traces one of drawHook's own J-curve bends - shared by the Advanced
+// Hook below so its two points are genuinely the same real hook shape
+// mirrored, not two different designs bolted together.
+function hookBendPoints(bendCX, bendCY, bendR, startDeg, endDeg, steps = 20) {
+  const points = [];
+  for (let i = 0; i <= steps; i += 1) {
+    const deg = startDeg + (endDeg - startDeg) * (i / steps);
+    const rad = Phaser.Math.DegToRad(deg);
+    points.push({ x: bendCX + Math.cos(rad) * bendR, y: bendCY + Math.sin(rad) * bendR });
+  }
+  return points;
+}
+
+// The Advanced Hook - a real double-sided (double-hook) rig: the exact
+// same J-curve, shank, and barb as the Basic Hook, mirrored into a
+// second point on the other side of the same shank instead of just one.
+// A brighter, harder steel than the Basic Hook's plain grey.
+export function drawAdvancedHook(g, x, y, scale = 1, rotation = 0, alpha = 1) {
+  g.save();
+  g.translateCanvas(x, y);
+  if (rotation) g.rotateCanvas(rotation);
+  const s = scale;
+  const color = 0x8a949c;
+  const highlight = 0xd8e0e4;
+
+  g.lineStyle(2.2 * s, color, alpha);
+  g.strokeCircle(0, -15 * s, 2.6 * s);
+
+  [1, -1].forEach((dir) => {
+    const bendCX = 7 * dir * s;
+    const bendCY = 3 * s;
+    const bendR = 7 * s;
+    const startDeg = dir > 0 ? 180 : 0;
+    const endDeg = dir > 0 ? -35 : 215;
+    const bend = hookBendPoints(bendCX, bendCY, bendR, startDeg, endDeg);
+    const points = [{ x: 0, y: -12.4 * s }, { x: 0, y: bendCY }].concat(bend);
+
+    g.lineStyle(2.2 * s, color, alpha);
+    g.beginPath();
+    g.moveTo(points[0].x, points[0].y);
+    points.slice(1).forEach((p) => g.lineTo(p.x, p.y));
+    g.strokePath();
+
+    const tip = points[points.length - 1];
+    const tipRad = Phaser.Math.DegToRad(endDeg);
+    const barbAngle = tipRad + Math.PI * 0.65 * dir;
+    g.beginPath();
+    g.moveTo(tip.x, tip.y);
+    g.lineTo(tip.x + Math.cos(barbAngle) * 3.5 * s, tip.y + Math.sin(barbAngle) * 3.5 * s);
+    g.strokePath();
+  });
+
+  // A thin bright highlight down the shank - harder, better-finished
+  // steel than the Basic Hook's own plain grey.
+  g.lineStyle(0.9 * s, highlight, 0.7 * alpha);
+  g.beginPath();
+  g.moveTo(-0.6 * s, -12 * s);
+  g.lineTo(-0.6 * s, 2.6 * s);
+  g.strokePath();
+
+  g.restore();
+}
+
+// The Abyssal Hook - the game's own Mythic tier applied to tackle itself:
+// a twisted, jagged obsidian-black hook (not a clean steel curve like the
+// other two), split by a glowing cyan crack running its whole length, the
+// same photophore-glow trick the Abyssal Bait/Kraken use, plus a soft
+// aura behind it and a scatter of small crystalline spikes along the
+// shank - deliberately the most elaborate, "crazy" piece of tackle in the
+// game, to match the single rarest hook there is.
+export function drawAbyssalHook(g, x, y, scale = 1, rotation = 0, alpha = 1) {
+  g.save();
+  g.translateCanvas(x, y);
+  if (rotation) g.rotateCanvas(rotation);
+  const s = scale;
+
+  const bodyColor = 0x0e0a14;
+  const bodyEdge = 0x241a30;
+  const glowColor = 0x5ad8e8;
+  const glowCore = 0xd8f8ff;
+
+  // A soft aura behind the whole hook.
+  [
+    [9, 0.08],
+    [6, 0.14],
+    [3.5, 0.22]
+  ].forEach(([r, a]) => {
+    g.fillStyle(glowColor, a * alpha);
+    g.fillCircle(-1 * s, -4 * s, r * s);
+  });
+
+  // The eye, jagged rather than a clean circle.
+  g.lineStyle(2.4 * s, bodyColor, alpha);
+  g.strokeCircle(0, -15 * s, 2.8 * s);
+  g.lineStyle(1 * s, glowColor, 0.6 * alpha);
+  g.strokeCircle(0, -15 * s, 2.8 * s);
+
+  // The same real J-curve shape as the Basic/Advanced Hooks underneath,
+  // drawn thicker and jet-black, so it reads as tackle first and a relic
+  // second.
+  const bend = hookBendPoints(7 * s, 3 * s, 7 * s, 180, -35);
+  const points = [{ x: 0, y: -12.4 * s }, { x: 0, y: 3 * s }].concat(bend);
+  g.lineStyle(3.2 * s, bodyColor, alpha);
+  g.beginPath();
+  g.moveTo(points[0].x, points[0].y);
+  points.slice(1).forEach((p) => g.lineTo(p.x, p.y));
+  g.strokePath();
+  g.lineStyle(1 * s, bodyEdge, 0.7 * alpha);
+  g.beginPath();
+  g.moveTo(points[0].x, points[0].y);
+  points.slice(1).forEach((p) => g.lineTo(p.x, p.y));
+  g.strokePath();
+
+  // The glowing crack running down the middle of the shank and into the
+  // curve - the real Abyssal field mark, not a clean painted stripe.
+  g.lineStyle(1.1 * s, glowColor, 0.9 * alpha);
+  g.beginPath();
+  g.moveTo(0, -11.5 * s);
+  quadCurveTo(g, 0, -11.5 * s, 1 * s, -3 * s, 6 * s, 4 * s);
+  g.strokePath();
+  g.lineStyle(0.5 * s, glowCore, alpha);
+  g.beginPath();
+  g.moveTo(0, -11.5 * s);
+  quadCurveTo(g, 0, -11.5 * s, 1 * s, -3 * s, 6 * s, 4 * s);
+  g.strokePath();
+
+  // A few small crystalline spikes jutting off the shank.
+  g.fillStyle(bodyColor, alpha);
+  [
+    [-1.5, -8, -5, -10],
+    [-1.5, -2, -6, -3],
+    [1.5, -6, 5.5, -8]
+  ].forEach(([x1, y1, x2, y2]) => {
+    g.fillTriangle(x1 * s, y1 * s, x2 * s, y2 * s, x1 * s, (y1 + 2) * s);
+    g.lineStyle(0.5 * s, glowColor, 0.5 * alpha);
+    g.strokeTriangle(x1 * s, y1 * s, x2 * s, y2 * s, x1 * s, (y1 + 2) * s);
+  });
+
+  // The barb, tipped with a tiny bright glowing point.
+  const tip = points[points.length - 1];
+  const tipRad = Phaser.Math.DegToRad(-35);
+  const barbAngle = tipRad + Math.PI * 0.65;
+  g.lineStyle(3.2 * s, bodyColor, alpha);
+  g.beginPath();
+  g.moveTo(tip.x, tip.y);
+  g.lineTo(tip.x + Math.cos(barbAngle) * 3.6 * s, tip.y + Math.sin(barbAngle) * 3.6 * s);
+  g.strokePath();
+  g.fillStyle(glowCore, alpha);
+  g.fillCircle(tip.x + Math.cos(barbAngle) * 3.6 * s, tip.y + Math.sin(barbAngle) * 3.6 * s, 0.9 * s);
+  g.fillStyle(glowCore, alpha);
+  g.fillCircle(tip.x, tip.y, 0.8 * s);
+
+  g.restore();
+}
+
 // A curled prawn/shrimp, modeled to actually look like the animal - a
 // segmented curled body, a fanned tail, a rounded head with a pointed
 // rostrum and an eye, thin trailing antennae, and a few small legs. Pale

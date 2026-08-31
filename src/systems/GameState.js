@@ -45,6 +45,13 @@ function defaultState() {
     // Flathead doesn't also mark every OTHER Flathead in the bag as
     // equipped, and casting only ever consumes that exact fish.
     equippedCatchUid: null,
+    // Hooks (see data/hookData.js) are a different kind of owned item from
+    // bait: boolean ownership, not a count - you either have one or you
+    // don't, never "3x", and a hook never gets used up. Always exactly one
+    // equipped, defaulting to (and never able to fully unequip down past)
+    // the Basic Hook every save starts with.
+    ownedHooks: ['basic_hook'],
+    equippedHook: 'basic_hook',
     // How many times the line-length upgrade has been bought (see
     // data/upgradeData.js) - determines how deep the hook can go. 0 =
     // starting line, no purchases yet.
@@ -166,6 +173,33 @@ class GameState {
 
   get lineLengthTier() {
     return this.data.lineLengthTier;
+  }
+
+  get equippedHook() {
+    return this.data.equippedHook;
+  }
+
+  ownsHook(hookId) {
+    return this.data.ownedHooks.includes(hookId);
+  }
+
+  // Grants a hook permanently (a Hook Crate roll, say) - a no-op if
+  // already owned, since ownership here is boolean, never a count.
+  ownHook(hookId) {
+    if (this.data.ownedHooks.includes(hookId)) return false;
+    this.data.ownedHooks.push(hookId);
+    this.save();
+    return true;
+  }
+
+  // Switches which owned hook is equipped - there's no unequip: a hook
+  // never leaves this.data.equippedHook empty, it only ever swaps to a
+  // different owned one.
+  equipHook(hookId) {
+    if (!this.data.ownedHooks.includes(hookId)) return false;
+    this.data.equippedHook = hookId;
+    this.save();
+    return true;
   }
 
   // Spends coins to buy one more line-length upgrade - the caller (ShopScene)

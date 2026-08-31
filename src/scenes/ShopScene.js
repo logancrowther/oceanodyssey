@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import GameState from '../systems/GameState.js';
 import { BAIT, getBait } from '../data/baitData.js';
+import { HOOKS, getHook } from '../data/hookData.js';
 import { getCatchable, sizeScaleFor, rarityColorFor, rarityLabelFor, RARITY_COLORS } from '../data/catchables.js';
 import { currentUpgrade, nextUpgrade } from '../data/upgradeData.js';
 import { createBubbleButton } from '../ui/BubbleButton.js';
@@ -195,7 +196,10 @@ import {
   drawMegalodon,
   drawKraken,
   drawSpinosaurus,
-  drawOldBoot
+  drawOldBoot,
+  drawHook,
+  drawAdvancedHook,
+  drawAbyssalHook
 } from '../ui/tackle.js';
 import { DESIGN_WIDTH, DESIGN_HEIGHT } from '../constants.js';
 import { heading, subheading, label } from '../ui/textStyle.js';
@@ -405,6 +409,14 @@ const BAIT_ICON_DRAWERS = {
   abyssal_bait: (g, x, y) => drawAbyssalBait(g, x, y, 3.0)
 };
 
+// Icon drawer for each hook (see HOOKS in hookData.js) - Shop-local, same
+// as BAIT_ICON_DRAWERS above, kept separate from InventoryScene's own copy.
+const HOOK_ICON_DRAWERS = {
+  basic_hook: (g, x, y) => drawHook(g, x, y + 6, 1.4),
+  advanced_hook: (g, x, y) => drawAdvancedHook(g, x, y + 6, 1.4),
+  abyssal_hook: (g, x, y) => drawAbyssalHook(g, x, y + 6, 1.4)
+};
+
 // A simple wooden loot-crate icon, purely decorative for the Bait Crate
 // panel below - not a bait or a catchable, so it lives here rather than
 // tackle.js.
@@ -501,6 +513,45 @@ const CRATE_VISIBLE = 5;
 const CRATE_STRIP_LEN = 36;
 const CRATE_LANDING_INDEX = 28;
 
+// Hook Crate: same spinning-reel mechanic as the Bait Crate above, its own
+// odds. Advanced Hook (Rare) and Abyssal Hook (Mythic) as specified, Basic
+// Hook filling the remainder - though once a hook's owned, rolling it again
+// is just a "no new reward" outcome (ownHook is a no-op) rather than being
+// re-rolled away, keeping the odds exactly as stated regardless of what the
+// player already has.
+const HOOK_CRATE_COST = 1000;
+const HOOK_CRATE_MYTHIC_CHANCE = 0.001;
+const HOOK_CRATE_RARE_CHANCE = 0.0075;
+
+function rollHookCrate() {
+  const r = Math.random();
+  if (r < HOOK_CRATE_MYTHIC_CHANCE) {
+    return { tier: 'mythic', itemId: 'abyssal_hook' };
+  }
+  if (r < HOOK_CRATE_MYTHIC_CHANCE + HOOK_CRATE_RARE_CHANCE) {
+    return { tier: 'rare', itemId: 'advanced_hook' };
+  }
+  return { tier: 'common', itemId: 'basic_hook' };
+}
+
+// Filler pool/weights for the hook strip's visual spin only (see
+// CRATE_STRIP_POOL above for the bait equivalent) - not the real odds.
+const HOOK_STRIP_POOL = [
+  { tier: 'common', itemId: 'basic_hook' },
+  { tier: 'rare', itemId: 'advanced_hook' },
+  { tier: 'mythic', itemId: 'abyssal_hook' }
+];
+const HOOK_STRIP_WEIGHTS = [0.75, 0.2, 0.05];
+function pickHookStripFiller() {
+  const r = Math.random();
+  let acc = 0;
+  for (let i = 0; i < HOOK_STRIP_POOL.length; i += 1) {
+    acc += HOOK_STRIP_WEIGHTS[i];
+    if (r < acc) return HOOK_STRIP_POOL[i];
+  }
+  return HOOK_STRIP_POOL[0];
+}
+
 export default class ShopScene extends Phaser.Scene {
   constructor() {
     super('ShopScene');
@@ -580,7 +631,12 @@ export default class ShopScene extends Phaser.Scene {
     // baitData.js) - never sold as their own row here.
     const buyableBait = BAIT.filter((bait) => !bait.crateOnly);
     buyableBait.forEach((bait, i) => this.buildBaitRow(bait, 200 + i * 110));
-    this.buildCratePanel(200 + buyableBait.length * 110);
+    // Bait Crate and Hook Crate sit side by side in one compact row rather
+    // than stacking (which would run the second crate into the Back
+    // button) - see buildCratePanel/buildHookCratePanel below.
+    const crateRowY = 200 + buyableBait.length * 110;
+    this.buildCratePanel(width / 2 - 120, crateRowY);
+    this.buildHookCratePanel(width / 2 + 120, crateRowY);
 
     this.buildBackButton(width, height);
   }
@@ -598,15 +654,13 @@ export default class ShopScene extends Phaser.Scene {
     createBubbleButton(this, width / 2 + 155, y, 120, 50, 'Buy', () => this.buyBait(bait), { fontSize: '18px' });
   }
 
-  buildCratePanel(y) {
-    const width = DESIGN_WIDTH;
-    this.add.rectangle(width / 2, y, 460, 100, 0x145a73).setStrokeStyle(2, 0x0c3446);
+  buildCratePanel(x, y) {
+    this.add.rectangle(x, y, 220, 116, 0x145a73).setStrokeStyle(2, 0x0c3446);
     const icon = this.add.graphics();
-    drawCrateIcon(icon, width / 2 - 175, y, 1.25);
-    this.add.text(width / 2 - 120, y - 12, 'Bait Crate', label('20px')).setOrigin(0, 0.5);
-    this.add.text(width / 2 - 120, y + 14, 'Roll an Item', label('13px', { color: '#bfe9ff' })).setOrigin(0, 0.5);
-    this.crateOpenBtn = createBubbleButton(this, width / 2 + 155, y, 130, 54, `Open - $${CRATE_COST}`, () => this.openCrate(), {
-      fontSize: '14px'
+    drawCrateIcon(icon, x, y - 30, 1.05);
+    this.add.text(x, y + 2, 'Bait Crate', label('17px')).setOrigin(0.5);
+    this.crateOpenBtn = createBubbleButton(this, x, y + 38, 160, 42, `Open - $${CRATE_COST}`, () => this.openCrate(), {
+      fontSize: '13px'
     });
     if (GameState.coins < CRATE_COST) this.crateOpenBtn.setEnabled(false);
   }
@@ -619,6 +673,37 @@ export default class ShopScene extends Phaser.Scene {
     this.statusBar.refresh();
     if (this.crateOpenBtn) this.crateOpenBtn.setEnabled(false);
     this.showCrateSpin(rollCrate());
+  }
+
+  // Hook Crate - same wooden crate icon (it's still just a crate), its own
+  // panel/button/spin/reward wiring so it stays entirely independent of the
+  // Bait Crate above (own cost constant, own odds, own GameState call).
+  buildHookCratePanel(x, y) {
+    this.add.rectangle(x, y, 220, 116, 0x145a73).setStrokeStyle(2, 0x0c3446);
+    const icon = this.add.graphics();
+    drawCrateIcon(icon, x, y - 30, 1.05);
+    this.add.text(x, y + 2, 'Hook Crate', label('17px')).setOrigin(0.5);
+    this.hookCrateOpenBtn = createBubbleButton(
+      this,
+      x,
+      y + 38,
+      160,
+      42,
+      `Open - $${HOOK_CRATE_COST}`,
+      () => this.openHookCrate(),
+      { fontSize: '13px' }
+    );
+    if (GameState.coins < HOOK_CRATE_COST) this.hookCrateOpenBtn.setEnabled(false);
+  }
+
+  openHookCrate() {
+    if (!GameState.spendCoins(HOOK_CRATE_COST)) {
+      this.flashMessage('Not enough coins!');
+      return;
+    }
+    this.statusBar.refresh();
+    if (this.hookCrateOpenBtn) this.hookCrateOpenBtn.setEnabled(false);
+    this.showHookCrateSpin(rollHookCrate());
   }
 
   // The spinning-strip crate-opening modal: a horizontally scrolling row
@@ -726,6 +811,109 @@ export default class ShopScene extends Phaser.Scene {
         modal.destroy(true);
         maskG.destroy();
         if (this.crateOpenBtn) this.crateOpenBtn.setEnabled(GameState.coins >= CRATE_COST);
+      },
+      { fontSize: '18px', container: modal }
+    );
+  }
+
+  // The Hook Crate's own spinning-strip modal - identical mechanic to
+  // showCrateSpin above (see its comment), just built off HOOK_STRIP_POOL/
+  // HOOK_ICON_DRAWERS/rollHookCrate instead of the bait equivalents. Kept
+  // as its own method rather than a generalised shared one so each crate's
+  // reward-granting call (ownHook here vs. addItem there) stays a plain,
+  // obvious call rather than a branch inside shared code.
+  showHookCrateSpin(result) {
+    const width = DESIGN_WIDTH;
+    const height = DESIGN_HEIGHT;
+    const cy = height / 2 - 20;
+    const viewCenterX = width / 2;
+
+    const modal = this.add.container(0, 0);
+    const backdrop = this.add.rectangle(width / 2, height / 2, width, height, 0x02121c, 0.82).setInteractive();
+    modal.add(backdrop);
+    modal.add(this.add.text(viewCenterX, cy - 130, 'Opening Hook Crate...', heading('24px')).setOrigin(0.5));
+
+    const viewWidth = CRATE_CELL * CRATE_VISIBLE;
+    const viewLeft = viewCenterX - viewWidth / 2;
+
+    const strip = [];
+    for (let i = 0; i < CRATE_STRIP_LEN; i += 1) {
+      strip.push(i === CRATE_LANDING_INDEX ? { tier: result.tier, itemId: result.itemId } : pickHookStripFiller());
+    }
+
+    const startX = viewCenterX - CRATE_CELL / 2;
+    const finalX = viewCenterX - (CRATE_LANDING_INDEX * CRATE_CELL + CRATE_CELL / 2);
+
+    const stripContainer = this.add.container(startX, cy);
+    strip.forEach((entry, i) => {
+      const x = i * CRATE_CELL + CRATE_CELL / 2;
+      const cellColor = RARITY_COLORS[entry.tier];
+      const panel = this.add.rectangle(x, 0, CRATE_CELL - 6, 84, cellColor.fill).setStrokeStyle(2, cellColor.stroke);
+      stripContainer.add(panel);
+      const icon = this.add.graphics();
+      const drawer = HOOK_ICON_DRAWERS[entry.itemId];
+      if (drawer) drawer(icon, x, 0);
+      stripContainer.add(icon);
+    });
+    modal.add(stripContainer);
+
+    const maskG = this.make.graphics();
+    maskG.fillStyle(0xffffff);
+    maskG.fillRect(viewLeft, cy - 46, viewWidth, 92);
+    stripContainer.setMask(maskG.createGeometryMask());
+
+    const pointer = this.add.rectangle(viewCenterX, cy, CRATE_CELL + 4, 96, 0xffe17d, 0).setStrokeStyle(3, 0xffe17d, 0.9);
+    modal.add(pointer);
+    modal.add(this.add.polygon(viewCenterX, cy - 58, [0, -8, 9, 8, -9, 8], 0xffe17d));
+    modal.add(this.add.polygon(viewCenterX, cy + 58, [0, 8, 9, -8, -9, -8], 0xffe17d));
+
+    this.tweens.add({
+      targets: stripContainer,
+      x: finalX,
+      duration: 3400,
+      ease: 'Cubic.easeOut',
+      onComplete: () => this.finishHookCrateSpin(modal, maskG, result, cy, viewCenterX)
+    });
+  }
+
+  finishHookCrateSpin(modal, maskG, result, cy, viewCenterX) {
+    const alreadyOwned = GameState.ownsHook(result.itemId);
+    GameState.ownHook(result.itemId);
+    this.statusBar.refresh();
+
+    const color = RARITY_COLORS[result.tier];
+    const name = getHook(result.itemId).name;
+    const rewardLabel = alreadyOwned ? `${name} (already owned)` : name;
+
+    const flash = this.add.rectangle(viewCenterX, cy, CRATE_CELL - 6, 84, 0xffffff, 0.8);
+    modal.add(flash);
+    this.tweens.add({ targets: flash, alpha: 0, duration: 500, onComplete: () => flash.destroy() });
+
+    const tierText = this.add
+      .text(viewCenterX, cy + 80, rarityLabelFor(result.itemId).toUpperCase(), subheading('16px', { color: color.tag }))
+      .setOrigin(0.5)
+      .setScale(0.6);
+    modal.add(tierText);
+    this.tweens.add({ targets: tierText, scale: 1, duration: 400, ease: 'Back.easeOut' });
+
+    const rewardText = this.add
+      .text(viewCenterX, cy + 110, `You got ${rewardLabel}!`, { ...heading('20px'), color: '#ffe17d' })
+      .setOrigin(0.5)
+      .setAlpha(0);
+    modal.add(rewardText);
+    this.tweens.add({ targets: rewardText, alpha: 1, duration: 400, delay: 150 });
+
+    createBubbleButton(
+      this,
+      viewCenterX,
+      cy + 165,
+      180,
+      50,
+      'Nice!',
+      () => {
+        modal.destroy(true);
+        maskG.destroy();
+        if (this.hookCrateOpenBtn) this.hookCrateOpenBtn.setEnabled(GameState.coins >= HOOK_CRATE_COST);
       },
       { fontSize: '18px', container: modal }
     );
