@@ -2039,13 +2039,11 @@ const MEGALODON_MIN_DEPTH = 6000; // 500m
 const SHARK_ATTRACT_BAITS = new Set(Object.values(SHARK_BAIT).flatMap((cfg) => cfg.baits));
 Object.keys(SHARK_BAIT).forEach((id) => SHARK_ATTRACT_BAITS.add(id));
 
-// The Kraken spawns two different ways: a genuinely big fish (250kg+)
-// equipped as bait in water shallower than 2500m, or Abyssal Bait, which
-// drops the depth restriction entirely. Either way it's still a really
-// low chance.
-const KRAKEN_CHANCE = 0.0003;
+// The Kraken only ever spawns two ways: at 2500m or shallower, or at any
+// depth at all while Abyssal Bait is actually equipped (which drops the
+// depth restriction entirely). Either way it's still a really low chance.
+const KRAKEN_CHANCE = 0.00025;
 const KRAKEN_MAX_DEPTH = 30000; // 2500m
-const KRAKEN_MIN_CATCH_WEIGHT = 250; // kg
 
 // Spinosaurus only ever turns up shallower than 750m - a real river/
 // estuary hunter, not a deep-sea creature - and only once a genuinely
@@ -2334,11 +2332,11 @@ export default class OceanScene extends Phaser.Scene {
     if (baitId && hookDepth >= MEGALODON_MIN_DEPTH && SHARK_ATTRACT_BAITS.has(baitId) && Math.random() < MEGALODON_CHANCE) {
       return 'megalodon';
     }
-    // Both Spinosaurus and the Kraken care about the equipped bait's own
-    // weight, not just what species it is - only a genuinely big fish
-    // used as bait counts, so this is the one place that actually looks
-    // at the specific caught-fish record behind GameState.equippedBait
-    // rather than just the bait id.
+    // Spinosaurus still cares about the equipped bait's own weight, not
+    // just what species it is - only a genuinely big fish used as bait
+    // counts, so this is the one place that actually looks at the
+    // specific caught-fish record behind GameState.equippedBait rather
+    // than just the bait id.
     const equippedBaitCatch =
       GameState.equippedCatchUid != null ? GameState.data.catches.find((c) => c.uid === GameState.equippedCatchUid) : null;
     if (
@@ -2349,9 +2347,10 @@ export default class OceanScene extends Phaser.Scene {
     ) {
       return 'spinosaurus';
     }
-    const krakenEligible =
-      (hookDepth < KRAKEN_MAX_DEPTH && equippedBaitCatch && equippedBaitCatch.weightKg >= KRAKEN_MIN_CATCH_WEIGHT) ||
-      baitId === 'abyssal_bait';
+    // The Kraken only cares about depth (2500m or shallower) or Abyssal
+    // Bait actually being equipped (any depth at all) - no fish-weight
+    // requirement here, unlike Spinosaurus above.
+    const krakenEligible = hookDepth <= KRAKEN_MAX_DEPTH || baitId === 'abyssal_bait';
     if (krakenEligible && Math.random() < KRAKEN_CHANCE) {
       return 'kraken';
     }

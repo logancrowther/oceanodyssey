@@ -2227,9 +2227,9 @@ export const FISH = [
     // Not a real animal at all, unlike anything else on this list (even
     // Megalodon is a real extinct species) - a purely mythical sea
     // monster. Swims around like any other spawn once the conditions are
-    // met (see OceanScene.KRAKEN_CHANCE): a genuinely big fish (250kg+)
-    // equipped as bait in water shallower than 2500m, or Abyssal Bait at
-    // any depth at all - either way, a really low chance. Mythically
+    // met (see OceanScene.KRAKEN_CHANCE): water 2500m or shallower, or
+    // Abyssal Bait actually equipped at any depth at all - either way,
+    // a really low chance. Mythically
     // bigger than anything real in the game - heavier even than the
     // Humpback Whale, and priced at the same value-per-kilo the Whale
     // itself carries, so its sheer size alone puts it ahead of the Whale
