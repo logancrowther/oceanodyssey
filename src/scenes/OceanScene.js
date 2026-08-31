@@ -1380,6 +1380,10 @@ const DEPTH_LIMITS = {
 // entire point of fishing with it.
 const ABYSS_FISH = ['warsaw_grouper', 'blueline_tilefish', 'golden_tilefish', 'blue_eye_trevalla', 'dragonfish', 'fangtooth', 'angler_fish'];
 const ABYSS_BOOST_COPIES = 3;
+// The Abyssal Hook's own version of Abyssal Bait's abyss-fish boost below
+// (see pickSpawnId) - same depth-gate bypass, fewer extra copies since it's
+// a permanent equip rather than a bait that gets used up.
+const HOOK_ABYSS_BOOST_COPIES = 2;
 
 // Every NORMAL_POOL species that's Legendary tier by value rank (see
 // rarityTierFor) - computed once here rather than hand-picked, so it
@@ -2039,6 +2043,15 @@ const WHALE_CHANCE_LURE = 0.0011;
 const WHALE_CHANCE_COLOSSAL = 0.00115;
 const WHALE_CHANCE_SHIMMERING = 0.0012;
 const WHALE_CHANCE_ABYSSAL = 0.0013;
+// The Abyssal Hook (see hookData.js) carries its own permanent slice of
+// Abyssal Bait's luck - eligible on its own even when no WHALE_BAIT-listed
+// bait is equipped, but a notch below Abyssal Bait's own value below it,
+// since the hook never gets used up the way a stack of bait does.
+const WHALE_CHANCE_ABYSSAL_HOOK = 0.00125;
+// The Advanced Hook (Rare, see hookData.js) gets a much smaller permanent
+// nudge of its own - a hint of extra luck rather than the Abyssal Hook's
+// real slice of Abyssal Bait's effects.
+const WHALE_CHANCE_ADVANCED_HOOK = 0.00102;
 
 // Megalodon spawns and swims around like everything else now (no more
 // last-instant swap on a shark's own bite) - past 500m, with bait that
@@ -2311,6 +2324,18 @@ export default class OceanScene extends Phaser.Scene {
   pickSpawnId() {
     const baitId = GameState.equippedBait;
     const hookDepth = this.hook.y - this.depthOrigin;
+    // The Abyssal Hook (see hookData.js) carries a permanent, slightly
+    // weaker slice of Abyssal Bait's own spawn luck (whale chance, the
+    // Kraken's depth bypass, and the abyss-fish depth bypass/boost below) -
+    // see WHALE_CHANCE_ABYSSAL_HOOK/HOOK_ABYSS_BOOST_COPIES above. Never
+    // stacks with Abyssal Bait itself; the bait's own (stronger) numbers
+    // just win wherever both are true at once.
+    const abyssalHookEquipped = GameState.equippedHook === 'abyssal_hook';
+    // The Advanced Hook's own much smaller luck buff (see
+    // WHALE_CHANCE_ADVANCED_HOOK above) - a small permanent nudge on top
+    // of whatever bait is equipped, not a new category of encounter the
+    // way the Abyssal Hook's Kraken/abyss-fish bypasses are.
+    const advancedHookEquipped = GameState.equippedHook === 'advanced_hook';
     if (baitId && hookDepth >= SHARK_MIN_DEPTH) {
       for (const sharkId of Object.keys(SHARK_BAIT)) {
         const config = SHARK_BAIT[sharkId];
@@ -2331,8 +2356,10 @@ export default class OceanScene extends Phaser.Scene {
         if (Math.random() < chance) return rayId;
       }
     }
-    if (baitId && WHALE_BAIT.includes(baitId)) {
+    if ((baitId && WHALE_BAIT.includes(baitId)) || abyssalHookEquipped || advancedHookEquipped) {
       let whaleChance = WHALE_CHANCE;
+      if (advancedHookEquipped) whaleChance = WHALE_CHANCE_ADVANCED_HOOK;
+      if (abyssalHookEquipped) whaleChance = WHALE_CHANCE_ABYSSAL_HOOK;
       if (baitId === 'abyssal_bait') whaleChance = WHALE_CHANCE_ABYSSAL;
       else if (baitId === 'shimmering_lure') whaleChance = WHALE_CHANCE_SHIMMERING;
       else if (baitId === 'colossal_bait') whaleChance = WHALE_CHANCE_COLOSSAL;
@@ -2358,39 +2385,54 @@ export default class OceanScene extends Phaser.Scene {
     ) {
       return 'spinosaurus';
     }
-    // The Kraken only cares about depth (2500m or shallower) or Abyssal
-    // Bait actually being equipped (any depth at all) - no fish-weight
-    // requirement here, unlike Spinosaurus above.
-    const krakenEligible = hookDepth <= KRAKEN_MAX_DEPTH || baitId === 'abyssal_bait';
+    // The Kraken only cares about depth (2500m or shallower), Abyssal Bait
+    // actually being equipped, or the Abyssal Hook being equipped (any
+    // depth at all either way) - no fish-weight requirement here, unlike
+    // Spinosaurus above.
+    const krakenEligible = hookDepth <= KRAKEN_MAX_DEPTH || baitId === 'abyssal_bait' || abyssalHookEquipped;
     if (krakenEligible && Math.random() < KRAKEN_CHANCE) {
       return 'kraken';
     }
     const isAbyssalBait = baitId === 'abyssal_bait';
+    // The Abyssal Hook grants this same abyss-fish depth bypass whenever
+    // Abyssal Bait itself isn't already doing so - see HOOK_ABYSS_BOOST_COPIES
+    // above for how its boost below is dialed down relative to the bait's.
+    const abyssalHookLuck = abyssalHookEquipped && !isAbyssalBait;
     // The three Bait Crate lures (see baitData.js) each carry a bit of
     // "luck" - a graduated ladder, not a single on/off flag: Plastic Lure
     // the least, Shimmering Lure a bit more, Abyssal Bait the most (the
     // only one that also blows through an abyss fish's own depth gate,
     // see below). None of this ever overrides a real depth gate for a
     // species that isn't already eligible here.
-    const legendaryBoostCopies = isAbyssalBait ? 1 : baitId === 'shimmering_lure' ? 2 : baitId === 'plastic_lure' ? 1 : 0;
+    const legendaryBoostCopies =
+      isAbyssalBait || abyssalHookLuck
+        ? 1
+        : baitId === 'shimmering_lure'
+          ? 2
+          : baitId === 'plastic_lure' || advancedHookEquipped
+            ? 1
+            : 0;
     const abyssBoostCopies = baitId === 'shimmering_lure' ? 1 : 0;
     const pool = NORMAL_POOL.filter((id) => {
       const limits = DEPTH_LIMITS[id];
       if (!limits) return true;
-      // Abyssal Bait blows straight through any abyss fish's own depth
-      // gate - the whole point of fishing with it is pulling something
-      // that deep up from anywhere.
-      if (isAbyssalBait && ABYSS_FISH.includes(id)) return true;
+      // Abyssal Bait (or the Abyssal Hook) blows straight through any
+      // abyss fish's own depth gate - the whole point of fishing with
+      // either is pulling something that deep up from anywhere.
+      if ((isAbyssalBait || abyssalHookLuck) && ABYSS_FISH.includes(id)) return true;
       if (limits.min != null && hookDepth < limits.min) return false;
       if (limits.max != null && hookDepth >= limits.max) return false;
       return true;
     });
-    if (isAbyssalBait) {
+    if (isAbyssalBait || abyssalHookLuck) {
       // Abyss fish get a real boost - and since their own depth gate was
       // just bypassed above, they're always in the pool to boost in the
-      // first place.
+      // first place. The Abyssal Hook's own copy count is a little lower
+      // than Abyssal Bait's (see HOOK_ABYSS_BOOST_COPIES) - it never runs
+      // out, so it stays a notch under the bait it's modeled on.
+      const copies = isAbyssalBait ? ABYSS_BOOST_COPIES : HOOK_ABYSS_BOOST_COPIES;
       ABYSS_FISH.forEach((id) => {
-        for (let i = 0; i < ABYSS_BOOST_COPIES; i += 1) pool.push(id);
+        for (let i = 0; i < copies; i += 1) pool.push(id);
       });
     } else if (abyssBoostCopies > 0) {
       // Shimmering Lure's much smaller version of the above - only for
