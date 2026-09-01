@@ -26,6 +26,15 @@ const CELL_H = 148;
 const VIEWPORT_TOP = 165;
 const VIEWPORT_BOTTOM_MARGIN = 24;
 const SCROLL_SPEED = 0.6;
+const SECTION_HEADER_H = 36;
+
+// Every species that only ever turns up past a genuine 1000m+ depth (see
+// DEPTH_LIMITS in OceanScene.js - Dragonfish/Fangtooth/Angler Fish's own
+// `min` there, all well past 12000 depth units at 12 units/m), plus the
+// Kraken - not gated by a real depth floor the same way (it's shallow-or-
+// bait-driven, see pickSpawnId), but every bit as much an Abyss creature
+// thematically, so it's called out here on purpose rather than derived.
+const ABYSS_SPECIES = ['dragonfish', 'fangtooth', 'angler_fish', 'kraken'];
 
 // Every silhouette texture is baked once (species art never changes) and
 // reused for the rest of the game session - keyed off this prefix so a
@@ -144,16 +153,40 @@ export default class FishIndexScene extends Phaser.Scene {
     this.gridContainer = this.add.container(0, 0);
     const gridWidth = COLS * CELL_W;
     const startX = (width - gridWidth) / 2 + CELL_W / 2;
-    items.forEach((item, i) => {
-      const col = i % COLS;
-      const row = Math.floor(i / COLS);
-      const x = startX + col * CELL_W;
-      const y = VIEWPORT_TOP + CELL_H / 2 + 8 + row * CELL_H;
-      this.buildCell(item, x, y);
-    });
 
-    const rows = Math.ceil(items.length / COLS);
-    const contentHeight = rows * CELL_H + 16;
+    // The Abyss (see ABYSS_SPECIES above) gets its own labelled block up
+    // top, then everything else follows below in the usual value-sorted
+    // grid - both drawn with the same buildCell, just laid out as two
+    // sections back to back rather than one flat list.
+    const abyssIds = new Set(ABYSS_SPECIES);
+    const abyssItems = items.filter((item) => abyssIds.has(item.itemId));
+    const restItems = items.filter((item) => !abyssIds.has(item.itemId));
+
+    let cursorY = VIEWPORT_TOP;
+    const layoutSection = (title, sectionItems) => {
+      if (sectionItems.length === 0) return;
+      if (title) {
+        const headerText = this.add
+          .text(width / 2, cursorY + SECTION_HEADER_H / 2, title, subheading('16px', { color: '#7fe8e0' }))
+          .setOrigin(0.5);
+        this.gridContainer.add(headerText);
+        cursorY += SECTION_HEADER_H;
+      }
+      sectionItems.forEach((item, i) => {
+        const col = i % COLS;
+        const row = Math.floor(i / COLS);
+        const x = startX + col * CELL_W;
+        const y = cursorY + CELL_H / 2 + 8 + row * CELL_H;
+        this.buildCell(item, x, y);
+      });
+      const rows = Math.ceil(sectionItems.length / COLS);
+      cursorY += rows * CELL_H + 16;
+    };
+
+    layoutSection('The Abyss — 1000m+', abyssItems);
+    layoutSection(null, restItems);
+
+    const contentHeight = cursorY - VIEWPORT_TOP;
     this.maxScroll = Math.max(0, contentHeight - viewportHeight);
 
     this.gridMaskGraphics = this.make.graphics();
