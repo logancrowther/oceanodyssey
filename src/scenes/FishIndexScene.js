@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import GameState from '../systems/GameState.js';
 import { FISH } from '../data/fishData.js';
 import { createIconButton, drawCloseIcon } from '../ui/iconButton.js';
+import { createBubbleButton } from '../ui/BubbleButton.js';
 import { createSearchBox } from '../ui/SearchBox.js';
 import { addStatusBar } from '../ui/fishIcon.js';
 import { DESIGN_WIDTH, DESIGN_HEIGHT } from '../constants.js';
@@ -23,7 +24,7 @@ const INDEX_DRAWERS = {
 const COLS = 3;
 const CELL_W = 225;
 const CELL_H = 148;
-const VIEWPORT_TOP = 165;
+const VIEWPORT_TOP = 190;
 const VIEWPORT_BOTTOM_MARGIN = 24;
 const SCROLL_SPEED = 0.6;
 const SECTION_HEADER_H = 36;
@@ -95,6 +96,16 @@ export default class FishIndexScene extends Phaser.Scene {
       onChange: () => this.refreshGrid()
     });
 
+    // Toggles between the full index and just The Abyss section (see
+    // ABYSS_SPECIES above) - the button's own label always names the mode
+    // a press would switch TO, not the one currently showing.
+    this.showAbyssOnly = false;
+    this.abyssToggleBtn = createBubbleButton(this, width / 2, 154, 180, 34, 'Abyss Index', () => {
+      this.showAbyssOnly = !this.showAbyssOnly;
+      this.abyssToggleBtn.setLabel(this.showAbyssOnly ? 'Ocean Index' : 'Abyss Index');
+      this.refreshGrid();
+    }, { fontSize: '14px' });
+
     this.input.on('wheel', (pointer, over, dx, dy) => {
       if (this.maxScroll <= 0 || !this.gridContainer) return;
       this.gridContainer.y = Phaser.Math.Clamp(this.gridContainer.y - dy * SCROLL_SPEED, -this.maxScroll, 0);
@@ -135,9 +146,14 @@ export default class FishIndexScene extends Phaser.Scene {
     // A locked entry shows only "???" - searching by name should only ever
     // match species the player has actually unlocked, not spoil what an
     // as-yet-uncaught fish is called.
-    const items = query
+    let items = query
       ? this.allItems.filter((item) => GameState.isDiscovered(item.itemId) && item.name.toLowerCase().includes(query))
       : this.allItems;
+
+    if (this.showAbyssOnly) {
+      const abyssIds = new Set(ABYSS_SPECIES);
+      items = items.filter((item) => abyssIds.has(item.itemId));
+    }
 
     if (items.length === 0) {
       this.maxScroll = 0;

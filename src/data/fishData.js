@@ -2056,15 +2056,16 @@ export const FISH = [
     name: 'Angler Fish',
     // Only turns up once the hook is past 4000m (see
     // OceanScene.NORMAL_POOL/DEPTH_LIMITS) - the deepest-dwelling catch in
-    // the game by a huge margin. Small like the real animal, but priced
-    // the highest per kg of anything short of a shark, reflecting just how
-    // absurd a line has to be to ever reach it. Low wariness - a real
-    // anglerfish is a passive ambush predator, not something that spooks
-    // and bolts.
+    // the game by a huge margin, and the single most valuable of the three
+    // Abyss species (see FishIndexScene's own Abyss section) to match:
+    // an Epic-tier catch, priced the highest per kg of anything short of a
+    // shark, reflecting just how absurd a line has to be to ever reach it.
+    // Low wariness - a real anglerfish is a passive ambush predator, not
+    // something that spooks and bolts.
     baseWeightKg: 1.2,
-    valuePerKg: 25,
+    valuePerKg: 142,
     turnsRequired: 2.0,
-    rarity: 'legendary',
+    rarity: 'epic',
     difficultyMultiplier: 1.2,
     // An opportunistic abyssal ambush predator - takes whatever drifts by.
     baits: ['prawn', 'squid']
@@ -2074,13 +2075,15 @@ export const FISH = [
     name: 'Dragonfish',
     // Only turns up once the hook is past 1500m (see
     // OceanScene.NORMAL_POOL/DEPTH_LIMITS) - sits between the Blue-eye
-    // Trevalla's 600m and the Angler Fish's abyssal 4000m. Tiny like the
-    // real animal (real dragonfish rarely top 30cm), so priced very high
-    // per kg to still feel like a real find rather than pocket change.
+    // Trevalla's 600m and the Angler Fish's abyssal 4000m. The shallowest
+    // (and so the least valuable) of the three Abyss species - a Rare-tier
+    // catch rather than Fangtooth/Angler Fish's Epic. Tiny like the real
+    // animal (real dragonfish rarely top 30cm), so still priced very high
+    // per kg to feel like a real find rather than pocket change.
     baseWeightKg: 0.4,
-    valuePerKg: 60,
+    valuePerKg: 225,
     turnsRequired: 2.3,
-    rarity: 'legendary',
+    rarity: 'rare',
     difficultyMultiplier: 1.4,
     // A passive abyssal ambush predator like the Angler Fish - not
     // picky about what's drifting on the hook.
@@ -2095,11 +2098,13 @@ export const FISH = [
     // any other depth-gated species, reachable at ANY depth while fishing
     // with Abyssal Bait, same as the rest of ABYSS_FISH. Tiny like the
     // real animal (rarely over 16cm), priced high per kg for the same
-    // reason the Dragonfish is.
+    // reason the Dragonfish is - and, like the Angler Fish, an Epic-tier
+    // catch (see FishIndexScene's Abyss section) rather than Dragonfish's
+    // Rare, its deeper minimum depth reflected in the higher value.
     baseWeightKg: 0.5,
-    valuePerKg: 50,
+    valuePerKg: 260,
     turnsRequired: 2.1,
-    rarity: 'legendary',
+    rarity: 'epic',
     difficultyMultiplier: 1.3,
     // A passive abyssal ambush predator like the Angler Fish and
     // Dragonfish - not picky about what's drifting on the hook.

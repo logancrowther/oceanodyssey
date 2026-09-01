@@ -200,7 +200,7 @@ import {
 } from '../ui/tackle.js';
 import { DESIGN_WIDTH, DESIGN_HEIGHT } from '../constants.js';
 import { shadeColor, buildSeaPolygon, drawSunGlow } from '../ui/oceanArt.js';
-import { subheading, label } from '../ui/textStyle.js';
+import { heading, subheading, label } from '../ui/textStyle.js';
 
 const DRAWERS = {
   prawn: drawPrawn,
@@ -1380,6 +1380,16 @@ const DEPTH_LIMITS = {
 // entire point of fishing with it.
 const ABYSS_FISH = ['warsaw_grouper', 'blueline_tilefish', 'golden_tilefish', 'blue_eye_trevalla', 'dragonfish', 'fangtooth', 'angler_fish'];
 const ABYSS_BOOST_COPIES = 3;
+// 1000m, in depth units (12/m) - the hard line between the Ocean and the
+// Abyss (see FishIndexScene's own "The Abyss" section). Nothing spawns
+// past it except the four species that actually belong to the Abyss -
+// Dragonfish, Fangtooth, Angler Fish, and the Kraken (ABYSS_ONLY_SPECIES
+// covers the first three; the Kraken's own eligibility check is separate
+// and untouched by this boundary). This is a hard stop, not a depth gate
+// like DEPTH_LIMITS' own `min`/`max` - even Abyssal Bait/Hook's usual
+// gate-bypass never invents a new max, so it doesn't get past this either.
+const ABYSS_BOUNDARY = 12000;
+const ABYSS_ONLY_SPECIES = new Set(['dragonfish', 'fangtooth', 'angler_fish']);
 // The Abyssal Hook's own version of Abyssal Bait's abyss-fish boost below
 // (see pickSpawnId) - same depth-gate bypass, fewer extra copies since it's
 // a permanent equip rather than a bait that gets used up.
@@ -2209,6 +2219,12 @@ export default class OceanScene extends Phaser.Scene {
     this.nextSwimmerId = 1;
     this.hook = { x: width / 2, y: 0 };
     this.hookSpeed = 0;
+    // Which side of the Abyss boundary (see ABYSS_BOUNDARY above) the hook
+    // currently sits on - starts 'ocean' since the dive always begins
+    // shallow, so the very first update() tick never mistakes scene
+    // startup for an actual crossing and pops the banner unprompted.
+    this.currentZone = 'ocean';
+    this.zoneBannerText = null;
     this.pointerActive = false;
     this.pointerTargetX = this.hook.x;
     this.pointerTargetY = this.hook.y;
@@ -2336,7 +2352,7 @@ export default class OceanScene extends Phaser.Scene {
     // of whatever bait is equipped, not a new category of encounter the
     // way the Abyssal Hook's Kraken/abyss-fish bypasses are.
     const advancedHookEquipped = GameState.equippedHook === 'advanced_hook';
-    if (baitId && hookDepth >= SHARK_MIN_DEPTH) {
+    if (baitId && hookDepth >= SHARK_MIN_DEPTH && hookDepth <= ABYSS_BOUNDARY) {
       for (const sharkId of Object.keys(SHARK_BAIT)) {
         const config = SHARK_BAIT[sharkId];
         // Most sharks just use the shared SHARK_MIN_DEPTH gate above - a
@@ -2347,16 +2363,17 @@ export default class OceanScene extends Phaser.Scene {
       }
     }
     // Rays answer to the stackable bait item itself, not a caught fish -
-    // no depth gate, since (unlike the sharks) they're meant to be a
-    // realistic, fairly reachable outcome of fishing with Squid.
-    if (baitId === 'squid' || baitId === 'prawn') {
+    // no depth gate of their own, since (unlike the sharks) they're meant
+    // to be a realistic, fairly reachable outcome of fishing with Squid -
+    // just still bounded by the Abyss boundary like everything else here.
+    if ((baitId === 'squid' || baitId === 'prawn') && hookDepth <= ABYSS_BOUNDARY) {
       for (const rayId of Object.keys(RAY_BAIT)) {
         const config = RAY_BAIT[rayId];
         const chance = baitId === 'squid' ? config.squidChance : config.prawnChance;
         if (Math.random() < chance) return rayId;
       }
     }
-    if ((baitId && WHALE_BAIT.includes(baitId)) || abyssalHookEquipped || advancedHookEquipped) {
+    if (((baitId && WHALE_BAIT.includes(baitId)) || abyssalHookEquipped || advancedHookEquipped) && hookDepth <= ABYSS_BOUNDARY) {
       let whaleChance = WHALE_CHANCE;
       if (advancedHookEquipped) whaleChance = WHALE_CHANCE_ADVANCED_HOOK;
       if (abyssalHookEquipped) whaleChance = WHALE_CHANCE_ABYSSAL_HOOK;
@@ -2367,7 +2384,13 @@ export default class OceanScene extends Phaser.Scene {
       else if (baitId === 'deep_sea_bait') whaleChance = WHALE_CHANCE_DEEP_SEA;
       if (Math.random() < whaleChance) return 'humpback_whale';
     }
-    if (baitId && hookDepth >= MEGALODON_MIN_DEPTH && SHARK_ATTRACT_BAITS.has(baitId) && Math.random() < MEGALODON_CHANCE) {
+    if (
+      baitId &&
+      hookDepth >= MEGALODON_MIN_DEPTH &&
+      hookDepth <= ABYSS_BOUNDARY &&
+      SHARK_ATTRACT_BAITS.has(baitId) &&
+      Math.random() < MEGALODON_CHANCE
+    ) {
       return 'megalodon';
     }
     // Spinosaurus still cares about the equipped bait's own weight, not
@@ -2414,6 +2437,10 @@ export default class OceanScene extends Phaser.Scene {
             : 0;
     const abyssBoostCopies = baitId === 'shimmering_lure' ? 1 : 0;
     const pool = NORMAL_POOL.filter((id) => {
+      // Nothing outside the Abyss's own three NORMAL_POOL species spawns
+      // past the Abyss boundary at all any more - a hard stop, unlike the
+      // bypass right below, which only ever waives a species' own `min`.
+      if (!ABYSS_ONLY_SPECIES.has(id) && hookDepth > ABYSS_BOUNDARY) return false;
       const limits = DEPTH_LIMITS[id];
       if (!limits) return true;
       // Abyssal Bait (or the Abyssal Hook) blows straight through any
@@ -2471,6 +2498,11 @@ export default class OceanScene extends Phaser.Scene {
   trySpawnFish() {
     if (this.swimmers.length >= MAX_FISH) return;
     const itemId = this.pickSpawnId();
+    // Between the Abyss boundary and the nearest Abyss-only species' own
+    // min depth (see ABYSS_BOUNDARY/ABYSS_ONLY_SPECIES above), the normal
+    // pool can come back genuinely empty for a given roll - just skip
+    // spawning this tick rather than crash on an undefined itemId.
+    if (!itemId) return;
     const fromLeft = Math.random() < 0.5;
     const y = Phaser.Math.Clamp(
       this.scroll.y + Phaser.Math.Between(60, DESIGN_HEIGHT - 60),
@@ -2798,6 +2830,52 @@ export default class OceanScene extends Phaser.Scene {
     }
   }
 
+  // A large white title card that announces crossing the Ocean/Abyss
+  // boundary (see ABYSS_BOUNDARY and its use in update() above) - fades
+  // in, holds for a second, then fades back out on its own rather than
+  // needing to be dismissed.
+  showZoneBanner(zone) {
+    if (this.zoneBannerTweens) {
+      this.zoneBannerTweens.forEach((t) => t.stop());
+    }
+    if (this.zoneBannerText) {
+      this.zoneBannerText.destroy();
+      this.zoneBannerText = null;
+    }
+
+    const width = DESIGN_WIDTH;
+    const height = DESIGN_HEIGHT;
+    const text = this.add
+      .text(width / 2, height / 2 - 60, zone === 'abyss' ? 'The Abyss' : 'Ocean', { ...heading('44px'), color: '#ffffff' })
+      .setOrigin(0.5)
+      .setAlpha(0)
+      .setDepth(1000);
+    this.zoneBannerText = text;
+
+    const fadeIn = this.tweens.add({
+      targets: text,
+      alpha: 1,
+      duration: 250,
+      ease: 'Sine.easeOut',
+      onComplete: () => {
+        this.time.delayedCall(1000, () => {
+          const fadeOut = this.tweens.add({
+            targets: text,
+            alpha: 0,
+            duration: 600,
+            ease: 'Sine.easeIn',
+            onComplete: () => {
+              text.destroy();
+              if (this.zoneBannerText === text) this.zoneBannerText = null;
+            }
+          });
+          this.zoneBannerTweens = [fadeOut];
+        });
+      }
+    });
+    this.zoneBannerTweens = [fadeIn];
+  }
+
   update(time, deltaMs) {
     this.waveT += deltaMs * 0.001;
     this.renderSurfaceSea(this.waveT);
@@ -2806,8 +2884,18 @@ export default class OceanScene extends Phaser.Scene {
       this.updateHook();
       this.updateScroll();
       this.updateSwimmers(deltaMs);
-      const depthM = Math.round((this.hook.y - this.depthOrigin) / 12);
+      const hookDepthUnits = this.hook.y - this.depthOrigin;
+      const depthM = Math.round(hookDepthUnits / 12);
       this.depthText.setText(`Depth: ${depthM}m`);
+
+      // The Ocean/Abyss title card (see showZoneBanner below) - fires only
+      // on an actual crossing of ABYSS_BOUNDARY, not every tick already on
+      // one side of it.
+      const zone = hookDepthUnits > ABYSS_BOUNDARY ? 'abyss' : 'ocean';
+      if (zone !== this.currentZone) {
+        this.currentZone = zone;
+        this.showZoneBanner(zone);
+      }
     }
 
     // Everything "underwater" (sky/sea/water tint/fish/hook) lives in
