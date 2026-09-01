@@ -2134,15 +2134,15 @@ const HOOK_DROP_MS = 700;
 // track. Every tick the two overlap fills the progress meter above the
 // track a little, every tick they don't drains it a little - a full
 // meter reels the catch in for real, an empty one lets it get away.
-const MINIGAME_TRACK_Y = 300;
-const MINIGAME_TRACK_LEN = 210;
+const MINIGAME_TRACK_Y = 520;
+const MINIGAME_TRACK_LEN = 340;
 const MINIGAME_TRACK_LEFT = DESIGN_WIDTH / 2 - MINIGAME_TRACK_LEN / 2;
 const MINIGAME_TRACK_RIGHT = DESIGN_WIDTH / 2 + MINIGAME_TRACK_LEN / 2;
 const MINIGAME_TRACK_THICKNESS = 30;
 const MINIGAME_START_PROGRESS = 0.45;
 const MINIGAME_FILL_RATE = 0.5; // progress/sec while overlapping
-const MINIGAME_PLAYER_FORWARD_PX = 370; // px/sec while held
-const MINIGAME_PLAYER_BACK_PX = 260; // px/sec while released
+const MINIGAME_PLAYER_FORWARD_PX = 600; // px/sec while held
+const MINIGAME_PLAYER_BACK_PX = 420; // px/sec while released
 // Difficulty is driven by the same per-species difficultyMultiplier
 // FISH already carries (fishData.js) - originally a reel-fight stat from
 // before this minigame existed, repurposed as a spook-wariness factor in
@@ -2733,8 +2733,8 @@ export default class OceanScene extends Phaser.Scene {
     this.landedCatch = { itemId: f.itemId, weightKg };
 
     const diffT = minigameDifficultyT(info.difficultyMultiplier || 1);
-    const playerBarW = Phaser.Math.Linear(105, 44, diffT);
-    const fishSpeed = Phaser.Math.Linear(70, 190, diffT);
+    const playerBarW = Phaser.Math.Linear(66, 24, diffT);
+    const fishSpeed = Phaser.Math.Linear(115, 310, diffT);
     const fishRetargetMs = Phaser.Math.Linear(900, 380, diffT);
     const drainRate = Phaser.Math.Linear(0.22, 0.5, diffT);
 
