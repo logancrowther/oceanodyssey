@@ -666,52 +666,97 @@ export default class ShopScene extends Phaser.Scene {
 
     this.messageText = this.add.text(width / 2, 130, '', subheading('15px', { color: '#ffe17d' })).setOrigin(0.5);
 
+    // Bait rows plus both crate panels together now run well past what
+    // fits above the Back button (especially once two crates are stacked -
+    // see the Hook Crate below), so this list scrolls in its own clipped
+    // viewport the same way the Sell screen's catch list already does,
+    // rather than pushing the Back button off the bottom of the screen.
+    this.listContainer = null;
+    this.listMaskGraphics = null;
+    this.scrollHintText = null;
+    this.scroll = 0;
+    this.maxScroll = 0;
+    this.listViewTop = 155;
+    this.listViewBottom = height - 142;
+
+    this.input.on('wheel', (pointer, over, dx, dy) => {
+      if (this.maxScroll <= 0 || !this.listContainer) return;
+      this.scroll = Phaser.Math.Clamp(this.scroll - dy * 0.5, -this.maxScroll, 0);
+      this.listContainer.y = this.listViewTop + this.scroll;
+    });
+
+    this.buildBuyList(width, height);
+    this.buildBackButton(width, height);
+  }
+
+  // Builds the scrollable Buy list - bait rows, then the Bait Crate, then
+  // the Hook Crate, all stacked into one clipped/scrolled container. See
+  // buildCatchList's own comment on the Sell screen for the same pattern.
+  buildBuyList(width, height) {
+    const rowHeight = 110;
     // Plastic Lure / Abyssal Bait are Bait Crate-only rewards (see
     // baitData.js) - never sold as their own row here.
     const buyableBait = BAIT.filter((bait) => !bait.crateOnly);
-    buyableBait.forEach((bait, i) => this.buildBaitRow(bait, 200 + i * 110));
-    // Bait Crate, then Hook Crate stacked below it (not side by side) -
-    // both compact rows so the two crates plus the Back button all still
-    // fit under the bait rows without running off the bottom of the panel.
-    const crateRowY = 200 + buyableBait.length * 110;
-    this.buildCratePanel(crateRowY);
-    const hookCrateRowY = crateRowY + 78;
-    this.buildHookCratePanel(hookCrateRowY);
+    const rowCount = buyableBait.length + 2; // + Bait Crate + Hook Crate
+    const viewTop = this.listViewTop;
+    const viewBottom = this.listViewBottom;
+    const viewHeight = viewBottom - viewTop;
+    const contentHeight = rowCount * rowHeight;
+    this.maxScroll = Math.max(0, contentHeight - viewHeight);
+    this.scroll = Phaser.Math.Clamp(this.scroll, -this.maxScroll, 0);
 
-    createBubbleButton(
-      this,
-      width / 2,
-      hookCrateRowY + 56,
-      220,
-      48,
-      'Back',
-      () => this.scene.restart({ mode: 'menu' }),
-      { fontSize: '18px' }
-    );
+    const listContainer = this.add.container(0, viewTop + this.scroll);
+    buyableBait.forEach((bait, i) => this.buildBaitRow(bait, 45 + i * rowHeight, listContainer));
+    this.buildCratePanel(45 + buyableBait.length * rowHeight, listContainer);
+    this.buildHookCratePanel(45 + (buyableBait.length + 1) * rowHeight, listContainer);
+    this.listContainer = listContainer;
+
+    if (this.listMaskGraphics) {
+      this.listMaskGraphics.destroy();
+      this.listMaskGraphics = null;
+    }
+
+    if (this.maxScroll <= 0) {
+      if (this.scrollHintText) this.scrollHintText.setVisible(false);
+      return;
+    }
+
+    this.listMaskGraphics = this.make.graphics().fillStyle(0xffffff).fillRect(0, viewTop, width, viewHeight);
+    listContainer.setMask(this.listMaskGraphics.createGeometryMask());
+
+    if (!this.scrollHintText) {
+      this.scrollHintText = this.add
+        .text(width / 2, viewBottom + 14, '↓ scroll for more ↓', label('12px', { color: '#7fa8bd' }))
+        .setOrigin(0.5);
+    }
+    this.scrollHintText.setVisible(true);
   }
 
-  buildBaitRow(bait, y) {
+  buildBaitRow(bait, y, container) {
     const width = DESIGN_WIDTH;
-    this.add.rectangle(width / 2, y, 460, 100, 0x145a73).setStrokeStyle(2, 0x0c3446);
+    const bg = this.add.rectangle(width / 2, y, 460, 100, 0x145a73).setStrokeStyle(2, 0x0c3446);
     const icon = this.add.graphics();
     const drawer = BAIT_ICON_DRAWERS[bait.id];
     if (drawer) drawer(icon, width / 2 - 175, y);
-    this.add.text(width / 2 - 120, y - 18, bait.name, label('20px')).setOrigin(0, 0.5);
-    this.add
+    const nameText = this.add.text(width / 2 - 120, y - 18, bait.name, label('20px')).setOrigin(0, 0.5);
+    const costText = this.add
       .text(width / 2 - 120, y + 12, `${bait.packSize} for $${bait.cost}`, label('15px', { color: '#bfe9ff' }))
       .setOrigin(0, 0.5);
-    createBubbleButton(this, width / 2 + 155, y, 120, 50, 'Buy', () => this.buyBait(bait), { fontSize: '18px' });
+    if (container) container.add([bg, icon, nameText, costText]);
+    createBubbleButton(this, width / 2 + 155, y, 120, 50, 'Buy', () => this.buyBait(bait), { fontSize: '18px', container });
   }
 
-  buildCratePanel(y) {
+  buildCratePanel(y, container) {
     const width = DESIGN_WIDTH;
-    this.add.rectangle(width / 2, y, 460, 80, 0x145a73).setStrokeStyle(2, 0x0c3446);
+    const bg = this.add.rectangle(width / 2, y, 460, 80, 0x145a73).setStrokeStyle(2, 0x0c3446);
     const icon = this.add.graphics();
     drawCrateIcon(icon, width / 2 - 175, y, 1.0);
-    this.add.text(width / 2 - 120, y - 10, 'Bait Crate', label('18px')).setOrigin(0, 0.5);
-    this.add.text(width / 2 - 120, y + 13, 'Roll an Item', label('12px', { color: '#bfe9ff' })).setOrigin(0, 0.5);
+    const nameText = this.add.text(width / 2 - 120, y - 10, 'Bait Crate', label('18px')).setOrigin(0, 0.5);
+    const subText = this.add.text(width / 2 - 120, y + 13, 'Roll an Item', label('12px', { color: '#bfe9ff' })).setOrigin(0, 0.5);
+    if (container) container.add([bg, icon, nameText, subText]);
     this.crateOpenBtn = createBubbleButton(this, width / 2 + 155, y, 120, 42, `Open - $${CRATE_COST}`, () => this.openCrate(), {
-      fontSize: '13px'
+      fontSize: '13px',
+      container
     });
     if (GameState.coins < CRATE_COST) this.crateOpenBtn.setEnabled(false);
   }
@@ -730,13 +775,16 @@ export default class ShopScene extends Phaser.Scene {
   // drawHookCrateIcon below) and its own panel tint, so it visually reads
   // as a different object from the plain wooden Bait Crate above, not just
   // a relabelled copy - own cost constant, own odds, own GameState call.
-  buildHookCratePanel(y) {
+  buildHookCratePanel(y, container) {
     const width = DESIGN_WIDTH;
-    this.add.rectangle(width / 2, y, 460, 80, 0x0c2430).setStrokeStyle(2, 0x1f4a58);
+    const bg = this.add.rectangle(width / 2, y, 460, 80, 0x0c2430).setStrokeStyle(2, 0x1f4a58);
     const icon = this.add.graphics();
     drawHookCrateIcon(icon, width / 2 - 175, y, 1.0);
-    this.add.text(width / 2 - 120, y - 10, 'Hook Crate', label('18px')).setOrigin(0, 0.5);
-    this.add.text(width / 2 - 120, y + 13, 'Roll a Hook', label('12px', { color: '#7fe8e0' })).setOrigin(0, 0.5);
+    const nameText = this.add.text(width / 2 - 120, y - 10, 'Hook Crate', label('18px')).setOrigin(0, 0.5);
+    const subText = this.add
+      .text(width / 2 - 120, y + 13, 'Roll a Hook', label('12px', { color: '#7fe8e0' }))
+      .setOrigin(0, 0.5);
+    if (container) container.add([bg, icon, nameText, subText]);
     this.hookCrateOpenBtn = createBubbleButton(
       this,
       width / 2 + 155,
@@ -745,7 +793,7 @@ export default class ShopScene extends Phaser.Scene {
       42,
       `Open - $${HOOK_CRATE_COST}`,
       () => this.openHookCrate(),
-      { fontSize: '13px' }
+      { fontSize: '13px', container }
     );
     if (GameState.coins < HOOK_CRATE_COST) this.hookCrateOpenBtn.setEnabled(false);
   }
