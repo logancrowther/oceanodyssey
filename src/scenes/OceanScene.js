@@ -2125,6 +2125,37 @@ const REEL_UP_MAX_MS = 2200;
 const REEL_UP_MS_PER_PX = 0.4;
 const HOOK_DROP_MS = 700;
 
+// The reel-in minigame (see startMinigame/updateMinigame/redrawMinigame) -
+// fires the moment a real fish reaches CATCH_RADIUS instead of an instant
+// catch (the Old Boot is exempt - it's not alive, so it's still a plain
+// snag). Hold the mouse/touch down to raise the player's own bar, release
+// it to let gravity pull it back down; the fish's bar wanders on its own
+// within the same track. Every tick the two overlap fills the progress
+// meter above the track a little, every tick they don't drains it a
+// little - a full meter reels the catch in for real, an empty one lets it
+// get away.
+const MINIGAME_TRACK_TOP = 180;
+const MINIGAME_TRACK_BOTTOM = 530;
+const MINIGAME_TRACK_W = 54;
+const MINIGAME_START_PROGRESS = 0.45;
+const MINIGAME_FILL_RATE = 0.5; // progress/sec while overlapping
+const MINIGAME_PLAYER_RISE_PX = 620; // px/sec while held
+const MINIGAME_PLAYER_FALL_PX = 420; // px/sec while released
+// Difficulty is driven by the same per-species difficultyMultiplier
+// FISH already carries (fishData.js) - originally a reel-fight stat from
+// before this minigame existed, repurposed as a spook-wariness factor in
+// the meantime (see updateSwimmers), now doing double duty as this
+// minigame's own difficulty knob too: the tougher a fish already is to
+// hook without spooking, the tougher it is to actually land here as well.
+// Clamped against the roster's real min/max (~0.6-5.0) so the curve
+// always spans the full easy<->hard range.
+const MINIGAME_DIFF_MIN = 0.6;
+const MINIGAME_DIFF_MAX = 5.0;
+
+function minigameDifficultyT(difficultyMultiplier) {
+  return Phaser.Math.Clamp((difficultyMultiplier - MINIGAME_DIFF_MIN) / (MINIGAME_DIFF_MAX - MINIGAME_DIFF_MIN), 0, 1);
+}
+
 function lerpColor(colorA, colorB, t) {
   const a = Phaser.Display.Color.IntegerToColor(colorA);
   const b = Phaser.Display.Color.IntegerToColor(colorB);
@@ -2228,6 +2259,9 @@ export default class OceanScene extends Phaser.Scene {
     this.pointerActive = false;
     this.pointerTargetX = this.hook.x;
     this.pointerTargetY = this.hook.y;
+    // Reel-in minigame state (see startMinigame/updateMinigame below) -
+    // null whenever nothing's currently on the hook fighting.
+    this.minigame = null;
 
     this.worldContainer = this.add.container(0, 0);
 
@@ -2257,6 +2291,10 @@ export default class OceanScene extends Phaser.Scene {
     this.worldContainer.add(this.fishG);
     this.hookG = this.add.graphics();
     this.worldContainer.add(this.hookG);
+    // Fixed-to-screen like the rest of the HUD (not added to
+    // worldContainer) - the minigame track/bars overlay the whole scene
+    // rather than scrolling with depth.
+    this.minigameG = this.add.graphics();
 
     this.statusBar = addStatusBar(this, GameState);
     this.depthText = this.add.text(34, 118, '', label('14px', { color: '#bfe9ff' }));
@@ -2656,7 +2694,13 @@ export default class OceanScene extends Phaser.Scene {
       f.y = Phaser.Math.Clamp(f.y, this.depthOrigin, this.depthOrigin + this.maxDepthPx);
 
       if (f.state === 'attracted' && dist < CATCH_RADIUS) {
-        this.catchFish(f);
+        // The Old Boot isn't alive - it's still a plain instant snag, not
+        // something that fights back on the line.
+        if (f.isBoot) {
+          this.catchFish(f);
+        } else {
+          this.startMinigame(f);
+        }
         this.swimmers.splice(i, 1);
         continue;
       }
@@ -2665,6 +2709,140 @@ export default class OceanScene extends Phaser.Scene {
         this.swimmers.splice(i, 1);
       }
     }
+  }
+
+  // Starts the reel-in minigame the instant a real fish reaches the hook,
+  // instead of catchFish firing immediately - see the MINIGAME_* constants
+  // above for the whole mechanic. The fish itself rides on the hook (see
+  // redrawFishAndHook's landedCatch branch, whose shake is amplified while
+  // this.phase === 'minigame') exactly like a genuine catch already would,
+  // so calling catchFish(f) again on success just replays that same tail
+  // end of the normal flow.
+  startMinigame(f) {
+    this.phase = 'minigame';
+    if (this.spawnTimer) this.spawnTimer.remove(false);
+
+    const info = getCatchable(f.itemId);
+    const weightKg = Math.round(info.baseWeightKg * f.sizeRoll * 10) / 10;
+    this.landedCatch = { itemId: f.itemId, weightKg };
+
+    const diffT = minigameDifficultyT(info.difficultyMultiplier || 1);
+    const playerBarH = Phaser.Math.Linear(150, 62, diffT);
+    const fishSpeed = Phaser.Math.Linear(90, 260, diffT);
+    const fishRetargetMs = Phaser.Math.Linear(900, 380, diffT);
+    const drainRate = Phaser.Math.Linear(0.22, 0.5, diffT);
+
+    this.minigame = {
+      fish: f,
+      playerY: MINIGAME_TRACK_BOTTOM - playerBarH / 2,
+      fishY: Phaser.Math.Between(MINIGAME_TRACK_TOP + 40, MINIGAME_TRACK_BOTTOM - 40),
+      fishTargetY: Phaser.Math.Between(MINIGAME_TRACK_TOP + 40, MINIGAME_TRACK_BOTTOM - 40),
+      fishSpeed,
+      fishRetargetMs,
+      fishRetargetTimer: fishRetargetMs,
+      playerBarH,
+      progress: MINIGAME_START_PROGRESS,
+      drainRate
+    };
+  }
+
+  updateMinigame(deltaMs) {
+    const m = this.minigame;
+    if (!m) return;
+    const dt = deltaMs / 1000;
+
+    const held = this.input.activePointer.isDown;
+    m.playerY += (held ? -MINIGAME_PLAYER_RISE_PX : MINIGAME_PLAYER_FALL_PX) * dt;
+    // Clamped so the bar's own edges stay inside the track, not just its
+    // center point - otherwise it visibly pokes out past the top/bottom
+    // whenever it's pinned at either extreme.
+    m.playerY = Phaser.Math.Clamp(
+      m.playerY,
+      MINIGAME_TRACK_TOP + m.playerBarH / 2,
+      MINIGAME_TRACK_BOTTOM - m.playerBarH / 2
+    );
+
+    // The fish's own bar wanders to a fresh random point on its own timer
+    // (or the instant it actually reaches its current one) - faster picks
+    // and a higher speed for a tougher fish (see startMinigame) is what
+    // makes the harder ones feel genuinely erratic rather than just slow.
+    m.fishRetargetTimer -= deltaMs;
+    if (m.fishRetargetTimer <= 0 || Math.abs(m.fishY - m.fishTargetY) < 4) {
+      m.fishTargetY = Phaser.Math.Between(MINIGAME_TRACK_TOP + 20, MINIGAME_TRACK_BOTTOM - 20);
+      m.fishRetargetTimer = m.fishRetargetMs;
+    }
+    const fishDir = Math.sign(m.fishTargetY - m.fishY);
+    m.fishY += fishDir * m.fishSpeed * dt;
+
+    const overlapping = Math.abs(m.fishY - m.playerY) <= m.playerBarH / 2;
+    m.progress = Phaser.Math.Clamp(m.progress + (overlapping ? MINIGAME_FILL_RATE : -m.drainRate) * dt, 0, 1);
+
+    if (m.progress >= 1) {
+      this.finishMinigame(true);
+    } else if (m.progress <= 0) {
+      this.finishMinigame(false);
+    }
+  }
+
+  finishMinigame(success) {
+    const f = this.minigame.fish;
+    this.minigame = null;
+    if (success) {
+      this.catchFish(f);
+    } else {
+      this.landedCatch = null;
+      this.phase = 'playing';
+      this.messageText.setText('It got away!');
+      this.time.delayedCall(1400, () => this.messageText.setText(''));
+      this.scheduleSpawn();
+    }
+  }
+
+  redrawMinigame() {
+    const g = this.minigameG;
+    g.clear();
+    const m = this.minigame;
+    if (this.phase !== 'minigame' || !m) return;
+
+    const trackX = DESIGN_WIDTH / 2;
+    const trackW = MINIGAME_TRACK_W;
+    const trackTop = MINIGAME_TRACK_TOP;
+    const trackBottom = MINIGAME_TRACK_BOTTOM;
+
+    g.fillStyle(0x02121c, 0.75);
+    g.fillRoundedRect(trackX - trackW / 2, trackTop, trackW, trackBottom - trackTop, 10);
+    g.lineStyle(2, 0x0c3446, 0.9);
+    g.strokeRoundedRect(trackX - trackW / 2, trackTop, trackW, trackBottom - trackTop, 10);
+
+    const overlapping = Math.abs(m.fishY - m.playerY) <= m.playerBarH / 2;
+
+    // The player's own bar - green while it's actually over the fish,
+    // blue otherwise, so the moment-to-moment feedback reads at a glance.
+    const barTop = m.playerY - m.playerBarH / 2;
+    g.fillStyle(overlapping ? 0x4ad991 : 0x4fb8e8, 0.55);
+    g.fillRoundedRect(trackX - trackW / 2 + 3, barTop, trackW - 6, m.playerBarH, 6);
+    g.lineStyle(2, overlapping ? 0x2e8a5e : 0x2b6f94, 0.95);
+    g.strokeRoundedRect(trackX - trackW / 2 + 3, barTop, trackW - 6, m.playerBarH, 6);
+
+    // The fish's own marker, drawn on top of the player's bar so it never
+    // disappears underneath it.
+    g.fillStyle(0xffb74a, 1);
+    g.fillCircle(trackX, m.fishY, 7);
+    g.lineStyle(1.5, 0x7a4a10, 0.9);
+    g.strokeCircle(trackX, m.fishY, 7);
+
+    // The progress meter, above the track - fills as the player keeps
+    // landing on the fish, drains when they miss it.
+    const pbX = trackX;
+    const pbY = 150;
+    const pbW = 280;
+    const pbH = 18;
+    g.fillStyle(0x02121c, 0.75);
+    g.fillRoundedRect(pbX - pbW / 2, pbY, pbW, pbH, 8);
+    g.fillStyle(0x4ad991, 0.95);
+    g.fillRoundedRect(pbX - pbW / 2 + 2, pbY + 2, Math.max(0, (pbW - 4) * m.progress), pbH - 4, 6);
+    g.lineStyle(2, 0x0c3446, 0.9);
+    g.strokeRoundedRect(pbX - pbW / 2, pbY, pbW, pbH, 8);
   }
 
   // Whatever's biting gets reeled straight up off the top of the screen
@@ -2799,7 +2977,16 @@ export default class OceanScene extends Phaser.Scene {
       hg.lineTo(this.hook.x, this.hook.y);
       hg.strokePath();
 
-      const dangle = Math.sin(this.waveT * 3) * 0.15;
+      // A fish actively fighting the reel-in minigame shakes hard on the
+      // line - much faster and wider than the gentle idle sway a landed
+      // catch gets on its way up, plus a bit of real positional jitter on
+      // top of the rotation so it genuinely looks like it's struggling.
+      const fighting = this.phase === 'minigame';
+      const dangle = fighting
+        ? Math.sin(this.waveT * 22) * 0.5 + Math.sin(this.waveT * 37) * 0.22
+        : Math.sin(this.waveT * 3) * 0.15;
+      const shakeX = fighting ? Math.sin(this.waveT * 41) * 3 : 0;
+      const shakeY = fighting ? Math.cos(this.waveT * 53) * 2 : 0;
       if (this.landedCatch && DRAWERS[this.landedCatch.itemId]) {
         // Whatever just got caught rides up on the hook during the reel-in,
         // instead of the bait that was there before it bit. Uses its own
@@ -2812,7 +2999,7 @@ export default class OceanScene extends Phaser.Scene {
         const lc = this.landedCatch;
         const reelScale = SWIM_SCALE[lc.itemId] ?? BAIT_HOOK_SCALE[lc.itemId] ?? 0.4;
         const scale = reelScale * Phaser.Math.Clamp(lc.weightKg / (getCatchable(lc.itemId).baseWeightKg || 1), 0.55, 1.9);
-        DRAWERS[lc.itemId](hg, this.hook.x + 2, this.hook.y + 1, scale, dangle, 1);
+        DRAWERS[lc.itemId](hg, this.hook.x + 2 + shakeX, this.hook.y + 1 + shakeY, scale, dangle, 1);
       } else {
         const baitId = GameState.equippedBait;
         if (baitId && DRAWERS[baitId]) {
@@ -2896,6 +3083,8 @@ export default class OceanScene extends Phaser.Scene {
         this.currentZone = zone;
         this.showZoneBanner(zone);
       }
+    } else if (this.phase === 'minigame') {
+      this.updateMinigame(deltaMs);
     }
 
     // Everything "underwater" (sky/sea/water tint/fish/hook) lives in
@@ -2907,5 +3096,6 @@ export default class OceanScene extends Phaser.Scene {
 
     this.redrawWaterTint();
     this.redrawFishAndHook();
+    this.redrawMinigame();
   }
 }
