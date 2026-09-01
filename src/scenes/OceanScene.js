@@ -2128,19 +2128,21 @@ const HOOK_DROP_MS = 700;
 // The reel-in minigame (see startMinigame/updateMinigame/redrawMinigame) -
 // fires the moment a real fish reaches CATCH_RADIUS instead of an instant
 // catch (the Old Boot is exempt - it's not alive, so it's still a plain
-// snag). Hold the mouse/touch down to raise the player's own bar, release
-// it to let gravity pull it back down; the fish's bar wanders on its own
-// within the same track. Every tick the two overlap fills the progress
-// meter above the track a little, every tick they don't drains it a
-// little - a full meter reels the catch in for real, an empty one lets it
-// get away.
-const MINIGAME_TRACK_TOP = 180;
-const MINIGAME_TRACK_BOTTOM = 530;
-const MINIGAME_TRACK_W = 54;
+// snag). A compact horizontal bar: hold the mouse/touch down to push the
+// player's own bar forward (right), release it to let it drift back
+// (left); the fish's bar wanders left-right on its own within the same
+// track. Every tick the two overlap fills the progress meter above the
+// track a little, every tick they don't drains it a little - a full
+// meter reels the catch in for real, an empty one lets it get away.
+const MINIGAME_TRACK_Y = 300;
+const MINIGAME_TRACK_LEN = 210;
+const MINIGAME_TRACK_LEFT = DESIGN_WIDTH / 2 - MINIGAME_TRACK_LEN / 2;
+const MINIGAME_TRACK_RIGHT = DESIGN_WIDTH / 2 + MINIGAME_TRACK_LEN / 2;
+const MINIGAME_TRACK_THICKNESS = 30;
 const MINIGAME_START_PROGRESS = 0.45;
 const MINIGAME_FILL_RATE = 0.5; // progress/sec while overlapping
-const MINIGAME_PLAYER_RISE_PX = 620; // px/sec while held
-const MINIGAME_PLAYER_FALL_PX = 420; // px/sec while released
+const MINIGAME_PLAYER_FORWARD_PX = 370; // px/sec while held
+const MINIGAME_PLAYER_BACK_PX = 260; // px/sec while released
 // Difficulty is driven by the same per-species difficultyMultiplier
 // FISH already carries (fishData.js) - originally a reel-fight stat from
 // before this minigame existed, repurposed as a spook-wariness factor in
@@ -2295,6 +2297,10 @@ export default class OceanScene extends Phaser.Scene {
     // worldContainer) - the minigame track/bars overlay the whole scene
     // rather than scrolling with depth.
     this.minigameG = this.add.graphics();
+    this.minigameHintText = this.add
+      .text(0, 0, 'Hold to Reel!', label('13px', { color: '#bfe9ff' }))
+      .setOrigin(0.5, 1)
+      .setVisible(false);
 
     this.statusBar = addStatusBar(this, GameState);
     this.depthText = this.add.text(34, 118, '', label('14px', { color: '#bfe9ff' }));
@@ -2727,22 +2733,26 @@ export default class OceanScene extends Phaser.Scene {
     this.landedCatch = { itemId: f.itemId, weightKg };
 
     const diffT = minigameDifficultyT(info.difficultyMultiplier || 1);
-    const playerBarH = Phaser.Math.Linear(150, 62, diffT);
-    const fishSpeed = Phaser.Math.Linear(90, 260, diffT);
+    const playerBarW = Phaser.Math.Linear(105, 44, diffT);
+    const fishSpeed = Phaser.Math.Linear(70, 190, diffT);
     const fishRetargetMs = Phaser.Math.Linear(900, 380, diffT);
     const drainRate = Phaser.Math.Linear(0.22, 0.5, diffT);
 
     this.minigame = {
       fish: f,
-      playerY: MINIGAME_TRACK_BOTTOM - playerBarH / 2,
-      fishY: Phaser.Math.Between(MINIGAME_TRACK_TOP + 40, MINIGAME_TRACK_BOTTOM - 40),
-      fishTargetY: Phaser.Math.Between(MINIGAME_TRACK_TOP + 40, MINIGAME_TRACK_BOTTOM - 40),
+      playerX: MINIGAME_TRACK_LEFT + playerBarW / 2,
+      fishX: Phaser.Math.Between(MINIGAME_TRACK_LEFT + 30, MINIGAME_TRACK_RIGHT - 30),
+      fishTargetX: Phaser.Math.Between(MINIGAME_TRACK_LEFT + 30, MINIGAME_TRACK_RIGHT - 30),
       fishSpeed,
       fishRetargetMs,
       fishRetargetTimer: fishRetargetMs,
-      playerBarH,
+      playerBarW,
       progress: MINIGAME_START_PROGRESS,
-      drainRate
+      drainRate,
+      // Whether the player has ever actually held the button down yet -
+      // gates the "Hold to Reel!" hint (see redrawMinigame), which only
+      // ever needs to show once, right at the start.
+      everHeld: false
     };
   }
 
@@ -2752,14 +2762,15 @@ export default class OceanScene extends Phaser.Scene {
     const dt = deltaMs / 1000;
 
     const held = this.input.activePointer.isDown;
-    m.playerY += (held ? -MINIGAME_PLAYER_RISE_PX : MINIGAME_PLAYER_FALL_PX) * dt;
+    if (held) m.everHeld = true;
+    m.playerX += (held ? MINIGAME_PLAYER_FORWARD_PX : -MINIGAME_PLAYER_BACK_PX) * dt;
     // Clamped so the bar's own edges stay inside the track, not just its
-    // center point - otherwise it visibly pokes out past the top/bottom
-    // whenever it's pinned at either extreme.
-    m.playerY = Phaser.Math.Clamp(
-      m.playerY,
-      MINIGAME_TRACK_TOP + m.playerBarH / 2,
-      MINIGAME_TRACK_BOTTOM - m.playerBarH / 2
+    // center point - otherwise it visibly pokes out past either end
+    // whenever it's pinned at an extreme.
+    m.playerX = Phaser.Math.Clamp(
+      m.playerX,
+      MINIGAME_TRACK_LEFT + m.playerBarW / 2,
+      MINIGAME_TRACK_RIGHT - m.playerBarW / 2
     );
 
     // The fish's own bar wanders to a fresh random point on its own timer
@@ -2767,14 +2778,14 @@ export default class OceanScene extends Phaser.Scene {
     // and a higher speed for a tougher fish (see startMinigame) is what
     // makes the harder ones feel genuinely erratic rather than just slow.
     m.fishRetargetTimer -= deltaMs;
-    if (m.fishRetargetTimer <= 0 || Math.abs(m.fishY - m.fishTargetY) < 4) {
-      m.fishTargetY = Phaser.Math.Between(MINIGAME_TRACK_TOP + 20, MINIGAME_TRACK_BOTTOM - 20);
+    if (m.fishRetargetTimer <= 0 || Math.abs(m.fishX - m.fishTargetX) < 4) {
+      m.fishTargetX = Phaser.Math.Between(MINIGAME_TRACK_LEFT + 20, MINIGAME_TRACK_RIGHT - 20);
       m.fishRetargetTimer = m.fishRetargetMs;
     }
-    const fishDir = Math.sign(m.fishTargetY - m.fishY);
-    m.fishY += fishDir * m.fishSpeed * dt;
+    const fishDir = Math.sign(m.fishTargetX - m.fishX);
+    m.fishX += fishDir * m.fishSpeed * dt;
 
-    const overlapping = Math.abs(m.fishY - m.playerY) <= m.playerBarH / 2;
+    const overlapping = Math.abs(m.fishX - m.playerX) <= m.playerBarW / 2;
     m.progress = Phaser.Math.Clamp(m.progress + (overlapping ? MINIGAME_FILL_RATE : -m.drainRate) * dt, 0, 1);
 
     if (m.progress >= 1) {
@@ -2787,6 +2798,7 @@ export default class OceanScene extends Phaser.Scene {
   finishMinigame(success) {
     const f = this.minigame.fish;
     this.minigame = null;
+    this.minigameHintText.setVisible(false);
     if (success) {
       this.catchFish(f);
     } else {
@@ -2802,47 +2814,74 @@ export default class OceanScene extends Phaser.Scene {
     const g = this.minigameG;
     g.clear();
     const m = this.minigame;
-    if (this.phase !== 'minigame' || !m) return;
+    if (this.phase !== 'minigame' || !m) {
+      this.minigameHintText.setVisible(false);
+      return;
+    }
 
-    const trackX = DESIGN_WIDTH / 2;
-    const trackW = MINIGAME_TRACK_W;
-    const trackTop = MINIGAME_TRACK_TOP;
-    const trackBottom = MINIGAME_TRACK_BOTTOM;
+    const trackY = MINIGAME_TRACK_Y;
+    const trackLeft = MINIGAME_TRACK_LEFT;
+    const trackLen = MINIGAME_TRACK_RIGHT - MINIGAME_TRACK_LEFT;
+    const th = MINIGAME_TRACK_THICKNESS;
+    const r = th / 2;
 
-    g.fillStyle(0x02121c, 0.75);
-    g.fillRoundedRect(trackX - trackW / 2, trackTop, trackW, trackBottom - trackTop, 10);
-    g.lineStyle(2, 0x0c3446, 0.9);
-    g.strokeRoundedRect(trackX - trackW / 2, trackTop, trackW, trackBottom - trackTop, 10);
+    // Track background - a full pill shape rather than a plain rounded
+    // rect, so both ends read as smooth caps instead of square corners.
+    g.fillStyle(0x02121c, 0.78);
+    g.fillRoundedRect(trackLeft, trackY - r, trackLen, th, r);
+    g.lineStyle(2, 0x0c3446, 0.95);
+    g.strokeRoundedRect(trackLeft, trackY - r, trackLen, th, r);
 
-    const overlapping = Math.abs(m.fishY - m.playerY) <= m.playerBarH / 2;
+    const overlapping = Math.abs(m.fishX - m.playerX) <= m.playerBarW / 2;
+
+    // A soft pulsing glow behind the player's bar while it's actually
+    // sitting on the fish - the clearest possible "you're doing it right"
+    // signal, on top of the colour swap below.
+    if (overlapping) {
+      const pulse = 0.3 + Math.sin(this.waveT * 10) * 0.15;
+      g.fillStyle(0x4ad991, pulse);
+      g.fillRoundedRect(m.playerX - m.playerBarW / 2 - 6, trackY - r - 6, m.playerBarW + 12, th + 12, r + 6);
+    }
 
     // The player's own bar - green while it's actually over the fish,
     // blue otherwise, so the moment-to-moment feedback reads at a glance.
-    const barTop = m.playerY - m.playerBarH / 2;
-    g.fillStyle(overlapping ? 0x4ad991 : 0x4fb8e8, 0.55);
-    g.fillRoundedRect(trackX - trackW / 2 + 3, barTop, trackW - 6, m.playerBarH, 6);
-    g.lineStyle(2, overlapping ? 0x2e8a5e : 0x2b6f94, 0.95);
-    g.strokeRoundedRect(trackX - trackW / 2 + 3, barTop, trackW - 6, m.playerBarH, 6);
+    const innerH = th - 8;
+    g.fillStyle(overlapping ? 0x4ad991 : 0x4fb8e8, 0.9);
+    g.fillRoundedRect(m.playerX - m.playerBarW / 2, trackY - innerH / 2, m.playerBarW, innerH, innerH / 2);
+    g.lineStyle(2, overlapping ? 0x2e8a5e : 0x2b6f94, 1);
+    g.strokeRoundedRect(m.playerX - m.playerBarW / 2, trackY - innerH / 2, m.playerBarW, innerH, innerH / 2);
 
-    // The fish's own marker, drawn on top of the player's bar so it never
+    // The fish's own marker - a soft layered glow behind a bright core,
+    // the same "glow" convention the rest of this game's own art already
+    // uses (see tackle.js), drawn on top of the player's bar so it never
     // disappears underneath it.
+    g.fillStyle(0xffb74a, 0.22);
+    g.fillCircle(m.fishX, trackY, 11);
+    g.fillStyle(0xffb74a, 0.45);
+    g.fillCircle(m.fishX, trackY, 8);
     g.fillStyle(0xffb74a, 1);
-    g.fillCircle(trackX, m.fishY, 7);
+    g.fillCircle(m.fishX, trackY, 5);
     g.lineStyle(1.5, 0x7a4a10, 0.9);
-    g.strokeCircle(trackX, m.fishY, 7);
+    g.strokeCircle(m.fishX, trackY, 5);
 
     // The progress meter, above the track - fills as the player keeps
     // landing on the fish, drains when they miss it.
-    const pbX = trackX;
-    const pbY = 150;
-    const pbW = 280;
-    const pbH = 18;
-    g.fillStyle(0x02121c, 0.75);
-    g.fillRoundedRect(pbX - pbW / 2, pbY, pbW, pbH, 8);
+    const pbX = DESIGN_WIDTH / 2;
+    const pbY = trackY - 55;
+    const pbW = 190;
+    const pbH = 14;
+    const pbR = pbH / 2;
+    g.fillStyle(0x02121c, 0.78);
+    g.fillRoundedRect(pbX - pbW / 2, pbY, pbW, pbH, pbR);
     g.fillStyle(0x4ad991, 0.95);
-    g.fillRoundedRect(pbX - pbW / 2 + 2, pbY + 2, Math.max(0, (pbW - 4) * m.progress), pbH - 4, 6);
-    g.lineStyle(2, 0x0c3446, 0.9);
-    g.strokeRoundedRect(pbX - pbW / 2, pbY, pbW, pbH, 8);
+    g.fillRoundedRect(pbX - pbW / 2 + 2, pbY + 2, Math.max(0, (pbW - 4) * m.progress), pbH - 4, pbR - 2);
+    g.lineStyle(2, 0x0c3446, 0.95);
+    g.strokeRoundedRect(pbX - pbW / 2, pbY, pbW, pbH, pbR);
+
+    // A brief "Hold to Reel!" hint the first time - gone for good the
+    // moment the player actually holds down once.
+    this.minigameHintText.setPosition(pbX, pbY - 20);
+    this.minigameHintText.setVisible(!m.everHeld);
   }
 
   // Whatever's biting gets reeled straight up off the top of the screen
