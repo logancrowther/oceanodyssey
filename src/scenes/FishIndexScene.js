@@ -150,10 +150,13 @@ export default class FishIndexScene extends Phaser.Scene {
       ? this.allItems.filter((item) => GameState.isDiscovered(item.itemId) && item.name.toLowerCase().includes(query))
       : this.allItems;
 
-    if (this.showAbyssOnly) {
-      const abyssIds = new Set(ABYSS_SPECIES);
-      items = items.filter((item) => abyssIds.has(item.itemId));
-    }
+    // The Abyss (see ABYSS_SPECIES above) only ever shows up in its own
+    // dedicated view now - the normal index excludes it entirely rather
+    // than folding it in as a section up top.
+    const abyssIds = new Set(ABYSS_SPECIES);
+    items = this.showAbyssOnly
+      ? items.filter((item) => abyssIds.has(item.itemId))
+      : items.filter((item) => !abyssIds.has(item.itemId));
 
     if (items.length === 0) {
       this.maxScroll = 0;
@@ -169,14 +172,6 @@ export default class FishIndexScene extends Phaser.Scene {
     this.gridContainer = this.add.container(0, 0);
     const gridWidth = COLS * CELL_W;
     const startX = (width - gridWidth) / 2 + CELL_W / 2;
-
-    // The Abyss (see ABYSS_SPECIES above) gets its own labelled block up
-    // top, then everything else follows below in the usual value-sorted
-    // grid - both drawn with the same buildCell, just laid out as two
-    // sections back to back rather than one flat list.
-    const abyssIds = new Set(ABYSS_SPECIES);
-    const abyssItems = items.filter((item) => abyssIds.has(item.itemId));
-    const restItems = items.filter((item) => !abyssIds.has(item.itemId));
 
     let cursorY = VIEWPORT_TOP;
     const layoutSection = (title, sectionItems) => {
@@ -199,8 +194,7 @@ export default class FishIndexScene extends Phaser.Scene {
       cursorY += rows * CELL_H + 16;
     };
 
-    layoutSection('The Abyss — 1000m+', abyssItems);
-    layoutSection(null, restItems);
+    layoutSection(this.showAbyssOnly ? 'The Abyss — 1000m+' : null, items);
 
     const contentHeight = cursorY - VIEWPORT_TOP;
     this.maxScroll = Math.max(0, contentHeight - viewportHeight);
