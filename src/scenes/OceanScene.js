@@ -2140,7 +2140,10 @@ const MINIGAME_TRACK_LEFT = DESIGN_WIDTH / 2 - MINIGAME_TRACK_LEN / 2;
 const MINIGAME_TRACK_RIGHT = DESIGN_WIDTH / 2 + MINIGAME_TRACK_LEN / 2;
 const MINIGAME_TRACK_THICKNESS = 30;
 const MINIGAME_START_PROGRESS = 0.45;
-const MINIGAME_FILL_RATE = 0.5; // progress/sec while overlapping
+// Slow enough that even a perfect run takes several real seconds of
+// sustained overlap, not one or two - a genuine fight rather than an
+// instant tap.
+const MINIGAME_FILL_RATE = 0.15; // progress/sec while overlapping
 const MINIGAME_PLAYER_FORWARD_PX = 600; // px/sec while held
 const MINIGAME_PLAYER_BACK_PX = 420; // px/sec while released
 // Difficulty is driven by the same per-species difficultyMultiplier
@@ -2736,7 +2739,11 @@ export default class OceanScene extends Phaser.Scene {
     const playerBarW = Phaser.Math.Linear(66, 24, diffT);
     const fishSpeed = Phaser.Math.Linear(115, 310, diffT);
     const fishRetargetMs = Phaser.Math.Linear(900, 380, diffT);
-    const drainRate = Phaser.Math.Linear(0.22, 0.5, diffT);
+    // Scaled down to match MINIGAME_FILL_RATE's own slower pace, at the
+    // same easy<->hard ratio the old numbers had (roughly 0.44x fill rate
+    // up to a full 1x - a miss against the toughest fish cancels out
+    // overlap time just as fast as it was gained).
+    const drainRate = Phaser.Math.Linear(0.066, 0.15, diffT);
 
     this.minigame = {
       fish: f,
