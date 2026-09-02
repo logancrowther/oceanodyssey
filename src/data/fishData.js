@@ -2111,6 +2111,233 @@ export const FISH = [
     baits: ['prawn', 'squid']
   },
   {
+    id: 'giant_oarfish',
+    name: 'Giant Oarfish',
+    // The single longest, most serpentine real fish in the ocean - a
+    // genuine "sea serpent" by real reputation. Only turns up past 1000m
+    // (see OceanScene.DEPTH_LIMITS/ABYSS_ONLY_SPECIES), and priced as the
+    // most valuable of the whole Abyss roster short of the Kraken itself.
+    baseWeightKg: 200,
+    valuePerKg: 2.5,
+    turnsRequired: 2.6,
+    rarity: 'legendary',
+    difficultyMultiplier: 2.8,
+    baits: ['prawn', 'squid']
+  },
+  {
+    id: 'pacific_blackdragon',
+    name: 'Pacific Blackdragon',
+    // A stockier, deep maroon-black cousin of the Dragonfish - real
+    // females run much bulkier than the tiny vestigial males.
+    baseWeightKg: 0.3,
+    valuePerKg: 600,
+    turnsRequired: 2.3,
+    rarity: 'epic',
+    difficultyMultiplier: 1.8,
+    baits: ['prawn', 'squid']
+  },
+  {
+    id: 'viperfish',
+    name: 'Viperfish',
+    // Unmistakable for a humped back and huge curved fangs so long the
+    // jaw can never fully close over them.
+    baseWeightKg: 0.1,
+    valuePerKg: 1500,
+    turnsRequired: 2.2,
+    rarity: 'epic',
+    difficultyMultiplier: 1.7,
+    baits: ['prawn', 'squid']
+  },
+  {
+    id: 'giant_grenadier',
+    name: 'Giant Grenadier',
+    // The biggest of the Abyss's own four grenadiers - a big blunt head
+    // tapering into one long whip-thin "rattail", the family's own
+    // namesake body plan.
+    baseWeightKg: 20,
+    valuePerKg: 7,
+    turnsRequired: 2.4,
+    rarity: 'epic',
+    difficultyMultiplier: 1.6,
+    baits: ['prawn', 'squid']
+  },
+  {
+    id: 'stoplight_loosejaw',
+    name: 'Stoplight Loosejaw',
+    // Same hinge-less lower jaw as the plain Loosejaw, but the real
+    // animal's own namesake feature: two adjacent photophores, one red,
+    // one blue-green, like a tiny stoplight.
+    baseWeightKg: 0.08,
+    valuePerKg: 1600,
+    turnsRequired: 2.1,
+    rarity: 'epic',
+    difficultyMultiplier: 1.6,
+    baits: ['prawn', 'squid']
+  },
+  {
+    id: 'black_dragonfish',
+    name: 'Black Dragonfish',
+    // An even thinner, jet-black cousin of the Dragonfish, with a cool
+    // blue-white barbel lure instead of red.
+    baseWeightKg: 0.05,
+    valuePerKg: 2400,
+    turnsRequired: 2.2,
+    rarity: 'epic',
+    difficultyMultiplier: 1.5,
+    baits: ['prawn', 'squid']
+  },
+  {
+    id: 'barreleye_fish',
+    name: 'Barreleye Fish',
+    // One of the strangest living things in the ocean: a transparent,
+    // fluid-filled dome over the head, with two barrel-shaped eyes
+    // visible inside it.
+    baseWeightKg: 0.15,
+    valuePerKg: 730,
+    turnsRequired: 2.1,
+    rarity: 'epic',
+    difficultyMultiplier: 1.5,
+    baits: ['prawn', 'squid']
+  },
+  {
+    id: 'telescopefish',
+    name: 'Telescopefish',
+    // Two rigid, forward-pointing tubular eyes, like a pair of built-in
+    // binoculars.
+    baseWeightKg: 0.2,
+    valuePerKg: 500,
+    turnsRequired: 2.1,
+    rarity: 'epic',
+    difficultyMultiplier: 1.4,
+    baits: ['prawn', 'squid']
+  },
+  {
+    id: 'loosejaw',
+    name: 'Loosejaw',
+    // A long, thin, hinge-less lower jaw with no floor of skin at all,
+    // permanently agape, plus a glowing red chin photophore invisible to
+    // almost everything else in the deep sea.
+    baseWeightKg: 0.05,
+    valuePerKg: 1900,
+    turnsRequired: 2.0,
+    rarity: 'rare',
+    difficultyMultiplier: 1.4,
+    baits: ['prawn', 'squid']
+  },
+  {
+    id: 'abyssal_grenadier',
+    name: 'Abyssal Grenadier',
+    // The darkest, deepest-living of the Abyss's own grenadiers - the
+    // only one of the four that actually lights up, a trailing line of
+    // photophores down its whip-thin tail.
+    baseWeightKg: 2.5,
+    valuePerKg: 36,
+    turnsRequired: 2.2,
+    rarity: 'rare',
+    difficultyMultiplier: 1.4,
+    baits: ['prawn', 'squid']
+  },
+  {
+    id: 'roundnose_grenadier',
+    name: 'Roundnose Grenadier',
+    // Same rattail body plan as the Giant Grenadier, but a shorter,
+    // blunter, rounded bulbous snout - the real animal's own namesake
+    // feature.
+    baseWeightKg: 3,
+    valuePerKg: 27,
+    turnsRequired: 2.0,
+    rarity: 'rare',
+    difficultyMultiplier: 1.3,
+    baits: ['prawn', 'squid']
+  },
+  {
+    id: 'coryphaenoid_grenadier',
+    name: 'Coryphaenoid Grenadier',
+    // A warm golden-tan grenadier with faint dark stripes down the flank -
+    // the family's own scientific genus name.
+    baseWeightKg: 2,
+    valuePerKg: 37.5,
+    turnsRequired: 2.0,
+    rarity: 'rare',
+    difficultyMultiplier: 1.3,
+    baits: ['prawn', 'squid']
+  },
+  {
+    id: 'tripod_fish',
+    name: 'Tripod Fish',
+    // Genuinely "stands" on the sea floor propped up on three long
+    // stilt-like fin rays, splayed out like a tripod - the real animal's
+    // own famous oddity.
+    baseWeightKg: 0.3,
+    valuePerKg: 217,
+    turnsRequired: 1.9,
+    rarity: 'rare',
+    difficultyMultiplier: 1.2,
+    baits: ['prawn', 'squid']
+  },
+  {
+    id: 'bigeye_fish',
+    name: 'Bigeye Fish',
+    // A compact, brick-red fish whose real field mark is one enormous
+    // round eye dominating most of the head.
+    baseWeightKg: 1,
+    valuePerKg: 60,
+    turnsRequired: 1.9,
+    rarity: 'rare',
+    difficultyMultiplier: 1.2,
+    baits: ['prawn', 'squid']
+  },
+  {
+    id: 'giant_hatchetfish',
+    name: 'Giant Hatchetfish',
+    // A deep, laterally-compressed, hatchet-blade-shaped body - scaled up
+    // and darker than the Deep-Sea Hatchetfish next to it.
+    baseWeightKg: 0.15,
+    valuePerKg: 333,
+    turnsRequired: 1.9,
+    rarity: 'rare',
+    difficultyMultiplier: 1.2,
+    baits: ['prawn', 'squid']
+  },
+  {
+    id: 'deep_sea_hatchetfish',
+    name: 'Deep-Sea Hatchetfish',
+    // An extremely deep, laterally-compressed, hatchet-blade-shaped body,
+    // all chest and almost no length behind it, with a genuinely
+    // mirror-bright reflective flank.
+    baseWeightKg: 0.03,
+    valuePerKg: 1333,
+    turnsRequired: 1.8,
+    rarity: 'uncommon',
+    difficultyMultiplier: 1.1,
+    baits: ['prawn', 'squid']
+  },
+  {
+    id: 'deep_sea_smelt',
+    name: 'Deep-Sea Smelt',
+    // A small, slender, simple fish next to the rest of the Abyss roster,
+    // but still faintly bioluminescent like most real deep-water smelt.
+    baseWeightKg: 0.05,
+    valuePerKg: 600,
+    turnsRequired: 1.7,
+    rarity: 'uncommon',
+    difficultyMultiplier: 1.0,
+    baits: ['prawn', 'squid']
+  },
+  {
+    id: 'bristlemouth',
+    name: 'Bristlemouth',
+    // The single most numerous vertebrate on Earth - a huge, permanently
+    // -agape mouth for such a tiny fish, bristling with needle teeth, and
+    // more photophores proportionally than almost any other fish alive.
+    baseWeightKg: 0.01,
+    valuePerKg: 2000,
+    turnsRequired: 1.7,
+    rarity: 'uncommon',
+    difficultyMultiplier: 1.0,
+    baits: ['prawn', 'squid']
+  },
+  {
     id: 'whiting',
     name: 'Whiting',
     // A small, prized table fish - much lighter than the others and no real

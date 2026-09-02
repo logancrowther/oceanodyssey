@@ -22196,6 +22196,1308 @@ export function drawFangtooth(g, x, y, scale = 1, rotation = 0, alpha = 1) {
   g.restore();
 }
 
+// A Black Dragonfish - the (red-lured) Dragonfish's even thinner, jet-
+// black cousin: a longer, uniformly narrow whip of a body with almost no
+// visible taper, and a cool blue-white barbel lure instead of red.
+export function drawBlackDragonfish(g, x, y, scale = 1, rotation = 0, alpha = 1) {
+  g.save();
+  g.translateCanvas(x, y);
+  if (rotation) g.rotateCanvas(rotation);
+  const s = scale;
+
+  const bodyColor = 0x000000;
+  const bellyColor = 0x0a0a0e;
+  const finColor = 0x000000;
+  const glowColor = 0x4ad8e8;
+
+  const top = [
+    { x: -30, y: -2.2 },
+    { x: -18, y: -3.4 },
+    { x: 0, y: -2.6 },
+    { x: 20, y: -1.6 },
+    { x: 40, y: -0.7 }
+  ];
+  const bottom = [
+    { x: 40, y: 0.7 },
+    { x: 20, y: 1.6 },
+    { x: 0, y: 2.6 },
+    { x: -18, y: 3 },
+    { x: -30, y: 2 }
+  ];
+  const body = [...top, ...bottom].map((p) => ({ x: p.x * s, y: p.y * s }));
+
+  g.lineStyle(0.8 * s, finColor, 0.85 * alpha);
+  g.beginPath();
+  g.moveTo(40 * s, 0);
+  quadCurveTo(g, 40 * s, 0, 52 * s, -1 * s, 62 * s, 0.5 * s);
+  g.strokePath();
+
+  g.fillStyle(finColor, alpha);
+  g.fillTriangle(22 * s, -2.4 * s, 30 * s, -8 * s, 33 * s, -1.8 * s);
+  g.fillTriangle(-18 * s, 1.6 * s, -23 * s, 7 * s, -14 * s, 4 * s);
+
+  g.fillStyle(bodyColor, alpha);
+  g.fillPoints(body, true);
+  g.fillStyle(bellyColor, 0.5 * alpha);
+  g.fillEllipse(0, 3 * s, 56 * s, 4 * s);
+  g.lineStyle(1 * s, 0x000000, 0.9 * alpha);
+  g.strokePoints(body, true);
+
+  // A ring of dim blue glow around the eye - the only real light on the
+  // whole animal besides the barbel tip and photophore line below.
+  g.fillStyle(glowColor, 0.25 * alpha);
+  g.fillCircle(-22 * s, -4 * s, 3 * s);
+  g.fillStyle(0x1c2028, alpha);
+  g.fillCircle(-22 * s, -4 * s, 1.4 * s);
+
+  // The long thin chin barbel, tipped with a small glowing blue-white
+  // photophore rather than the (red) Dragonfish's own lure colour.
+  g.lineStyle(0.8 * s, 0x000000, alpha);
+  g.beginPath();
+  g.moveTo(-26 * s, 5 * s);
+  quadCurveTo(g, -26 * s, 5 * s, -22 * s, 16 * s, -12 * s, 20 * s);
+  g.strokePath();
+  const lureX = -12 * s;
+  const lureY = 20 * s;
+  g.fillStyle(glowColor, 0.18 * alpha);
+  g.fillCircle(lureX, lureY, 6 * s);
+  g.fillStyle(glowColor, 0.4 * alpha);
+  g.fillCircle(lureX, lureY, 3.5 * s);
+  g.fillStyle(0xe8fbff, alpha);
+  g.fillCircle(lureX, lureY, 1.6 * s);
+
+  g.fillStyle(glowColor, 0.5 * alpha);
+  [-10, -2, 6, 14, 22].forEach((px) => g.fillCircle(px * s, 2.6 * s, 0.8 * s));
+
+  g.restore();
+}
+
+// A Viperfish - unmistakable for a humped-back profile and huge curved
+// fangs so long the jaw can never fully close over them, plus an
+// enormously long first dorsal fin ray trailing back past the tail,
+// tipped with its own glowing lure.
+export function drawViperfish(g, x, y, scale = 1, rotation = 0, alpha = 1) {
+  g.save();
+  g.translateCanvas(x, y);
+  if (rotation) g.rotateCanvas(rotation);
+  const s = scale;
+
+  const bodyColor = 0x1c2838;
+  const bellyColor = 0x2c3c50;
+  const finColor = 0x141c26;
+  const fangColor = 0xe8f0f4;
+  const glowColor = 0x8ad8ff;
+
+  const body = [
+    { x: -28, y: 2 },
+    { x: -22, y: -7 },
+    { x: -10, y: -10 },
+    { x: 4, y: -6 },
+    { x: 20, y: -2.5 },
+    { x: 36, y: -0.8 },
+    { x: 36, y: 1 },
+    { x: 20, y: 3 },
+    { x: 2, y: 5.5 },
+    { x: -14, y: 5 },
+    { x: -24, y: 5.5 }
+  ].map((p) => ({ x: p.x * s, y: p.y * s }));
+
+  g.lineStyle(0.8 * s, finColor, 0.85 * alpha);
+  g.beginPath();
+  g.moveTo(36 * s, 0);
+  quadCurveTo(g, 36 * s, 0, 46 * s, -1 * s, 54 * s, 0.5 * s);
+  g.strokePath();
+
+  // The real field mark: an enormously long first dorsal fin ray, trailing
+  // back well past the tail, tipped with a small glowing photophore lure.
+  g.lineStyle(1 * s, finColor, 0.9 * alpha);
+  g.beginPath();
+  g.moveTo(-6 * s, -9 * s);
+  quadCurveTo(g, -6 * s, -9 * s, 10 * s, -22 * s, 30 * s, -14 * s);
+  g.strokePath();
+  const rayTipX = 30 * s;
+  const rayTipY = -14 * s;
+  g.fillStyle(glowColor, 0.2 * alpha);
+  g.fillCircle(rayTipX, rayTipY, 4.5 * s);
+  g.fillStyle(glowColor, 0.5 * alpha);
+  g.fillCircle(rayTipX, rayTipY, 2.4 * s);
+  g.fillStyle(0xf0fbff, alpha);
+  g.fillCircle(rayTipX, rayTipY, 1 * s);
+
+  g.fillStyle(finColor, alpha);
+  g.fillTriangle(-16 * s, 5 * s, -22 * s, 11 * s, -12 * s, 7 * s);
+
+  g.fillStyle(bodyColor, alpha);
+  g.fillPoints(body, true);
+  g.fillStyle(bellyColor, 0.4 * alpha);
+  g.fillEllipse(4 * s, 4.5 * s, 44 * s, 5 * s);
+  g.lineStyle(1 * s, 0x000000, 0.85 * alpha);
+  g.strokePoints(body, true);
+
+  g.lineStyle(1 * s, 0x000000, 0.7 * alpha);
+  g.beginPath();
+  g.moveTo(-28 * s, 2 * s);
+  g.lineTo(-16 * s, 0);
+  g.strokePath();
+
+  // Huge curved fangs, jutting outward past the closed jawline - the
+  // single most unmistakable feature on the animal.
+  g.fillStyle(fangColor, 0.9 * alpha);
+  g.beginPath();
+  g.moveTo(-27 * s, 0.5 * s);
+  quadCurveTo(g, -27 * s, 0.5 * s, -30 * s, -6 * s, -24 * s, -8 * s);
+  g.lineTo(-22 * s, -1 * s);
+  g.closePath();
+  g.fillPath();
+  g.beginPath();
+  g.moveTo(-25 * s, 2 * s);
+  quadCurveTo(g, -25 * s, 2 * s, -29 * s, 9 * s, -22 * s, 10 * s);
+  g.lineTo(-20 * s, 2.5 * s);
+  g.closePath();
+  g.fillPath();
+
+  g.fillStyle(0x1c2028, alpha);
+  g.fillCircle(-18 * s, -5 * s, 2 * s);
+  g.fillStyle(glowColor, 0.4 * alpha);
+  g.fillCircle(-18 * s, -5 * s, 3 * s);
+
+  g.restore();
+}
+
+// A Pacific Blackdragon - a stockier, deep maroon-black eel than either
+// dragonfish above, real females running much bulkier than their tiny
+// vestigial males, with a greenish (not red or blue) barbel lure and a
+// double row of teal photophores.
+export function drawPacificBlackdragon(g, x, y, scale = 1, rotation = 0, alpha = 1) {
+  g.save();
+  g.translateCanvas(x, y);
+  if (rotation) g.rotateCanvas(rotation);
+  const s = scale;
+
+  const bodyColor = 0x1a0e10;
+  const bellyColor = 0x2c1618;
+  const finColor = 0x120a0c;
+  const fangColor = 0xd8ccc0;
+  const glowColor = 0x4affb0;
+
+  const top = [
+    { x: -32, y: -4 },
+    { x: -20, y: -8 },
+    { x: -4, y: -8 },
+    { x: 14, y: -5.5 },
+    { x: 32, y: -2.5 },
+    { x: 46, y: -1 }
+  ];
+  const bottom = [
+    { x: 46, y: 1 },
+    { x: 32, y: 3 },
+    { x: 14, y: 6 },
+    { x: -4, y: 8 },
+    { x: -20, y: 7 },
+    { x: -32, y: 4 }
+  ];
+  const body = [...top, ...bottom].map((p) => ({ x: p.x * s, y: p.y * s }));
+
+  g.lineStyle(1 * s, finColor, 0.85 * alpha);
+  g.beginPath();
+  g.moveTo(46 * s, 0);
+  quadCurveTo(g, 46 * s, 0, 58 * s, -1.5 * s, 68 * s, 0.5 * s);
+  g.strokePath();
+
+  g.fillStyle(finColor, alpha);
+  g.fillTriangle(26 * s, -3 * s, 34 * s, -10 * s, 37 * s, -2.5 * s);
+  g.fillTriangle(26 * s, 4 * s, 33 * s, 10.5 * s, 36 * s, 3 * s);
+  g.fillTriangle(-20 * s, 3 * s, -26 * s, 9.5 * s, -16 * s, 6 * s);
+
+  g.fillStyle(bodyColor, alpha);
+  g.fillPoints(body, true);
+  g.fillStyle(bellyColor, 0.35 * alpha);
+  g.fillEllipse(2 * s, 6 * s, 64 * s, 6 * s);
+  g.lineStyle(1 * s, 0x000000, 0.9 * alpha);
+  g.strokePoints(body, true);
+
+  g.fillStyle(0x000000, alpha);
+  g.beginPath();
+  g.moveTo(-32 * s, -5 * s);
+  g.lineTo(-10 * s, -4 * s);
+  g.lineTo(-12 * s, 9 * s);
+  g.lineTo(-30 * s, 10 * s);
+  g.closePath();
+  g.fillPath();
+  g.fillStyle(fangColor, 0.55 * alpha);
+  for (let i = 0; i < 3; i += 1) {
+    const tx = -28 + i * 6;
+    g.fillTriangle(tx * s, -4 * s, (tx + 2.2) * s, -4 * s, (tx + 1.1) * s, 4 * s);
+  }
+
+  g.fillStyle(0x1c1416, alpha);
+  g.fillCircle(-22 * s, -6.5 * s, 1.8 * s);
+
+  // A trailing chin barbel tipped with a dim greenish photophore, and a
+  // double row of small teal photophores down the belly - the real
+  // animal's own light-organ pattern, distinct from either Dragonfish's.
+  g.lineStyle(1 * s, 0x000000, alpha);
+  g.beginPath();
+  g.moveTo(-28 * s, 10 * s);
+  quadCurveTo(g, -28 * s, 10 * s, -24 * s, 22 * s, -12 * s, 27 * s);
+  g.strokePath();
+  const lureX = -12 * s;
+  const lureY = 27 * s;
+  g.fillStyle(glowColor, 0.16 * alpha);
+  g.fillCircle(lureX, lureY, 7 * s);
+  g.fillStyle(glowColor, 0.36 * alpha);
+  g.fillCircle(lureX, lureY, 4 * s);
+  g.fillStyle(0xe8fff2, alpha);
+  g.fillCircle(lureX, lureY, 1.8 * s);
+
+  g.fillStyle(glowColor, 0.55 * alpha);
+  [-16, -6, 4, 14, 24].forEach((px) => g.fillCircle(px * s, 6.5 * s, 0.9 * s));
+  g.fillStyle(glowColor, 0.4 * alpha);
+  [-10, 0, 10, 20].forEach((px) => g.fillCircle(px * s, 2 * s, 0.7 * s));
+
+  g.restore();
+}
+
+// A Loosejaw - the real animal's own signature oddity: a long, thin,
+// hinge-less lower jaw with no floor of skin connecting it to the head at
+// all, permanently agape, plus a glowing red chin photophore invisible to
+// almost everything else in the deep sea.
+export function drawLoosejaw(g, x, y, scale = 1, rotation = 0, alpha = 1) {
+  g.save();
+  g.translateCanvas(x, y);
+  if (rotation) g.rotateCanvas(rotation);
+  const s = scale;
+
+  const bodyColor = 0x14181e;
+  const bellyColor = 0x22282f;
+  const finColor = 0x0e1116;
+  const fangColor = 0xe8eef2;
+  const glowColor = 0xff4a3c;
+
+  const body = [
+    { x: -26, y: -2 },
+    { x: -14, y: -8 },
+    { x: 2, y: -8 },
+    { x: 16, y: -4 },
+    { x: 30, y: -1.5 },
+    { x: 30, y: 1.5 },
+    { x: 16, y: 4 },
+    { x: 2, y: 6 },
+    { x: -14, y: 4 }
+  ].map((p) => ({ x: p.x * s, y: p.y * s }));
+
+  g.lineStyle(0.9 * s, finColor, 0.85 * alpha);
+  g.beginPath();
+  g.moveTo(30 * s, 0);
+  quadCurveTo(g, 30 * s, 0, 40 * s, -1 * s, 48 * s, 0.5 * s);
+  g.strokePath();
+
+  g.fillStyle(finColor, alpha);
+  g.fillTriangle(10 * s, -6 * s, 16 * s, -13 * s, 19 * s, -5 * s);
+
+  g.fillStyle(bodyColor, alpha);
+  g.fillPoints(body, true);
+  g.fillStyle(bellyColor, 0.4 * alpha);
+  g.fillEllipse(4 * s, 3.5 * s, 34 * s, 5 * s);
+  g.lineStyle(1 * s, 0x000000, 0.85 * alpha);
+  g.strokePoints(body, true);
+
+  // The signature feature: a long, thin, hinge-less lower jaw trailing
+  // loose beneath the skull, permanently agape.
+  g.lineStyle(1.4 * s, 0x000000, alpha);
+  g.beginPath();
+  g.moveTo(-26 * s, -1 * s);
+  quadCurveTo(g, -26 * s, -1 * s, -30 * s, 9 * s, -18 * s, 12 * s);
+  g.strokePath();
+  g.fillStyle(fangColor, 0.9 * alpha);
+  g.fillTriangle(-27 * s, 1 * s, -24 * s, 9 * s, -22 * s, 1.5 * s);
+  g.fillTriangle(-22 * s, 2 * s, -19 * s, 10 * s, -17 * s, 2.5 * s);
+
+  // Upper fangs, angled to slot outside the lower jaw entirely.
+  g.fillStyle(fangColor, 0.85 * alpha);
+  g.fillTriangle(-25 * s, -3 * s, -22 * s, -9 * s, -20 * s, -2.5 * s);
+  g.fillTriangle(-20 * s, -3 * s, -17 * s, -8 * s, -15 * s, -2 * s);
+
+  // A bright glowing red photophore under the eye.
+  const lureX = -14 * s;
+  const lureY = -3 * s;
+  g.fillStyle(glowColor, 0.2 * alpha);
+  g.fillCircle(lureX, lureY, 5 * s);
+  g.fillStyle(glowColor, 0.5 * alpha);
+  g.fillCircle(lureX, lureY, 2.8 * s);
+  g.fillStyle(0xffd8d0, alpha);
+  g.fillCircle(lureX, lureY, 1.2 * s);
+
+  g.fillStyle(0x000000, alpha);
+  g.fillCircle(-20 * s, -6 * s, 1.6 * s);
+
+  g.restore();
+}
+
+// A Stoplight Loosejaw - the same hinge-less loose lower jaw as the plain
+// Loosejaw, but the real animal's own namesake feature: two adjacent
+// glowing photophores under the eye, one red and one blue-green, like a
+// tiny stoplight - almost nothing else in the ocean can even see the red.
+export function drawStoplightLoosejaw(g, x, y, scale = 1, rotation = 0, alpha = 1) {
+  g.save();
+  g.translateCanvas(x, y);
+  if (rotation) g.rotateCanvas(rotation);
+  const s = scale;
+
+  const bodyColor = 0x181418;
+  const bellyColor = 0x282228;
+  const finColor = 0x100c10;
+  const fangColor = 0xe8eef2;
+  const redGlow = 0xff3c3c;
+  const greenGlow = 0x4affa0;
+
+  const body = [
+    { x: -26, y: -2 },
+    { x: -14, y: -8 },
+    { x: 2, y: -8 },
+    { x: 16, y: -4 },
+    { x: 30, y: -1.5 },
+    { x: 30, y: 1.5 },
+    { x: 16, y: 4 },
+    { x: 2, y: 6 },
+    { x: -14, y: 4 }
+  ].map((p) => ({ x: p.x * s, y: p.y * s }));
+
+  g.lineStyle(0.9 * s, finColor, 0.85 * alpha);
+  g.beginPath();
+  g.moveTo(30 * s, 0);
+  quadCurveTo(g, 30 * s, 0, 40 * s, -1 * s, 48 * s, 0.5 * s);
+  g.strokePath();
+
+  g.fillStyle(finColor, alpha);
+  g.fillTriangle(10 * s, -6 * s, 16 * s, -13 * s, 19 * s, -5 * s);
+
+  g.fillStyle(bodyColor, alpha);
+  g.fillPoints(body, true);
+  g.fillStyle(bellyColor, 0.4 * alpha);
+  g.fillEllipse(4 * s, 3.5 * s, 34 * s, 5 * s);
+  g.lineStyle(1 * s, 0x000000, 0.85 * alpha);
+  g.strokePoints(body, true);
+
+  g.lineStyle(1.4 * s, 0x000000, alpha);
+  g.beginPath();
+  g.moveTo(-26 * s, -1 * s);
+  quadCurveTo(g, -26 * s, -1 * s, -30 * s, 9 * s, -18 * s, 12 * s);
+  g.strokePath();
+  g.fillStyle(fangColor, 0.9 * alpha);
+  g.fillTriangle(-27 * s, 1 * s, -24 * s, 9 * s, -22 * s, 1.5 * s);
+  g.fillTriangle(-22 * s, 2 * s, -19 * s, 10 * s, -17 * s, 2.5 * s);
+  g.fillStyle(fangColor, 0.85 * alpha);
+  g.fillTriangle(-25 * s, -3 * s, -22 * s, -9 * s, -20 * s, -2.5 * s);
+  g.fillTriangle(-20 * s, -3 * s, -17 * s, -8 * s, -15 * s, -2 * s);
+
+  // The real field mark this species is named for: two adjacent glowing
+  // photophores under the eye, one red, one blue-green.
+  const redX = -16 * s;
+  const redY = -2 * s;
+  g.fillStyle(redGlow, 0.2 * alpha);
+  g.fillCircle(redX, redY, 4.5 * s);
+  g.fillStyle(redGlow, 0.55 * alpha);
+  g.fillCircle(redX, redY, 2.4 * s);
+  g.fillStyle(0xffd8d0, alpha);
+  g.fillCircle(redX, redY, 1 * s);
+
+  const greenX = -11 * s;
+  const greenY = -5 * s;
+  g.fillStyle(greenGlow, 0.2 * alpha);
+  g.fillCircle(greenX, greenY, 4 * s);
+  g.fillStyle(greenGlow, 0.55 * alpha);
+  g.fillCircle(greenX, greenY, 2.1 * s);
+  g.fillStyle(0xe0fff0, alpha);
+  g.fillCircle(greenX, greenY, 0.9 * s);
+
+  g.fillStyle(0x000000, alpha);
+  g.fillCircle(-20 * s, -6.5 * s, 1.4 * s);
+
+  g.restore();
+}
+
+// A Giant Oarfish - by far the longest, most serpentine silhouette in the
+// game: an extremely long flat ribbon body, a tall continuous brilliant-
+// red dorsal crest running its entire length, and long trailing "oar"
+// pelvic fin rays tipped with paddle blades - the real animal's own
+// namesake feature.
+export function drawGiantOarfish(g, x, y, scale = 1, rotation = 0, alpha = 1) {
+  g.save();
+  g.translateCanvas(x, y);
+  if (rotation) g.rotateCanvas(rotation);
+  const s = scale;
+
+  const bodyColor = 0xc8d8e0;
+  const bellyColor = 0xe8f2f6;
+  const darkColor = 0x2c3c44;
+  const crestColor = 0xe83c3c;
+  const finColor = 0xd83030;
+
+  const top = [
+    { x: -50, y: -3 },
+    { x: -34, y: -5 },
+    { x: -14, y: -5.5 },
+    { x: 10, y: -5 },
+    { x: 34, y: -3.6 },
+    { x: 56, y: -2 },
+    { x: 74, y: -1 }
+  ];
+  const bottom = [
+    { x: 74, y: 1 },
+    { x: 56, y: 2 },
+    { x: 34, y: 3.6 },
+    { x: 10, y: 5 },
+    { x: -14, y: 5.5 },
+    { x: -34, y: 5 },
+    { x: -50, y: 3 }
+  ];
+  const body = [...top, ...bottom].map((p) => ({ x: p.x * s, y: p.y * s }));
+
+  g.lineStyle(1 * s, finColor, 0.85 * alpha);
+  [
+    { dx: -30, dy: 8, len: 26 },
+    { dx: -20, dy: 8, len: 20 }
+  ].forEach(({ dx, dy, len }) => {
+    g.beginPath();
+    g.moveTo(dx * s, dy * s);
+    quadCurveTo(g, dx * s, dy * s, (dx - 2) * s, (dy + len * 0.6) * s, (dx + 3) * s, (dy + len) * s);
+    g.strokePath();
+    g.fillStyle(finColor, alpha);
+    g.fillCircle((dx + 3) * s, (dy + len) * s, 2 * s);
+  });
+
+  g.fillStyle(bodyColor, alpha);
+  g.fillPoints(body, true);
+  g.fillStyle(bellyColor, 0.5 * alpha);
+  g.fillEllipse(10 * s, 3.5 * s, 110 * s, 4 * s);
+  g.lineStyle(1 * s, darkColor, 0.8 * alpha);
+  g.strokePoints(body, true);
+
+  // A tall, continuous, brilliant-red dorsal crest running the entire
+  // length of the spine, with individually visible erectile rays.
+  const crestBase = [-48, -30, -12, 8, 30, 52, 72].map((cx) => cx * s);
+  const crestTop = [-14, -18, -15, -13, -11, -9, -7].map((cy) => cy * s);
+  g.fillStyle(crestColor, 0.9 * alpha);
+  crestBase.forEach((cx, i) => {
+    const nextX = crestBase[i + 1];
+    if (nextX == null) return;
+    g.fillTriangle(cx, -3 * s, nextX, -3 * s, (cx + nextX) / 2, crestTop[i]);
+  });
+
+  // A few dark round blotches down the flank, matching the real fish's
+  // own irregular dark markings on a silvery body.
+  g.fillStyle(darkColor, 0.5 * alpha);
+  [-38, -16, 6, 28, 50].forEach((px) => g.fillCircle(px * s, -1 * s, 2 * s));
+
+  g.fillStyle(0x1c2830, alpha);
+  g.fillCircle(-46 * s, -1 * s, 2.6 * s);
+  g.fillStyle(0xffffff, 0.9 * alpha);
+  g.fillCircle(-46.8 * s, -1.8 * s, 0.9 * s);
+  g.lineStyle(1 * s, darkColor, 0.6 * alpha);
+  g.beginPath();
+  g.moveTo(-50 * s, 2 * s);
+  g.lineTo(-44 * s, 3 * s);
+  g.strokePath();
+
+  g.restore();
+}
+
+// A Giant Grenadier - the rattail body plan every grenadier here shares: a
+// big blunt head tapering smoothly into one long whip-thin tail with no
+// separate tail fin at all. The biggest and plainest-coloured of the four.
+export function drawGiantGrenadier(g, x, y, scale = 1, rotation = 0, alpha = 1) {
+  g.save();
+  g.translateCanvas(x, y);
+  if (rotation) g.rotateCanvas(rotation);
+  const s = scale;
+
+  const bodyColor = 0x5c4a3c;
+  const bellyColor = 0x84705c;
+  const finColor = 0x3c3028;
+  const darkColor = 0x000000;
+
+  const top = [
+    { x: -22, y: -12 },
+    { x: -10, y: -14 },
+    { x: 6, y: -10 },
+    { x: 20, y: -5 },
+    { x: 34, y: -2 },
+    { x: 50, y: -0.6 }
+  ];
+  const bottom = [
+    { x: 50, y: 0.6 },
+    { x: 34, y: 2 },
+    { x: 20, y: 5 },
+    { x: 6, y: 10 },
+    { x: -10, y: 13 },
+    { x: -22, y: 10 }
+  ];
+  const body = [...top, ...bottom].map((p) => ({ x: p.x * s, y: p.y * s }));
+
+  g.lineStyle(1 * s, finColor, 0.8 * alpha);
+  g.beginPath();
+  g.moveTo(50 * s, 0);
+  quadCurveTo(g, 50 * s, 0, 60 * s, -0.5 * s, 68 * s, 0.4 * s);
+  g.strokePath();
+
+  g.fillStyle(finColor, alpha);
+  g.fillTriangle(-6 * s, -10 * s, 0, -22 * s, 6 * s, -9 * s);
+  g.beginPath();
+  g.moveTo(14 * s, -6 * s);
+  g.lineTo(46 * s, -1.5 * s);
+  g.lineTo(46 * s, 0.5 * s);
+  g.lineTo(14 * s, -4 * s);
+  g.closePath();
+  g.fillPath();
+  g.fillStyle(finColor, alpha);
+  g.fillTriangle(-16 * s, 9 * s, -22 * s, 16 * s, -12 * s, 12 * s);
+
+  g.fillStyle(bodyColor, alpha);
+  g.fillPoints(body, true);
+  g.fillStyle(bellyColor, 0.4 * alpha);
+  g.fillEllipse(-6 * s, 8 * s, 30 * s, 8 * s);
+  g.lineStyle(1 * s, darkColor, 0.75 * alpha);
+  g.strokePoints(body, true);
+
+  g.lineStyle(1 * s, darkColor, 0.6 * alpha);
+  g.beginPath();
+  g.moveTo(-22 * s, 8 * s);
+  g.lineTo(-15 * s, 10 * s);
+  g.strokePath();
+  g.fillStyle(0x1c1410, alpha);
+  g.fillCircle(-14 * s, -4 * s, 3.4 * s);
+  g.fillStyle(0xffffff, 0.85 * alpha);
+  g.fillCircle(-15 * s, -5 * s, 1.1 * s);
+
+  g.restore();
+}
+
+// A Roundnose Grenadier - the same rattail plan, but a shorter, blunter,
+// more rounded bulbous snout (the real animal's own namesake feature) and
+// a smaller overall build than the Giant Grenadier.
+export function drawRoundnoseGrenadier(g, x, y, scale = 1, rotation = 0, alpha = 1) {
+  g.save();
+  g.translateCanvas(x, y);
+  if (rotation) g.rotateCanvas(rotation);
+  const s = scale;
+
+  const bodyColor = 0x9c7868;
+  const bellyColor = 0xc8a894;
+  const finColor = 0x5c4438;
+  const darkColor = 0x2c2018;
+
+  const top = [
+    { x: -18, y: -10 },
+    { x: -9, y: -12.5 },
+    { x: 4, y: -9 },
+    { x: 16, y: -4.5 },
+    { x: 28, y: -1.6 },
+    { x: 40, y: -0.5 }
+  ];
+  const bottom = [
+    { x: 40, y: 0.5 },
+    { x: 28, y: 1.6 },
+    { x: 16, y: 4.5 },
+    { x: 4, y: 9 },
+    { x: -9, y: 11.5 },
+    { x: -18, y: 8 }
+  ];
+  const body = [...top, ...bottom].map((p) => ({ x: p.x * s, y: p.y * s }));
+
+  g.lineStyle(0.9 * s, finColor, 0.8 * alpha);
+  g.beginPath();
+  g.moveTo(40 * s, 0);
+  quadCurveTo(g, 40 * s, 0, 48 * s, -0.5 * s, 55 * s, 0.4 * s);
+  g.strokePath();
+
+  g.fillStyle(finColor, alpha);
+  g.fillTriangle(-4 * s, -8 * s, 1 * s, -17 * s, 6 * s, -7 * s);
+  g.beginPath();
+  g.moveTo(12 * s, -5 * s);
+  g.lineTo(36 * s, -1.2 * s);
+  g.lineTo(36 * s, 0.5 * s);
+  g.lineTo(12 * s, -3 * s);
+  g.closePath();
+  g.fillPath();
+  g.fillStyle(finColor, alpha);
+  g.fillTriangle(-12 * s, 7 * s, -17 * s, 13 * s, -9 * s, 10 * s);
+
+  // The rounded, blunt-bulged snout itself, drawn as a separate lobe
+  // overlapping the head so it reads distinctly bulbous.
+  g.fillStyle(bodyColor, alpha);
+  g.fillEllipse(-16 * s, -2 * s, 10 * s, 9 * s);
+
+  g.fillPoints(body, true);
+  g.fillStyle(bellyColor, 0.4 * alpha);
+  g.fillEllipse(-4 * s, 6.5 * s, 24 * s, 6.5 * s);
+  g.lineStyle(1 * s, darkColor, 0.7 * alpha);
+  g.strokePoints(body, true);
+  g.strokeEllipse(-16 * s, -2 * s, 10 * s, 9 * s);
+
+  g.fillStyle(0x1c1410, alpha);
+  g.fillCircle(-11 * s, -3.5 * s, 2.8 * s);
+  g.fillStyle(0xffffff, 0.85 * alpha);
+  g.fillCircle(-12 * s, -4.3 * s, 0.9 * s);
+
+  g.restore();
+}
+
+// A Coryphaenoid Grenadier - the same rattail plan again, but a warm
+// golden-tan colour with faint dark diagonal stripes down the flank, and
+// a slightly more slender build than either Grenadier above it.
+export function drawCoryphaenoidGrenadier(g, x, y, scale = 1, rotation = 0, alpha = 1) {
+  g.save();
+  g.translateCanvas(x, y);
+  if (rotation) g.rotateCanvas(rotation);
+  const s = scale;
+
+  const bodyColor = 0xa88848;
+  const bellyColor = 0xd4bc84;
+  const finColor = 0x5c4820;
+  const darkColor = 0x2c2010;
+
+  const top = [
+    { x: -20, y: -11 },
+    { x: -9, y: -13 },
+    { x: 5, y: -9.5 },
+    { x: 18, y: -4.8 },
+    { x: 32, y: -1.8 },
+    { x: 48, y: -0.5 }
+  ];
+  const bottom = [
+    { x: 48, y: 0.5 },
+    { x: 32, y: 1.8 },
+    { x: 18, y: 4.8 },
+    { x: 5, y: 9.5 },
+    { x: -9, y: 12 },
+    { x: -20, y: 9 }
+  ];
+  const body = [...top, ...bottom].map((p) => ({ x: p.x * s, y: p.y * s }));
+
+  g.lineStyle(1 * s, finColor, 0.8 * alpha);
+  g.beginPath();
+  g.moveTo(48 * s, 0);
+  quadCurveTo(g, 48 * s, 0, 58 * s, -0.5 * s, 65 * s, 0.4 * s);
+  g.strokePath();
+
+  g.fillStyle(finColor, alpha);
+  g.fillTriangle(-5 * s, -9 * s, 0, -19 * s, 5 * s, -8 * s);
+  g.beginPath();
+  g.moveTo(13 * s, -5.5 * s);
+  g.lineTo(44 * s, -1.4 * s);
+  g.lineTo(44 * s, 0.5 * s);
+  g.lineTo(13 * s, -3.5 * s);
+  g.closePath();
+  g.fillPath();
+  g.fillStyle(finColor, alpha);
+  g.fillTriangle(-14 * s, 8 * s, -19 * s, 14.5 * s, -10 * s, 11 * s);
+
+  g.fillStyle(bodyColor, alpha);
+  g.fillPoints(body, true);
+  g.fillStyle(bellyColor, 0.4 * alpha);
+  g.fillEllipse(-4 * s, 7 * s, 28 * s, 7 * s);
+
+  // Faint dark stripes along the flank - a subtle field mark of its own,
+  // unlike the plain-coloured Giant/Roundnose Grenadiers.
+  g.lineStyle(0.8 * s, darkColor, 0.35 * alpha);
+  [-8, 2, 12, 22].forEach((sx) => {
+    g.beginPath();
+    g.moveTo(sx * s, -8 * s);
+    g.lineTo((sx + 4) * s, 8 * s);
+    g.strokePath();
+  });
+
+  g.lineStyle(1 * s, darkColor, 0.75 * alpha);
+  g.strokePoints(body, true);
+
+  g.fillStyle(0x1c1608, alpha);
+  g.fillCircle(-13 * s, -3.8 * s, 3 * s);
+  g.fillStyle(0xffffff, 0.85 * alpha);
+  g.fillCircle(-14 * s, -4.6 * s, 1 * s);
+
+  g.restore();
+}
+
+// An Abyssal Grenadier - the darkest, deepest-living of the four, a
+// near-black body with a trailing line of small glowing photophores down
+// its whip-thin tail, the only grenadier here that actually lights up.
+export function drawAbyssalGrenadier(g, x, y, scale = 1, rotation = 0, alpha = 1) {
+  g.save();
+  g.translateCanvas(x, y);
+  if (rotation) g.rotateCanvas(rotation);
+  const s = scale;
+
+  const bodyColor = 0x18140f;
+  const bellyColor = 0x28211a;
+  const finColor = 0x0e0b08;
+  const darkColor = 0x000000;
+  const glowColor = 0x5ad8e8;
+
+  const top = [
+    { x: -20, y: -11 },
+    { x: -9, y: -13 },
+    { x: 5, y: -9.5 },
+    { x: 18, y: -4.8 },
+    { x: 32, y: -1.8 },
+    { x: 48, y: -0.5 }
+  ];
+  const bottom = [
+    { x: 48, y: 0.5 },
+    { x: 32, y: 1.8 },
+    { x: 18, y: 4.8 },
+    { x: 5, y: 9.5 },
+    { x: -9, y: 12 },
+    { x: -20, y: 9 }
+  ];
+  const body = [...top, ...bottom].map((p) => ({ x: p.x * s, y: p.y * s }));
+
+  g.lineStyle(1 * s, finColor, 0.85 * alpha);
+  g.beginPath();
+  g.moveTo(48 * s, 0);
+  quadCurveTo(g, 48 * s, 0, 58 * s, -0.5 * s, 65 * s, 0.4 * s);
+  g.strokePath();
+
+  g.fillStyle(finColor, alpha);
+  g.fillTriangle(-5 * s, -9 * s, 0, -19 * s, 5 * s, -8 * s);
+  g.beginPath();
+  g.moveTo(13 * s, -5.5 * s);
+  g.lineTo(44 * s, -1.4 * s);
+  g.lineTo(44 * s, 0.5 * s);
+  g.lineTo(13 * s, -3.5 * s);
+  g.closePath();
+  g.fillPath();
+  g.fillStyle(finColor, alpha);
+  g.fillTriangle(-14 * s, 8 * s, -19 * s, 14.5 * s, -10 * s, 11 * s);
+
+  g.fillStyle(bodyColor, alpha);
+  g.fillPoints(body, true);
+  g.fillStyle(bellyColor, 0.35 * alpha);
+  g.fillEllipse(-4 * s, 7 * s, 28 * s, 7 * s);
+  g.lineStyle(1 * s, darkColor, 0.9 * alpha);
+  g.strokePoints(body, true);
+
+  // A trailing line of small glowing photophores down the whip-thin tail.
+  g.fillStyle(glowColor, 0.5 * alpha);
+  [18, 26, 34, 42, 50, 58].forEach((px) => g.fillCircle(px * s, 0.8 * s, 0.8 * s));
+
+  g.fillStyle(0x000000, alpha);
+  g.fillCircle(-13 * s, -3.8 * s, 2.8 * s);
+  g.lineStyle(1 * s, glowColor, 0.5 * alpha);
+  g.strokeCircle(-13 * s, -3.8 * s, 2.8 * s);
+
+  g.restore();
+}
+
+// A Tripod Fish - the real animal's own famous oddity: it "stands" on the
+// sea floor propped up on three long stilt-like fin rays (splayed like a
+// tripod), with long thin pectoral fins held forward as current sensors
+// instead of proper vision, since it barely uses its eyes at all.
+export function drawTripodFish(g, x, y, scale = 1, rotation = 0, alpha = 1) {
+  g.save();
+  g.translateCanvas(x, y);
+  if (rotation) g.rotateCanvas(rotation);
+  const s = scale;
+
+  const bodyColor = 0xb8a8a0;
+  const bellyColor = 0xd8ccc4;
+  const finColor = 0x8c7c74;
+  const darkColor = 0x3c322c;
+
+  // The three long stilt-like fin rays it "stands" on, drawn first so the
+  // body sits on top of them.
+  g.lineStyle(1 * s, finColor, 0.85 * alpha);
+  [
+    { x0: -6, y0: 6, x1: -14, y1: 30 },
+    { x0: 2, y0: 6, x1: 8, y1: 30 },
+    { x0: 16, y0: 2, x1: 30, y1: 26 }
+  ].forEach(({ x0, y0, x1, y1 }) => {
+    g.beginPath();
+    g.moveTo(x0 * s, y0 * s);
+    g.lineTo(x1 * s, y1 * s);
+    g.strokePath();
+  });
+
+  const body = [
+    { x: -14, y: -3 },
+    { x: -6, y: -6 },
+    { x: 8, y: -5 },
+    { x: 18, y: -1.5 },
+    { x: 18, y: 1.5 },
+    { x: 8, y: 4 },
+    { x: -6, y: 5 },
+    { x: -14, y: 2 }
+  ].map((p) => ({ x: p.x * s, y: p.y * s }));
+
+  // The long, thin, forward-held pectoral fin rays - used as current
+  // sensors while perched, the real animal's other famous feature.
+  g.lineStyle(0.8 * s, finColor, 0.8 * alpha);
+  g.beginPath();
+  g.moveTo(-10 * s, -1 * s);
+  quadCurveTo(g, -10 * s, -1 * s, -20 * s, -8 * s, -30 * s, -6 * s);
+  g.strokePath();
+
+  g.fillStyle(bodyColor, alpha);
+  g.fillPoints(body, true);
+  g.fillStyle(bellyColor, 0.4 * alpha);
+  g.fillEllipse(0, 2.5 * s, 24 * s, 3 * s);
+  g.lineStyle(1 * s, darkColor, 0.7 * alpha);
+  g.strokePoints(body, true);
+
+  g.fillStyle(darkColor, alpha);
+  g.fillCircle(-12 * s, -2.5 * s, 1 * s);
+
+  g.restore();
+}
+
+// A Telescopefish - the real field mark: two rigid, forward-pointing
+// tubular eyes sticking straight off the front of the head like a pair of
+// binoculars, each with a glowing pale-blue lens at the tip.
+export function drawTelescopefish(g, x, y, scale = 1, rotation = 0, alpha = 1) {
+  g.save();
+  g.translateCanvas(x, y);
+  if (rotation) g.rotateCanvas(rotation);
+  const s = scale;
+
+  const bodyColor = 0x141820;
+  const bellyColor = 0x20262e;
+  const finColor = 0x0c0e12;
+  const darkColor = 0x000000;
+  const eyeGlow = 0x8ac8ff;
+
+  const top = [
+    { x: -24, y: -3 },
+    { x: -12, y: -5.5 },
+    { x: 4, y: -5 },
+    { x: 20, y: -3 },
+    { x: 34, y: -1.5 }
+  ];
+  const bottom = [
+    { x: 34, y: 1.5 },
+    { x: 20, y: 3 },
+    { x: 4, y: 5 },
+    { x: -12, y: 5.5 },
+    { x: -24, y: 3 }
+  ];
+  const body = [...top, ...bottom].map((p) => ({ x: p.x * s, y: p.y * s }));
+
+  g.lineStyle(0.9 * s, finColor, 0.85 * alpha);
+  g.beginPath();
+  g.moveTo(34 * s, 0);
+  quadCurveTo(g, 34 * s, 0, 44 * s, -1 * s, 52 * s, 0.5 * s);
+  g.strokePath();
+
+  g.fillStyle(finColor, alpha);
+  g.fillTriangle(14 * s, -4 * s, 20 * s, -10 * s, 23 * s, -3 * s);
+  g.fillTriangle(-14 * s, 4 * s, -19 * s, 9.5 * s, -10 * s, 6 * s);
+
+  g.fillStyle(bodyColor, alpha);
+  g.fillPoints(body, true);
+  g.fillStyle(bellyColor, 0.4 * alpha);
+  g.fillEllipse(2 * s, 4 * s, 44 * s, 4 * s);
+  g.lineStyle(1 * s, darkColor, 0.85 * alpha);
+  g.strokePoints(body, true);
+
+  // Two rigid, forward-pointing tubular eyes.
+  [-3, 3].forEach((oy) => {
+    g.fillStyle(darkColor, alpha);
+    g.fillRect(-26 * s, (oy - 1.4) * s, 8 * s, 2.8 * s);
+    g.fillStyle(eyeGlow, 0.3 * alpha);
+    g.fillCircle(-26 * s, oy * s, 2.6 * s);
+    g.fillStyle(eyeGlow, 0.8 * alpha);
+    g.fillCircle(-26 * s, oy * s, 1.4 * s);
+  });
+
+  g.lineStyle(1 * s, darkColor, 0.6 * alpha);
+  g.beginPath();
+  g.moveTo(-24 * s, 3 * s);
+  g.lineTo(-14 * s, 4.5 * s);
+  g.strokePath();
+
+  g.restore();
+}
+
+// A Barreleye Fish - the real animal's own alien field mark: a
+// transparent, fluid-filled dome over the top of the head, with two green
+// barrel-shaped eyes visible inside it - genuinely one of the strangest
+// living things in this game.
+export function drawBarreleyeFish(g, x, y, scale = 1, rotation = 0, alpha = 1) {
+  g.save();
+  g.translateCanvas(x, y);
+  if (rotation) g.rotateCanvas(rotation);
+  const s = scale;
+
+  const bodyColor = 0x1c2c28;
+  const bellyColor = 0x2c4038;
+  const finColor = 0x142018;
+  const darkColor = 0x000000;
+  const domeColor = 0x8ad8c8;
+  const eyeGlow = 0x4affb0;
+
+  const top = [
+    { x: -18, y: -3 },
+    { x: -6, y: -6 },
+    { x: 10, y: -5 },
+    { x: 26, y: -2.5 }
+  ];
+  const bottom = [
+    { x: 26, y: 2.5 },
+    { x: 10, y: 5 },
+    { x: -6, y: 6 },
+    { x: -18, y: 3 }
+  ];
+  const body = [...top, ...bottom].map((p) => ({ x: p.x * s, y: p.y * s }));
+
+  g.lineStyle(0.9 * s, finColor, 0.85 * alpha);
+  g.beginPath();
+  g.moveTo(26 * s, 0);
+  quadCurveTo(g, 26 * s, 0, 34 * s, -1 * s, 40 * s, 0.5 * s);
+  g.strokePath();
+
+  g.fillStyle(finColor, alpha);
+  g.fillTriangle(8 * s, -4.5 * s, 13 * s, -10 * s, 16 * s, -3.5 * s);
+  g.fillTriangle(-6 * s, 5 * s, -11 * s, 10.5 * s, -3 * s, 6.5 * s);
+
+  g.fillStyle(bodyColor, alpha);
+  g.fillPoints(body, true);
+  g.fillStyle(bellyColor, 0.4 * alpha);
+  g.fillEllipse(4 * s, 4 * s, 32 * s, 4 * s);
+  g.lineStyle(1 * s, darkColor, 0.8 * alpha);
+  g.strokePoints(body, true);
+
+  // The transparent dome, with two barrel-shaped eyes visible pointing
+  // up inside it.
+  g.fillStyle(domeColor, 0.22 * alpha);
+  g.fillEllipse(-8 * s, -7 * s, 22 * s, 14 * s);
+  g.lineStyle(1 * s, domeColor, 0.4 * alpha);
+  g.strokeEllipse(-8 * s, -7 * s, 22 * s, 14 * s);
+
+  [-13, -3].forEach((ex) => {
+    g.fillStyle(darkColor, 0.7 * alpha);
+    g.fillRect((ex - 1.6) * s, -13 * s, 3.2 * s, 7 * s);
+    g.fillStyle(eyeGlow, 0.9 * alpha);
+    g.fillCircle(ex * s, -13 * s, 2 * s);
+  });
+
+  g.lineStyle(0.8 * s, darkColor, 0.5 * alpha);
+  g.beginPath();
+  g.moveTo(-18 * s, 2 * s);
+  g.lineTo(-12 * s, 3 * s);
+  g.strokePath();
+
+  g.restore();
+}
+
+// A Deep-Sea Hatchetfish - the real field mark: an extremely deep,
+// laterally-compressed, hatchet-blade-shaped body, all chest and almost
+// no length behind it, with a genuinely mirror-bright reflective flank
+// that camouflages its silhouette from below.
+export function drawDeepSeaHatchetfish(g, x, y, scale = 1, rotation = 0, alpha = 1) {
+  g.save();
+  g.translateCanvas(x, y);
+  if (rotation) g.rotateCanvas(rotation);
+  const s = scale;
+
+  const bodyColor = 0xb8c8d4;
+  const bellyColor = 0xe8f2f8;
+  const finColor = 0x8898a4;
+  const darkColor = 0x2c3840;
+  const shineColor = 0xffffff;
+
+  const body = [
+    { x: 14, y: -2 },
+    { x: 8, y: -10 },
+    { x: -2, y: -13 },
+    { x: -12, y: -10 },
+    { x: -16, y: -2 },
+    { x: -12, y: 8 },
+    { x: -2, y: 12 },
+    { x: 8, y: 6 },
+    { x: 14, y: 0 }
+  ].map((p) => ({ x: p.x * s, y: p.y * s }));
+
+  g.lineStyle(1 * s, finColor, 0.8 * alpha);
+  g.beginPath();
+  g.moveTo(14 * s, -1 * s);
+  g.lineTo(24 * s, -5 * s);
+  g.lineTo(19 * s, 0);
+  g.lineTo(24 * s, 5 * s);
+  g.lineTo(14 * s, 1 * s);
+  g.closePath();
+  g.strokePath();
+  g.fillStyle(finColor, 0.7 * alpha);
+  g.fillPath();
+
+  g.fillStyle(finColor, alpha);
+  g.fillTriangle(0, -12 * s, 4 * s, -19 * s, 7 * s, -10 * s);
+
+  g.fillStyle(bodyColor, alpha);
+  g.fillPoints(body, true);
+  g.fillStyle(shineColor, 0.25 * alpha);
+  g.fillEllipse(-3 * s, -3 * s, 18 * s, 12 * s);
+  g.fillStyle(bellyColor, 0.5 * alpha);
+  g.fillEllipse(-4 * s, 6 * s, 18 * s, 6 * s);
+  g.lineStyle(1 * s, darkColor, 0.75 * alpha);
+  g.strokePoints(body, true);
+
+  g.fillStyle(darkColor, alpha);
+  g.fillCircle(-4 * s, -8 * s, 3.2 * s);
+  g.fillStyle(shineColor, 0.8 * alpha);
+  g.fillCircle(-5 * s, -9.2 * s, 1 * s);
+
+  g.restore();
+}
+
+// A Giant Hatchetfish - the same hatchet-blade body plan, scaled up and
+// darker than the Deep-Sea Hatchetfish, with a row of small keel-like
+// serrations along its deep, sharp belly.
+export function drawGiantHatchetfish(g, x, y, scale = 1, rotation = 0, alpha = 1) {
+  g.save();
+  g.translateCanvas(x, y);
+  if (rotation) g.rotateCanvas(rotation);
+  const s = scale;
+
+  const bodyColor = 0x7c8c98;
+  const bellyColor = 0xa8bcc8;
+  const finColor = 0x505c68;
+  const darkColor = 0x1c2630;
+  const shineColor = 0xd8e8f0;
+
+  const body = [
+    { x: 18, y: -2.5 },
+    { x: 10, y: -13 },
+    { x: -3, y: -17 },
+    { x: -16, y: -13 },
+    { x: -21, y: -2 },
+    { x: -16, y: 10 },
+    { x: -3, y: 15 },
+    { x: 10, y: 8 },
+    { x: 18, y: 0 }
+  ].map((p) => ({ x: p.x * s, y: p.y * s }));
+
+  g.lineStyle(1 * s, finColor, 0.85 * alpha);
+  g.beginPath();
+  g.moveTo(18 * s, -1 * s);
+  g.lineTo(30 * s, -6 * s);
+  g.lineTo(24 * s, 0);
+  g.lineTo(30 * s, 6 * s);
+  g.lineTo(18 * s, 1 * s);
+  g.closePath();
+  g.strokePath();
+  g.fillStyle(finColor, 0.75 * alpha);
+  g.fillPath();
+
+  g.fillStyle(finColor, alpha);
+  g.fillTriangle(-1 * s, -15 * s, 4 * s, -24 * s, 8 * s, -13 * s);
+  g.fillTriangle(-14 * s, 9 * s, -20 * s, 16 * s, -9 * s, 11 * s);
+
+  g.fillStyle(bodyColor, alpha);
+  g.fillPoints(body, true);
+  g.fillStyle(shineColor, 0.2 * alpha);
+  g.fillEllipse(-4 * s, -4 * s, 24 * s, 16 * s);
+  g.fillStyle(bellyColor, 0.45 * alpha);
+  g.fillEllipse(-5 * s, 8 * s, 22 * s, 7 * s);
+  g.lineStyle(1.2 * s, darkColor, 0.85 * alpha);
+  g.strokePoints(body, true);
+
+  g.fillStyle(darkColor, alpha);
+  g.fillCircle(-5 * s, -10 * s, 4 * s);
+  g.fillStyle(shineColor, 0.85 * alpha);
+  g.fillCircle(-6.4 * s, -11.6 * s, 1.3 * s);
+
+  g.fillStyle(darkColor, 0.4 * alpha);
+  [-12, -6, 0, 6].forEach((sx) => g.fillTriangle(sx * s, 12 * s, (sx + 3) * s, 12 * s, (sx + 1.5) * s, 16 * s));
+
+  g.restore();
+}
+
+// A Bigeye Fish - a compact, deep-bodied, brick-red fish whose real field
+// mark is one enormous round eye dominating most of the head, adapted to
+// catch every scrap of the faint deep-water light.
+export function drawBigeyeFish(g, x, y, scale = 1, rotation = 0, alpha = 1) {
+  g.save();
+  g.translateCanvas(x, y);
+  if (rotation) g.rotateCanvas(rotation);
+  const s = scale;
+
+  const bodyColor = 0xa8342c;
+  const bellyColor = 0xd8685c;
+  const finColor = 0x7c2018;
+  const darkColor = 0x000000;
+
+  const body = [
+    { x: -16, y: -8 },
+    { x: -4, y: -12 },
+    { x: 10, y: -8 },
+    { x: 16, y: 0 },
+    { x: 10, y: 8 },
+    { x: -4, y: 12 },
+    { x: -16, y: 8 },
+    { x: -20, y: 0 }
+  ].map((p) => ({ x: p.x * s, y: p.y * s }));
+
+  g.fillStyle(finColor, alpha);
+  g.fillTriangle(14 * s, -2 * s, 24 * s, -6 * s, 18 * s, 0);
+  g.fillTriangle(14 * s, 2 * s, 24 * s, 6 * s, 18 * s, 0);
+  g.fillTriangle(-2 * s, -10 * s, 3 * s, -18 * s, 7 * s, -8 * s);
+  g.fillTriangle(-10 * s, 7 * s, -14 * s, 13 * s, -6 * s, 9.5 * s);
+
+  g.fillStyle(bodyColor, alpha);
+  g.fillPoints(body, true);
+  g.fillStyle(bellyColor, 0.4 * alpha);
+  g.fillEllipse(-2 * s, 6 * s, 22 * s, 6 * s);
+  g.lineStyle(1 * s, darkColor, 0.7 * alpha);
+  g.strokePoints(body, true);
+
+  g.fillStyle(0x1c0c0a, alpha);
+  g.fillCircle(-4 * s, -3 * s, 6 * s);
+  g.lineStyle(0.8 * s, 0x3c1410, 0.7 * alpha);
+  g.strokeCircle(-4 * s, -3 * s, 6 * s);
+  g.fillStyle(0xffd8a0, 0.9 * alpha);
+  g.fillCircle(-6 * s, -5 * s, 1.8 * s);
+
+  g.restore();
+}
+
+// A Deep-Sea Smelt - a small, slender, simple fish next to the game's
+// other Abyss species, but still faintly bioluminescent like most real
+// deep-water smelt.
+export function drawDeepSeaSmelt(g, x, y, scale = 1, rotation = 0, alpha = 1) {
+  g.save();
+  g.translateCanvas(x, y);
+  if (rotation) g.rotateCanvas(rotation);
+  const s = scale;
+
+  const bodyColor = 0x8898b0;
+  const bellyColor = 0xd0dce8;
+  const finColor = 0x5c6c84;
+  const darkColor = 0x2c3444;
+  const glowColor = 0x9ad8ff;
+
+  const top = [
+    { x: -14, y: -2 },
+    { x: -6, y: -4.5 },
+    { x: 6, y: -4 },
+    { x: 16, y: -1.5 }
+  ];
+  const bottom = [
+    { x: 16, y: 1.5 },
+    { x: 6, y: 4 },
+    { x: -6, y: 4.5 },
+    { x: -14, y: 2 }
+  ];
+  const pts = [...top, ...bottom].map((p) => ({ x: p.x * s, y: p.y * s }));
+
+  g.lineStyle(0.8 * s, finColor, 0.8 * alpha);
+  g.beginPath();
+  g.moveTo(16 * s, 0);
+  g.lineTo(24 * s, -4 * s);
+  g.lineTo(20 * s, 0);
+  g.lineTo(24 * s, 4 * s);
+  g.closePath();
+  g.strokePath();
+  g.fillStyle(finColor, 0.7 * alpha);
+  g.fillPath();
+
+  g.fillStyle(finColor, alpha);
+  g.fillTriangle(-2 * s, -4 * s, 1 * s, -8 * s, 4 * s, -3.5 * s);
+
+  g.fillStyle(bodyColor, alpha);
+  g.fillPoints(pts, true);
+  g.fillStyle(bellyColor, 0.5 * alpha);
+  g.fillEllipse(0, 3 * s, 26 * s, 3 * s);
+  g.lineStyle(0.8 * s, darkColor, 0.7 * alpha);
+  g.strokePoints(pts, true);
+
+  g.fillStyle(glowColor, 0.5 * alpha);
+  [-8, -2, 4, 10].forEach((px) => g.fillCircle(px * s, 3 * s, 0.6 * s));
+
+  g.fillStyle(darkColor, alpha);
+  g.fillCircle(-10 * s, -2 * s, 1.4 * s);
+
+  g.restore();
+}
+
+// A Bristlemouth - the single most numerous vertebrate on Earth, and the
+// real field mark that earns its name: a huge, permanently-agape mouth
+// for such a tiny fish, bristling with thin needle teeth, plus a double
+// row of glowing photophores - real bristlemouths carry more light organs,
+// proportionally, than almost any other fish alive.
+export function drawBristlemouth(g, x, y, scale = 1, rotation = 0, alpha = 1) {
+  g.save();
+  g.translateCanvas(x, y);
+  if (rotation) g.rotateCanvas(rotation);
+  const s = scale;
+
+  const bodyColor = 0x1c1418;
+  const bellyColor = 0x2c2228;
+  const finColor = 0x120c10;
+  const darkColor = 0x000000;
+  const toothColor = 0xe8eef2;
+  const glowColor = 0x4affc8;
+
+  const top = [
+    { x: -14, y: -3 },
+    { x: -6, y: -6 },
+    { x: 6, y: -5 },
+    { x: 16, y: -2 }
+  ];
+  const bottom = [
+    { x: 16, y: 2 },
+    { x: 6, y: 5 },
+    { x: -6, y: 6 },
+    { x: -14, y: 3 }
+  ];
+  const pts = [...top, ...bottom].map((p) => ({ x: p.x * s, y: p.y * s }));
+
+  g.lineStyle(0.8 * s, finColor, 0.85 * alpha);
+  g.beginPath();
+  g.moveTo(16 * s, 0);
+  g.lineTo(24 * s, -3 * s);
+  g.lineTo(20 * s, 0);
+  g.lineTo(24 * s, 3 * s);
+  g.closePath();
+  g.strokePath();
+  g.fillStyle(finColor, 0.7 * alpha);
+  g.fillPath();
+
+  g.fillStyle(finColor, alpha);
+  g.fillTriangle(0, -5 * s, 3 * s, -10 * s, 6 * s, -4.5 * s);
+
+  g.fillStyle(bodyColor, alpha);
+  g.fillPoints(pts, true);
+  g.fillStyle(bellyColor, 0.4 * alpha);
+  g.fillEllipse(0, 4 * s, 28 * s, 3.5 * s);
+  g.lineStyle(1 * s, darkColor, 0.85 * alpha);
+  g.strokePoints(pts, true);
+
+  // A huge, permanently-agape mouth bristling with thin needle teeth.
+  g.fillStyle(darkColor, alpha);
+  g.beginPath();
+  g.moveTo(-14 * s, -2 * s);
+  g.lineTo(-4 * s, -1 * s);
+  g.lineTo(-5 * s, 5 * s);
+  g.lineTo(-13 * s, 4.5 * s);
+  g.closePath();
+  g.fillPath();
+  g.fillStyle(toothColor, 0.85 * alpha);
+  for (let i = 0; i < 4; i += 1) {
+    const tx = -13 + i * 2.4;
+    g.fillTriangle(tx * s, -1.5 * s, (tx + 1.2) * s, -1.5 * s, (tx + 0.6) * s, 3 * s);
+  }
+
+  g.fillStyle(darkColor, alpha);
+  g.fillCircle(-8 * s, -3.5 * s, 1.6 * s);
+
+  // A double row of small glowing teal photophores along the belly.
+  g.fillStyle(glowColor, 0.6 * alpha);
+  [-10, -4, 2, 8].forEach((px) => g.fillCircle(px * s, 4.5 * s, 0.6 * s));
+  g.fillStyle(glowColor, 0.4 * alpha);
+  [-7, -1, 5, 11].forEach((px) => g.fillCircle(px * s, 1.5 * s, 0.5 * s));
+
+  g.restore();
+}
+
 // A humpback whale - not a fish or a shark, and drawn nothing like either:
 // a real humpback's own unmistakable field marks are a much deeper, chunkier
 // body than any shark here, a small stubby dorsal fin sat on a "hump" far

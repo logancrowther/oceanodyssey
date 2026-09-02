@@ -30,12 +30,35 @@ const SCROLL_SPEED = 0.6;
 const SECTION_HEADER_H = 36;
 
 // Every species that only ever turns up past a genuine 1000m+ depth (see
-// DEPTH_LIMITS in OceanScene.js - Dragonfish/Fangtooth/Angler Fish's own
-// `min` there, all well past 12000 depth units at 12 units/m), plus the
-// Kraken - not gated by a real depth floor the same way (it's shallow-or-
-// bait-driven, see pickSpawnId), but every bit as much an Abyss creature
-// thematically, so it's called out here on purpose rather than derived.
-const ABYSS_SPECIES = ['dragonfish', 'fangtooth', 'angler_fish', 'kraken'];
+// DEPTH_LIMITS/ABYSS_ONLY_SPECIES in OceanScene.js - all well past 12000
+// depth units at 12 units/m), plus the Kraken - not gated by a real depth
+// floor the same way (it's shallow-or-bait-driven, see pickSpawnId), but
+// every bit as much an Abyss creature thematically, so it's called out
+// here on purpose rather than derived.
+const ABYSS_SPECIES = [
+  'dragonfish',
+  'fangtooth',
+  'angler_fish',
+  'black_dragonfish',
+  'viperfish',
+  'pacific_blackdragon',
+  'loosejaw',
+  'stoplight_loosejaw',
+  'giant_oarfish',
+  'giant_grenadier',
+  'roundnose_grenadier',
+  'coryphaenoid_grenadier',
+  'abyssal_grenadier',
+  'tripod_fish',
+  'telescopefish',
+  'barreleye_fish',
+  'deep_sea_hatchetfish',
+  'giant_hatchetfish',
+  'bigeye_fish',
+  'deep_sea_smelt',
+  'bristlemouth',
+  'kraken'
+];
 
 // Every silhouette texture is baked once (species art never changes) and
 // reused for the rest of the game session - keyed off this prefix so a
